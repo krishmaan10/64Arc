@@ -685,6 +685,8 @@ a { color: inherit; }
 }
 .cards--2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
 .cards--3 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+/* Four cards with real paragraphs in them — 2x2 rather than an orphaned fourth. */
+.cards--wide { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
 .cards--4 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
 
 /* Pill / chip list */
