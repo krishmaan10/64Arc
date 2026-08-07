@@ -127,15 +127,96 @@
     </div>
   </section>
 
+  <!-- ============================ PSS — LIVE ============================== -->
+  <section class="section section--lg s-ivory anchor" id="pss">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label label--signal reveal">Built and running</p>
+        <h2 class="t-h2 reveal" style="--delay:.08s">
+          The first ecosystem we built was our own.<br>
+          <span class="muted">93 branches, on a twenty-year-old ERP nobody wanted to replace.</span>
+        </h2>
+        <p class="lead reveal measure" style="--delay:.14s">
+          Partap Singh &amp; Sons distributes commercial-vehicle parts across 93 branches in India.
+          It is a family business, and it is ours — which is why we could try this on a real
+          operation with real money before offering it to anyone else.
+        </p>
+      </div>
+
+      <article class="case reveal">
+        <div class="case-head">
+          <span class="sector">PSS &middot; Commercial-vehicle parts distribution &middot; India</span>
+          <h2>A salesman standing in a dealer's shop could not see what that dealer owed.</h2>
+          <ul class="chips">
+            <li class="chip chip--dark">Field app</li><li class="chip chip--dark">Dealer portal</li>
+            <li class="chip chip--dark">Supplier portal</li><li class="chip chip--dark">Head-office desk</li>
+            <li class="chip chip--dark">ERP</li>
+          </ul>
+        </div>
+        <div class="case-body">
+          <div class="case-cell">
+            <h3>Before</h3>
+            <p>The business ran — and still runs — on an ERP built in VB.NET two decades ago,
+               living on desktop PCs inside each of 93 branches. Nothing left the building. A rep
+               in a dealer's shop carried the dues in his head, phoned the branch to ask about
+               stock, and wrote orders on paper. Attendance was a register. Credit approvals
+               travelled by telephone.</p>
+          </div>
+          <div class="case-cell">
+            <h3>Architecture</h3>
+            <p>The ERP stays. It holds twenty years of books and every branch works in it daily —
+               replacing it first would have been the most expensive possible way to start. Instead
+               we put one shared read layer across all 93 branch databases, and a separate write
+               path for the things the ERP was never able to capture: field activity, orders,
+               attendance, credit decisions.</p>
+          </div>
+          <div class="case-cell">
+            <h3>Platforms</h3>
+            <ul>
+              <li>Field app for reps — Android, iOS and installable web, in 13 languages</li>
+              <li>Dealer portal — signs in with GSTIN and customer ID, sees their own account, places their own orders</li>
+              <li>Supplier portal — 13 brands see their own stock across the network</li>
+              <li>Head-office desk — credit sanctions, tour and expense approvals</li>
+              <li>ERP rebuild — running beside the original, not yet in its place</li>
+            </ul>
+          </div>
+          <div class="case-cell">
+            <h3>Intelligence</h3>
+            <p>Dealers ranked for collection by size, lateness and exposure. The same dealer's
+               overdue position at <em>another</em> branch, which nobody could see before. Orders
+               dictated by voice or photographed off a handwritten slip. Leak detection: billing
+               past a sanctioned limit, one customer split across branches, cheque-bouncers still
+               buying.</p>
+          </div>
+          <div class="case-cell case-cell--outcome">
+            <h3>Outcome</h3>
+            <p><strong>The branch PC stopped being the only place the business existed.</strong>
+               An order placed in a dealer's shop arrives at the fulfilling branch already priced
+               and credit-checked, and opens in the ERP as a native sales order. A payment cannot
+               be recorded without its proof photograph — they commit together or not at all. And
+               the ERP itself is still the ERP: the rebuild runs in parallel against a copy of the
+               books, and until it has earned the switch, it does not get it.</p>
+          </div>
+        </div>
+      </article>
+
+      <div class="principle reveal" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
+        <p class="label label--signal">What it proves</p>
+        <p>We did not rip out the system the business depends on.<br>
+           We built the ecosystem around it, and left the books where they were.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ========================== ECOSYSTEM MODELS ========================== -->
   <section class="section section--lg s-sunken">
     <div class="wrap">
       <div class="section-head">
         <p class="label reveal">Ecosystem models</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">Four architectures, described end to end.</h2>
+        <h2 class="t-h2 reveal" style="--delay:.08s">Four more architectures, described end to end.</h2>
         <p class="lead reveal measure" style="--delay:.14s">
-          These are ecosystem models, not client work — four common business shapes and how
-          64ARC would approach each. Client stories will be published with permission.
+          Unlike PSS above, these four are models rather than built work — common business shapes
+          and how 64ARC would approach each. Client stories will be published with permission.
         </p>
       </div>
 
