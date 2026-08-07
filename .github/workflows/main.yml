@@ -1,7 +1,0 @@
-unzip 64arc-website.zip -d 64arc
-cd 64arc
-git init -b main
-git add -A
-git commit -m "Build the 64ARC website"
-git remote add origin https://github.com/krishmaan10/64Arc.git
-git push -u origin main
