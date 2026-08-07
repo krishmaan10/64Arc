@@ -1845,5 +1845,111 @@ a { color: inherit; }
 .contact-aside .rows > div { grid-template-columns: 1fr; gap: .5rem; }
 .contact-aside .rows h3 { font-size: 1.125rem; }
 
+/* ---- Long-form prose (the engineering note) ---- */
+.prose {
+  max-width: 68ch;
+  font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem);
+  line-height: 1.72;
+  color: var(--ink);
+}
+/* Both rules are (0,1,0) so the adjacent-sibling one wins on order. Do NOT write
+   this reset as `.prose p` — at (0,1,1) it outranks the spacing rule and every
+   paragraph gap silently collapses to zero. */
+.prose > * { margin: 0; }
+.prose > * + * { margin-top: 1.5em; }
+.prose h2 {
+  font-size: var(--t-h3);
+  letter-spacing: -.02em;
+  margin-top: 2.6em;
+  margin-bottom: -.4em;
+}
+.prose h2 + p { margin-top: 1.1em; }
+.prose strong { font-weight: 500; color: var(--ink); }
+.prose em { font-style: italic; }
+.prose ul, .prose ol { margin-left: 0; padding-left: 1.35em; color: var(--ink-muted); }
+.prose li + li { margin-top: .5em; }
+.prose a { color: var(--signal-ink); text-decoration: none; border-bottom: 1px solid var(--signal-line); }
+.prose a:hover { border-bottom-color: var(--signal-ink); }
+.prose blockquote {
+  margin: 2em 0;
+  padding-left: clamp(1.25rem, .8rem + 1.4vw, 2rem);
+  border-left: 2px solid var(--signal);
+  font-family: var(--font-display);
+  font-size: var(--t-h4);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -.015em;
+  color: var(--ink);
+}
+.prose code {
+  font-family: var(--font-mono);
+  font-size: .875em;
+  background: var(--ivory-sunken);
+  border: 1px solid var(--soft-grey);
+  border-radius: 4px;
+  padding: .1em .35em;
+}
+/* A rule that reads as a section break rather than a divider */
+.prose hr {
+  border: 0;
+  margin: 2.8em 0;
+  height: 1px;
+  background: var(--soft-grey);
+  max-width: 5rem;
+}
+
+.note-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 1.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding-bottom: 2rem;
+  margin-bottom: 2.75rem;
+  border-bottom: 1px solid var(--soft-grey);
+}
+
+/* The one drawn idea in the note */
+.note-figure {
+  margin: clamp(2rem, 1.4rem + 2vw, 3.25rem) 0;
+  max-width: 100%;
+}
+.note-figure .frame {
+  border: 1px solid var(--carbon-line);
+  border-radius: var(--radius);
+  background: var(--carbon-sunken);
+  padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  overflow-x: auto;
+}
+.note-figure svg { width: 100%; height: auto; min-width: 460px; }
+.note-figure figcaption {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 1.125rem;
+  display: flex;
+  gap: .625rem;
+  align-items: baseline;
+}
+.note-figure .scroll-hint { display: none; }
+/* The diagram is wider than a phone; it scrolls inside its own frame, so say so. */
+@media (max-width: 720px) {
+  .note-figure .scroll-hint { display: inline; color: var(--signal-ink); }
+}
+.note-figure figcaption::before {
+  content: "";
+  width: 6px; height: 6px;
+  border: 1px solid currentColor;
+  transform: rotate(45deg);
+  flex: none;
+  position: relative;
+  top: .45em;
+}
+
 /* ---- Named anchor offset helper ---- */
 .anchor { scroll-margin-top: calc(var(--header-h) + 32px); }

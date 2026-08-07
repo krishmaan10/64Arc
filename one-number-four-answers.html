@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One number. Four answers. — a build note from 64ARC</title>
+<meta name="description" content="We agreed what 90+ days overdue meant, built it, and shipped it into exactly one screen — and it was not the screen the decision-maker reads. An engineering note from building a 93-branch distributor's ecosystem.">
+<link rel="canonical" href="https://64arc.com/one-number-four-answers.html">
+
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="64ARC">
+<meta property="og:title" content="One number. Four answers. — a build note from 64ARC">
+<meta property="og:description" content="The same question had four live answers on the same product at the same time. Nothing was broken. Nothing failed. A build note about who owns a number.">
+<meta property="og:url" content="https://64arc.com/one-number-four-answers.html">
+<meta property="og:image" content="https://64arc.com/assets/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#111318">
+
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;450;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+<noscript><style>
+  /* Without JS the reveal system never runs — show everything immediately. */
+  .reveal, .reveal-l, .reveal-r, .frag, .mega .sub, .mega .mark { opacity: 1 !important; transform: none !important; }
+  .rise > span { transform: none !important; }
+  .rule-draw, .layer-stitch i, .core-drops i, .core-rail, .pmap-bar { transform: none !important; }
+  .draw { stroke-dashoffset: 0 !important; }
+  .flow { display: none; }
+  .hero-eyebrow, .hero-cols, .hero-figure { opacity: 1 !important; transform: none !important; }
+  .ai-stop { color: var(--ivory); border-color: var(--signal); }
+  .ai-result { opacity: 1 !important; transform: none !important; }
+  .ai-replay { display: none; }
+  [data-contact-form] button[type="submit"] { display: none; }
+</style></noscript>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="header">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="64ARC — home">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path d="M4.6 30V16.4a11.4 11.4 0 0 1 22.8 0V30" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"/>
+        <circle cx="16" cy="5" r="3.4" fill="#5367FF"/>
+      </svg>
+      <span class="brand-word">64ARC</span>
+    </a>
+
+    <nav class="nav" aria-label="Primary">
+      <a class="nav-link" href="what-we-build.html">What We Build</a>
+      <a class="nav-link" href="how-it-works.html">How It Works</a>
+      <a class="nav-link" href="ai-intelligence.html">AI + Intelligence</a>
+      <a class="nav-link" href="work.html">Work</a>
+      <a class="nav-link" href="about.html">About</a>
+    </nav>
+
+    <a class="btn btn--on-dark header-cta" href="contact.html">
+      Talk to 64ARC
+      <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
+    </a>
+
+    <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-nav" id="mobile-nav" aria-hidden="true">
+  <a class="m-link" href="what-we-build.html"><span class="n">01</span> What We Build</a>
+  <a class="m-link" href="how-it-works.html"><span class="n">02</span> How It Works</a>
+  <a class="m-link" href="ai-intelligence.html"><span class="n">03</span> AI + Intelligence</a>
+  <a class="m-link" href="work.html"><span class="n">04</span> Work</a>
+  <a class="m-link" href="about.html"><span class="n">05</span> About</a>
+  <div class="m-foot">
+    <a class="btn btn--primary" href="contact.html">
+      Talk to 64ARC
+      <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
+    </a>
+  </div>
+</div>
+
+<main id="main">
+
+  <!-- ================================ HERO ================================ -->
+  <section class="page-hero blueprint">
+    <div class="wrap wrap--narrow">
+      <span class="eyebrow">Build note</span>
+      <h1 class="t-h1">One number. Four answers.</h1>
+      <p class="lead">
+        We agreed what &ldquo;90+ days overdue&rdquo; meant, built it, and shipped it into exactly
+        one screen &mdash; and it was not the screen the decision-maker reads.
+      </p>
+      <div class="page-meta">
+        <span>August 2026</span><span>PSS</span><span>Receivables</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================ NOTE ================================= -->
+  <section class="section section--lg s-ivory">
+    <div class="wrap wrap--narrow">
+      <div class="prose reveal">
+
+        <p>The owner of the business told us that the overdue calculation had already been
+           discussed and finalised, and asked why the figure on his screen was still wrong. He was
+           right on both counts, and that is what makes this worth writing down rather than quietly
+           fixing. The definition had been agreed. We had built it. We had built it into one
+           screen, and left every other screen showing the same label to carry whatever arithmetic
+           it had always used.</p>
+
+        <p>This is our live product &mdash; reps, dealers, suppliers and a head-office desk across a
+           93-branch commercial-vehicle parts distributor, sitting on top of a twenty-year-old
+           VB.NET ERP of roughly 3.4 million lines. Real receivables, in production every day.</p>
+
+        <p>When we counted, the same question &mdash; how much of what dealers owe is more than
+           ninety days overdue &mdash; had four live answers on the same product at the same time.</p>
+
+        <p>The company ageing bar took each bill&rsquo;s age, gross, and bucketed each bill
+           separately. That was the agreed definition. Beside it sat a netted variant of the same
+           bar, credit notes subtracted. A third worked at dealer level, measuring days past terms
+           rather than bill age. The fourth was the exceptions row on the head-office dashboard
+           &mdash; the one he actually looks at, computed separately from all three, and the
+           furthest of the four from the answer we had agreed. Roughly half of it.</p>
+
+        <p>That outlier deviated three ways at once, and the deviations compounded. It aged money
+           from the due date rather than the invoice date, which on normal trade terms is weeks of
+           difference. It bucketed per dealer rather than per bill, so a dealer&rsquo;s entire
+           balance landed in the bucket of their worst invoice. And it netted credit notes out.
+           Each of those three choices is defensible on its own. Together they answer a different
+           question, under the same words.</p>
+
+        <p>Nothing was broken. No test failed, no alert fired, no query errored, every screen
+           rendered, and each of the four numbers was internally consistent and entirely plausible.
+           Nothing in the product had any notion that two of its own figures were meant to agree,
+           so nothing could notice that they did not. It was found the only way it could have been
+           found: a person put two screens carrying the same label side by side and saw different
+           money. What reads as a process complaint was a precise and correct bug report.</p>
+
+        <p>The cause was not a coding slip. A line on our own backlog read, in effect, <em>one place
+           that owns outstanding and overdue</em>. We had written it down and recognised it as
+           right. We skipped it, more than once, in favour of shipping screens &mdash; because it
+           would have produced no new screen of its own. That is the mistake, and the incentive
+           behind it is worth naming plainly: the work that stops a number drifting is invisible on
+           the day you do it, and becomes visible only on the day someone loses faith in a figure.
+           We took the visible work. Meanwhile the definition we had agreed went onto a screen the
+           decision-maker does not use, while the screen he does use carried the oldest and most
+           divergent version. Nobody had checked which screen the person complaining was reading.</p>
+
+        <figure class="note-figure observe">
+          <div class="frame">
+            <svg viewBox="0 0 900 690" role="img" aria-label="Before: the bills feed four screens, each holding its own formula, and the four formulas differ. After: the bills feed one computation that produces a company band and a per-dealer figure, and the four screens simply read those.">
+
+              <!-- ============================ BEFORE ============================ -->
+              <text class="d-label" x="0" y="14">Before &mdash; the arithmetic lives inside each screen</text>
+
+              <!-- the bills -->
+              <g class="pop" style="--delay:.1s">
+                <rect class="d-node" x="8"  y="108" width="104" height="14" rx="2"/>
+                <rect class="d-node" x="8"  y="128" width="104" height="14" rx="2"/>
+                <rect class="d-node" x="8"  y="148" width="104" height="14" rx="2"/>
+                <rect class="d-node" x="8"  y="168" width="104" height="14" rx="2"/>
+                <text class="d-label" x="60" y="200" text-anchor="middle">The bills</text>
+              </g>
+
+              <!-- four divergent paths -->
+              <g class="d-link">
+                <path class="draw" style="--delay:.35s" d="M118 145 C190 145 200 82 268 82"/>
+                <path class="draw" style="--delay:.42s" d="M118 145 C190 145 200 130 268 130"/>
+                <path class="draw" style="--delay:.49s" d="M118 145 C190 145 200 178 268 178"/>
+                <path class="draw" style="--delay:.56s" d="M118 145 C190 145 200 226 268 226"/>
+              </g>
+
+              <!-- four screens, each with its own formula box -->
+              <g class="pop" style="--delay:.7s">
+                <rect class="d-node" x="268" y="62" width="624" height="40" rx="6"/>
+                <text class="d-title" x="284" y="87" style="font-size:12px">Headline bar</text>
+                <rect x="480" y="72" width="400" height="20" rx="3" fill="rgba(83,103,255,.10)" stroke="#343947"/>
+                <text class="d-label" x="496" y="86">bill age &middot; gross &middot; per bill</text>
+              </g>
+              <g class="pop" style="--delay:.78s">
+                <rect class="d-node" x="268" y="110" width="624" height="40" rx="6"/>
+                <text class="d-title" x="284" y="135" style="font-size:12px">Netted bar</text>
+                <rect x="480" y="120" width="400" height="20" rx="3" fill="rgba(83,103,255,.10)" stroke="#343947"/>
+                <text class="d-label" x="496" y="134">bill age &middot; net &middot; per bill</text>
+              </g>
+              <g class="pop" style="--delay:.86s">
+                <rect class="d-node" x="268" y="158" width="624" height="40" rx="6"/>
+                <text class="d-title" x="284" y="183" style="font-size:12px">Dealer view</text>
+                <rect x="480" y="168" width="400" height="20" rx="3" fill="rgba(83,103,255,.10)" stroke="#343947"/>
+                <text class="d-label" x="496" y="182">days past terms &middot; net &middot; per dealer</text>
+              </g>
+              <g class="pop" style="--delay:.94s">
+                <rect class="d-node" x="268" y="206" width="624" height="40" rx="6" stroke="#5367FF"/>
+                <text class="d-title" x="284" y="231" style="font-size:12px">Dashboard row</text>
+                <rect x="480" y="216" width="400" height="20" rx="3" fill="rgba(83,103,255,.10)" stroke="#5367FF"/>
+                <text class="d-label" x="496" y="230" style="fill:#7A89FF">days past terms &middot; net &middot; per dealer</text>
+              </g>
+              <text class="d-label" x="268" y="268" style="fill:#808795">Four formulas. One label. The one he reads is the last.</text>
+
+              <!-- divider -->
+              <path d="M0 320 H900" stroke="#262A34" stroke-width="1"/>
+
+              <!-- ============================= AFTER ============================= -->
+              <text class="d-label" x="0" y="368">After &mdash; the arithmetic lives once, upstream</text>
+
+              <g class="pop" style="--delay:1.15s">
+                <rect class="d-node" x="8"  y="470" width="104" height="14" rx="2"/>
+                <rect class="d-node" x="8"  y="490" width="104" height="14" rx="2"/>
+                <rect class="d-node" x="8"  y="510" width="104" height="14" rx="2"/>
+                <rect class="d-node" x="8"  y="530" width="104" height="14" rx="2"/>
+                <text class="d-label" x="60" y="562" text-anchor="middle">The bills</text>
+              </g>
+
+              <path class="d-link draw" style="--delay:1.3s" d="M118 507 H236"/>
+
+              <!-- the single computation -->
+              <g class="pop" style="--delay:1.4s">
+                <rect x="236" y="466" width="216" height="82" rx="8" fill="rgba(83,103,255,.10)" stroke="#5367FF"/>
+                <text class="d-title" x="344" y="500" text-anchor="middle" style="font-size:12px">One pass,</text>
+                <text class="d-title" x="344" y="518" text-anchor="middle" style="font-size:12px">one bucketing rule</text>
+              </g>
+
+              <!-- two outputs -->
+              <g class="d-link">
+                <path class="draw" style="--delay:1.6s" d="M452 490 C500 490 500 462 548 462"/>
+                <path class="draw" style="--delay:1.66s" d="M452 524 C500 524 500 552 548 552"/>
+              </g>
+              <text class="d-label" x="470" y="452" style="fill:#7A89FF">company band</text>
+              <text class="d-label" x="470" y="578" style="fill:#7A89FF">per-dealer figure</text>
+
+              <g class="d-link">
+                <path class="draw" style="--delay:1.8s" d="M548 462 C620 462 630 424 700 424"/>
+                <path class="draw" style="--delay:1.86s" d="M548 462 C620 462 630 472 700 472"/>
+                <path class="draw" style="--delay:1.92s" d="M548 552 C620 552 630 520 700 520"/>
+                <path class="draw" style="--delay:1.98s" d="M548 552 C620 552 630 568 700 568"/>
+              </g>
+
+              <!-- the same four screens, now with nothing to compute -->
+              <g class="pop" style="--delay:2.1s">
+                <rect class="d-node" x="700" y="406" width="192" height="36" rx="6"/>
+                <text class="d-title" x="716" y="429" style="font-size:12px">Headline bar</text>
+                <rect class="d-node" x="700" y="454" width="192" height="36" rx="6"/>
+                <text class="d-title" x="716" y="477" style="font-size:12px">Netted bar</text>
+                <rect class="d-node" x="700" y="502" width="192" height="36" rx="6"/>
+                <text class="d-title" x="716" y="525" style="font-size:12px">Dealer view</text>
+                <rect class="d-node" x="700" y="550" width="192" height="36" rx="6"/>
+                <text class="d-title" x="716" y="573" style="font-size:12px">Dashboard row</text>
+              </g>
+
+              <path class="flow" style="--delay:2.4s;--flow-dur:3s" d="M118 507 H236"/>
+              <text class="d-label" x="236" y="620" style="fill:#808795">No formulas left in the screens. They read what the pass produced.</text>
+            </svg>
+          </div>
+          <figcaption><span class="scroll-hint">Scroll the diagram sideways. </span>Four formula boxes become one &mdash; and the one that is left has moved out of the screens and into the pass over the bills.</figcaption>
+        </figure>
+
+        <p>The per-dealer 90+ amount and its bill count are now produced inside the same single pass
+           over the bill list, through the same bucketing rule, as the company-level band. The
+           headline bar, the exceptions row and the drill-down beneath it are no longer three
+           implementations that happen to agree; they are one piece of arithmetic displayed three
+           times, and cannot disagree. We checked it against the full book: the two independently
+           assembled totals landed one rupee apart &mdash; per-dealer rounding &mdash; with
+           identical bill counts. We relabelled the row so it states the basis it measures instead
+           of implying a different one. We also had to apply the fix twice, because the first pass
+           corrected the arithmetic without correcting the selection that decided which records the
+           arithmetic ran over.</p>
+
+        <p>One detail worth copying: the row&rsquo;s total sums over every dealer, not only the ones
+           listed underneath it. A few carry a negative pending balance from an over-applied receipt
+           and are left out of the list &mdash; but they must stay in the total, or the row and the
+           bar drift apart again, which is the entire bug.</p>
+
+        <p>There is a second mistake here, and it is the better one. The check we wrote to stop this
+           recurring &mdash; a standing comparison that fires when two figures that must match do
+           not &mdash; was written to abort the data build. It fired on real data. It killed every
+           rebuild for hours. So while fixing a stale number we froze the whole product on stale
+           numbers, and the figure that started all this sat at its old value all afternoon. We
+           turned a reporting defect into an availability one, in the middle of fixing the reporting
+           defect. The check now warns loudly and lets the build finish.</p>
+
+        <blockquote>A guard on a number must never be able to take the product down. Stale but
+           consistent beats confidently absent.</blockquote>
+
+        <p>A refused build hands every user yesterday&rsquo;s data on every screen &mdash; far worse
+           than the discrepancy it was looking for.</p>
+
+        <p>Days later we went looking on purpose and found seven more places that had each
+           hand-written their own answer to &ldquo;what does this dealer owe&rdquo; &mdash; a
+           rep&rsquo;s home band, the credit strip on the order screen, an export, a review list, an
+           exposure view among them &mdash; all now behind one server-side definition and one
+           front-end pair. One habit came out of the same week: a code release and a data rebuild
+           land at different times, so a screen must confirm a newly added figure is really there
+           before it depends on it.</p>
+
+        <p>The last decision is the one we would most like a sceptical reader to check us on,
+           because it is where we deliberately did <em>not</em> unify. What we display is gross.
+           What blocks an order stays net, on purpose. Moving the block onto the gross basis would
+           begin blocking dealers who were not blocked yesterday, and that is a change of credit
+           policy wearing an engineering cleanup&rsquo;s clothes. It is the owner&rsquo;s decision,
+           not ours &mdash; one variable when he wants it. Until then the two figures answer two
+           different questions, and each one says which question it answers.</p>
+
+        <hr>
+
+        <p>A number with no owner will disagree with itself. Agreeing a definition is not the same
+           as owning one: unless one piece of code computes a business figure and everything else
+           reads that computation, every screen re-derives it, and the derivations drift silently,
+           because each is individually correct and nothing compares them. That is how we build. One
+           version of the truth does not mean one number &mdash; it means one owner per number,
+           every number stating its basis, and the line between an engineering decision and a
+           business one drawn where the business can see it. All four of those answers were working
+           software. The fix shipped no new screen at all. It moved a computation.</p>
+
+      </div>
+
+      <p class="reveal" style="margin-top:3.5rem">
+        <a class="link" href="work.html#pss">The ecosystem this came from
+          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <!-- =============================== CTA ================================= -->
+  <section class="cta blueprint">
+    <div class="wrap">
+      <p class="label label--signal reveal">Begin</p>
+      <h2 class="reveal" style="--delay:.08s">
+        How many answers does your business have to its own most important number?
+        <span class="lets">Let&rsquo;s find out.</span>
+      </h2>
+      <div class="btn-row reveal" style="--delay:.14s">
+        <a class="btn btn--primary" href="contact.html">
+          Map your business
+          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
+        </a>
+        <a class="btn btn--ghost-dark" href="work.html">See the ecosystem</a>
+      </div>
+      <p class="cta-note reveal">A conversation about your business &mdash; not a product demo.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <a class="brand" href="index.html" aria-label="64ARC — home">
+          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true" style="width:30px;height:30px">
+            <path d="M4.6 30V16.4a11.4 11.4 0 0 1 22.8 0V30" stroke="#F4F1EA" stroke-width="2.6" stroke-linecap="square"/>
+            <circle cx="16" cy="5" r="3.4" fill="#5367FF"/>
+          </svg>
+          <span class="brand-word" style="color:#F4F1EA">64ARC</span>
+        </a>
+        <p class="footer-tag">The architecture of intelligent business.</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer">
+        <div>
+          <h4>Company</h4>
+          <ul>
+            <li><a href="what-we-build.html">What We Build</a></li>
+            <li><a href="how-it-works.html">How It Works</a></li>
+            <li><a href="ai-intelligence.html">AI + Intelligence</a></li>
+            <li><a href="work.html">Work</a></li>
+            <li><a href="about.html">About</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Start</h4>
+          <ul>
+            <li><a href="contact.html">Contact</a></li>
+            <li><a data-mail="text" href="mailto:hello@64arc.com">hello@64arc.com</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Writing</h4>
+          <ul>
+            <li><a href="one-number-four-answers.html">One number. Four answers.</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; <span data-year>2026</span> 64ARC</span>
+      <div class="set">
+        <span>India &middot; Building globally</span>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/site.js"></script>
+</body>
+</html>
