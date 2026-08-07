@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Editors
+*.swp
+*~
+
+# The internal creative brief this site was built from. Kept out of the repo so it
+# is never published with the site — the original stays alongside this folder.
+64ARC_Website_Detailed_Mockup.docx
