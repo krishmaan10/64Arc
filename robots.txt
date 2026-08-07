@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /README.md
 
 Sitemap: https://64arc.com/sitemap.xml
