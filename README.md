@@ -38,9 +38,49 @@ but a local server matches production behaviour.)
 
 ---
 
-## Deploy
+## Live
 
-### Option A — GoDaddy hosting (you already own the domain there)
+Deployed to GitHub Pages from `main` (branch source, root path):
+
+**<https://krishmaan10.github.io/64Arc/>**
+
+Pushing to `main` republishes automatically — there is no build step, Pages just
+serves the files. `.nojekyll` is present so Jekyll never processes the folder.
+
+### Pointing 64arc.com at it
+
+The domain currently resolves to GoDaddy's parked page (`76.223.105.230`). Two steps,
+in this order:
+
+**1. Change DNS at GoDaddy** — *My Products → Domains → 64arc.com → DNS*. Delete the
+existing parked `A` records for `@`, then add:
+
+| Type | Name | Value | TTL |
+|---|---|---|---|
+| A | @ | 185.199.108.153 | 600 |
+| A | @ | 185.199.109.153 | 600 |
+| A | @ | 185.199.110.153 | 600 |
+| A | @ | 185.199.111.153 | 600 |
+| CNAME | www | krishmaan10.github.io | 600 |
+
+(The existing `www` record points at the apex — replace it with the CNAME above.)
+
+**2. Once DNS has propagated**, set the custom domain on the repo. Either in
+*Settings → Pages → Custom domain*, or:
+
+```bash
+gh api repos/krishmaan10/64Arc/pages -X PUT -f cname=64arc.com -F https_enforced=true
+```
+
+That writes a `CNAME` file to the repo and issues a Let's Encrypt certificate.
+
+> Do step 2 **after** step 1. Setting the custom domain first makes the working
+> `github.io` URL redirect to a domain that does not resolve yet, so the site would
+> appear broken in the gap.
+
+## Other deployment options
+
+### Option A — GoDaddy hosting (if you have hosting, not just the domain)
 
 1. In the GoDaddy account, open **cPanel → File Manager**.
 2. Go into `public_html` and delete the default placeholder page.
