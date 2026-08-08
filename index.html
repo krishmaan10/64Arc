@@ -834,7 +834,7 @@
       </div>
 
       <figure class="note-figure note-figure--wide note-figure--on-dark observe">
-        <div class="frame">
+        <div class="frame only-wide">
           <svg viewBox="0 0 1000 470" role="img" aria-label="The PSS ecosystem. Three platforms — PSSAO for company profile and B2B ecommerce, PSS Go for branch reps, admin staff, dealers and suppliers, and PSS One for the ERP — all reading from one shared business core, which sits over the legacy ERP holding twenty years of books across 93 branches. PSSAO and PSS Go are live; PSS One is a pilot running against a copy of the books, not yet in their place.">
 
                       <!-- ---------------------- who each one serves ---------------------- -->
@@ -912,7 +912,37 @@
                       <text class="d-label" x="980" y="460" text-anchor="end" style="fill:#808795">PSS One runs against a copy of these books &mdash; not yet in their place.</text>
                     </svg>
         </div>
-        <figcaption><span class="scroll-hint">Scroll the diagram sideways. </span>Three platforms, three audiences, one business underneath. Two platforms live; the ERP rebuild still in pilot, beside the twenty-year-old system that holds the books.</figcaption>
+        <div class="only-narrow eco-stack">
+          <article class="eco-node">
+            <p class="who">Customers &middot; dealers &middot; public</p>
+            <div class="eco-head"><h3>PSSAO</h3><span class="eco-tag">Live</span></div>
+            <p class="what">Company profile and B2B ecommerce front &mdash; catalogue, ordering, account.</p>
+          </article>
+          <div class="eco-join" aria-hidden="true"></div>
+          <article class="eco-node">
+            <p class="who">Reps &middot; admin &middot; customers &middot; suppliers</p>
+            <div class="eco-head"><h3>PSS GO</h3><span class="eco-tag">Live</span></div>
+            <p class="what">Field app for reps and admin staff, with customer, dealer and supplier portals. Android, iOS and web, in 13 languages.</p>
+          </article>
+          <div class="eco-join" aria-hidden="true"></div>
+          <article class="eco-node">
+            <p class="who">Head office &middot; finance &middot; management</p>
+            <div class="eco-head"><h3>PSS ONE</h3><span class="eco-tag eco-tag--pilot">Pilot</span></div>
+            <p class="what">The ERP, rebuilt &mdash; sales, finance, CRM, legal, procurement, stock and service.</p>
+          </article>
+          <div class="eco-join" aria-hidden="true"></div>
+          <div class="eco-core">
+            <span class="t">Shared business core</span>
+            <p>One customer, one product, one price, one stock position, one order, one set of numbers.</p>
+          </div>
+          <div class="eco-join" aria-hidden="true"></div>
+          <div class="eco-books">
+            <span class="t">The books &mdash; the ERP that stays</span>
+            <p>Built in VB.NET two decades ago. 93 branches, twenty years of records, still the system of record.</p>
+          </div>
+          <p class="eco-note">PSS One runs against a copy of these books &mdash; not yet in their place.</p>
+        </div>
+        <figcaption>Three platforms, three audiences, one business underneath. Two platforms live; the ERP rebuild still in pilot, beside the twenty-year-old system that holds the books.</figcaption>
       </figure>
 
       <p class="reveal" style="margin-top:2.5rem">

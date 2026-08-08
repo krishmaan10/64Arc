@@ -469,16 +469,28 @@
      ====================================================================== */
 
   function boot() {
-    initHeader();
-    initMobileNav();
-    initReveal();
-    initHero();
-    initAiDemos();
-    initForm();
-    initPickers();
-    initStepRail();
-    initYear();
-    initMailLinks();
+    // Every revealed block starts at opacity:0 and is un-hidden by initReveal.
+    // So one throw anywhere in this list would leave the whole site blank —
+    // each step is isolated, and initReveal runs first so content is visible
+    // even if a later enhancement fails.
+    [
+      ['reveal', initReveal],
+      ['header', initHeader],
+      ['mobileNav', initMobileNav],
+      ['hero', initHero],
+      ['aiDemos', initAiDemos],
+      ['form', initForm],
+      ['pickers', initPickers],
+      ['stepRail', initStepRail],
+      ['year', initYear],
+      ['mailLinks', initMailLinks]
+    ].forEach(function (step) {
+      try {
+        step[1]();
+      } catch (err) {
+        if (window.console && console.error) console.error('64ARC: ' + step[0] + ' failed', err);
+      }
+    });
   }
 
   if (document.readyState === 'loading') {

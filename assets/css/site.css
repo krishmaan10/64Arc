@@ -1916,6 +1916,9 @@ a { color: inherit; }
 /* ---- Phase rail (How It Works) ----
    A sequence, not a set of alternatives — so this jumps rather than filters.
    Nothing is ever hidden; the rail only says where you are and lets you skip. */
+/* The rail is sticky within the phases only — the wrapper is what releases it,
+   so it does not ride over the delivery principles and the closing CTA. */
+.rail-scope { position: relative; }
 .railwrap {
   position: sticky;
   top: var(--header-h);
@@ -1958,12 +1961,158 @@ a { color: inherit; }
 }
 
 /* The rail pins under the fixed header, so anchored phases need to clear both. */
-.railwrap ~ .anchor { scroll-margin-top: calc(var(--header-h) + 60px); }
+.railwrap ~ * .anchor,
+.railwrap ~ .anchor { scroll-margin-top: calc(var(--header-h) + 78px); }
+/* Clear the rail's real height, not just the header's. */
+.rail-scope .split--sticky > :first-child { top: calc(var(--header-h) + 82px); }
 
 @media (max-width: 720px) {
   .rail { padding-inline: 0; }
   .rail-step { padding: .95rem .5rem; font-size: .6875rem; }
+  /* The rail is wider than the screen. Without an affordance the last two
+     phases simply do not exist for a phone user. */
+  .railwrap {
+    -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+  }
+  .railwrap::after {
+    content: "";
+    position: absolute;
+    right: 0; top: 0; bottom: 1px;
+    width: 34px;
+    pointer-events: none;
+    background: linear-gradient(to right, rgba(244,241,234,0), var(--ivory));
+  }
 }
+
+/* ---- Ecosystem stack: the phone version of the PSS diagram ----
+   Real text rather than a second SVG, so it scales with the user's font size,
+   can be selected and translated, and never renders below the 12px floor. */
+/* The stack carries its own dark panel, mirroring .note-figure .frame — its
+   children use inverted ink and translucent tints, so it cannot sit directly
+   on a light section. */
+.eco-stack {
+  display: grid;
+  gap: .625rem;
+  background: var(--carbon-sunken);
+  border: 1px solid var(--carbon-line);
+  border-radius: var(--radius);
+  padding: clamp(1rem, .8rem + 1vw, 1.5rem);
+}
+.note-figure--on-dark .eco-stack {
+  background: var(--carbon);
+  border-color: var(--carbon-line-2);
+}
+.eco-node {
+  border: 1px solid var(--carbon-line);
+  border-radius: var(--radius);
+  background: var(--carbon-raised);
+  padding: 1.125rem 1.25rem;
+}
+.eco-node .who {
+  font-family: var(--font-mono);
+  font-size: .625rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-inv-faint);
+  margin: 0 0 .75rem;
+}
+.eco-head { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; margin-bottom: .625rem; }
+.eco-head h3 {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--ivory);
+}
+.eco-tag {
+  font-family: var(--font-mono);
+  font-size: .625rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: .2rem .5rem;
+  border-radius: 3px;
+  border: 1px solid var(--signal);
+  color: var(--signal-on-dark);
+  background: rgba(83,103,255,.12);
+}
+.eco-tag--pilot { border-color: #4A5060; color: var(--ink-inv-faint); background: rgba(244,241,234,.05); }
+.eco-node p.what { font-size: .9375rem; color: var(--ink-inv-muted); margin: 0; line-height: 1.55; }
+
+.eco-join {
+  justify-self: center;
+  width: 1px;
+  height: 22px;
+  background: linear-gradient(to bottom, var(--signal-line), var(--signal));
+}
+.eco-core, .eco-books {
+  border-radius: var(--radius);
+  padding: 1.125rem 1.25rem;
+}
+.eco-core { border: 1px solid var(--signal); background: rgba(83,103,255,.08); }
+.eco-books { border: 1px solid var(--carbon-line); background: var(--carbon-raised); }
+.eco-core .t, .eco-books .t {
+  font-family: var(--font-mono);
+  font-size: .6875rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ivory);
+  display: block;
+  margin-bottom: .5rem;
+}
+.eco-core p, .eco-books p { font-size: .875rem; color: var(--ink-inv-muted); margin: 0; line-height: 1.55; }
+.eco-note {
+  font-family: var(--font-mono);
+  font-size: .625rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-inv-faint);
+  margin: .25rem 0 0;
+  line-height: 1.6;
+}
+
+/* ---- Ledger stack: the phone version of the build-note diagram ---- */
+.ledger-stack {
+  display: grid;
+  gap: .75rem;
+  background: var(--carbon-sunken);
+  border: 1px solid var(--carbon-line);
+  border-radius: var(--radius);
+  padding: clamp(1rem, .8rem + 1vw, 1.5rem);
+}
+.ledger-head {
+  font-family: var(--font-mono);
+  font-size: .625rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-inv-faint);
+  margin: .5rem 0 0;
+}
+.ledger { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.ledger li {
+  border: 1px solid var(--carbon-line);
+  border-radius: var(--radius-sm);
+  background: var(--carbon-raised);
+  padding: .875rem 1rem;
+  display: grid;
+  gap: .3rem;
+}
+.ledger li b {
+  font-family: var(--font-display);
+  font-size: .9375rem;
+  font-weight: 500;
+  color: var(--ivory);
+}
+.ledger li span {
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .04em;
+  color: var(--ink-inv-muted);
+  line-height: 1.5;
+}
+.ledger li.is-odd { border-color: var(--signal); }
+.ledger li.is-odd span { color: var(--signal-on-dark); }
+.ledger li.is-one { border-color: var(--signal); background: rgba(83,103,255,.10); }
 
 /* ---- Long-form prose (the engineering note) ---- */
 .prose {

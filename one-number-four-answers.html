@@ -156,7 +156,7 @@
            divergent version. Nobody had checked which screen the person complaining was reading.</p>
 
         <figure class="note-figure observe">
-          <div class="frame">
+          <div class="frame only-wide">
             <svg viewBox="0 0 900 690" role="img" aria-label="Before: the bills feed four screens, each holding its own formula, and the four formulas differ. After: the bills feed one computation that produces a company band and a per-dealer figure, and the four screens simply read those.">
 
               <!-- ============================ BEFORE ============================ -->
@@ -260,7 +260,21 @@
               <text class="d-label" x="236" y="620" style="fill:#808795">No formulas left in the screens. They read what the pass produced.</text>
             </svg>
           </div>
-          <figcaption><span class="scroll-hint">Scroll the diagram sideways. </span>Four separate computations become one &mdash; and the one that is left has moved out of the screens and into the pass over the bills.</figcaption>
+          <div class="only-narrow ledger-stack">
+            <p class="ledger-head">Before &mdash; the arithmetic lived inside each screen</p>
+            <ol class="ledger">
+              <li><b>Headline bar</b><span>bill age &middot; gross &middot; per bill</span></li>
+              <li><b>Netted bar</b><span>bill age &middot; net &middot; per bill</span></li>
+              <li><b>Dealer view</b><span>days past terms &middot; net &middot; per dealer</span></li>
+              <li class="is-odd"><b>Dashboard row</b><span>the same basis &mdash; computed all over again</span></li>
+            </ol>
+            <p class="ledger-head">After &mdash; the arithmetic lives once, upstream</p>
+            <ol class="ledger">
+              <li class="is-one"><b>One pass, one bucketing rule</b><span>produces a company band and a per-dealer figure</span></li>
+            </ol>
+            <p class="eco-note">All four screens now read that one computation. None of them compute anything.</p>
+          </div>
+          <figcaption>Four separate computations become one &mdash; and the one that is left has moved out of the screens and into the pass over the bills.</figcaption>
         </figure>
 
         <p>The per-dealer figure and its bill count are now produced inside the same single pass
