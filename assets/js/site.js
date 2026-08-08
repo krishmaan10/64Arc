@@ -390,7 +390,65 @@
   }
 
   /* ======================================================================
-     9 · SMALL UTILITIES
+     9 · PHASE RAIL (How It Works)
+     Marks which phase you are reading. Jumps only — a sequence must never be
+     filtered, so nothing here hides anything. With JS off the rail is still a
+     working list of in-page links.
+     ====================================================================== */
+
+  function initStepRail() {
+    var rail = $('[data-steprail]');
+    if (!rail) return;
+
+    var steps = $$('.rail-step', rail);
+    if (!steps.length) return;
+
+    var sections = steps
+      .map(function (a) {
+        var id = (a.getAttribute('href') || '').slice(1);
+        var el = id ? document.getElementById(id) : null;
+        return el ? { link: a, el: el } : null;
+      })
+      .filter(Boolean);
+    if (!sections.length) return;
+
+    function mark(active) {
+      steps.forEach(function (a) {
+        if (a === active) a.setAttribute('aria-current', 'true');
+        else a.removeAttribute('aria-current');
+      });
+    }
+
+    if (!('IntersectionObserver' in window)) return;
+
+    var seen = {};
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { seen[e.target.id] = e.intersectionRatio; });
+
+      // Whichever phase occupies most of the reading area wins.
+      var best = null, bestRatio = 0;
+      sections.forEach(function (s) {
+        var r = seen[s.el.id] || 0;
+        if (r > bestRatio) { bestRatio = r; best = s.link; }
+      });
+      mark(bestRatio > 0 ? best : null);
+    }, {
+      // Ignore the strip under the fixed header and the tail of the viewport.
+      rootMargin: '-' + (parseInt(getComputedStyle(document.documentElement)
+        .getPropertyValue('--header-h'), 10) + 70) + 'px 0px -45% 0px',
+      threshold: [0, 0.15, 0.35, 0.6, 0.9]
+    });
+
+    sections.forEach(function (s) { io.observe(s.el); });
+
+    // Clicking should feel decisive rather than waiting for the observer.
+    steps.forEach(function (a) {
+      a.addEventListener('click', function () { mark(a); });
+    });
+  }
+
+  /* ======================================================================
+     10 · SMALL UTILITIES
      ====================================================================== */
 
   function initYear() {
@@ -418,6 +476,7 @@
     initAiDemos();
     initForm();
     initPickers();
+    initStepRail();
     initYear();
     initMailLinks();
   }

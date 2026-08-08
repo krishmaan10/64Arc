@@ -1913,6 +1913,58 @@ a { color: inherit; }
   .case[data-model]:not([hidden]) { animation: none; }
 }
 
+/* ---- Phase rail (How It Works) ----
+   A sequence, not a set of alternatives — so this jumps rather than filters.
+   Nothing is ever hidden; the rail only says where you are and lets you skip. */
+.railwrap {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 40;
+  background: var(--ivory);
+  border-bottom: 1px solid var(--soft-grey);
+}
+.rail {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: clamp(.25rem, .1rem + .8vw, 1.5rem);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.rail::-webkit-scrollbar { display: none; }
+.rail li { flex: none; }
+
+.rail-step {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .55rem;
+  padding: 1.125rem .5rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color .3s var(--ease), border-color .3s var(--ease);
+}
+.rail-step .n { color: var(--signal-ink); font-size: .625rem; }
+.rail-step:hover { color: var(--ink); }
+.rail-step[aria-current="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--signal);
+}
+
+/* The rail pins under the fixed header, so anchored phases need to clear both. */
+.railwrap ~ .anchor { scroll-margin-top: calc(var(--header-h) + 60px); }
+
+@media (max-width: 720px) {
+  .rail { padding-inline: 0; }
+  .rail-step { padding: .95rem .5rem; font-size: .6875rem; }
+}
+
 /* ---- Long-form prose (the engineering note) ---- */
 .prose {
   max-width: 68ch;
