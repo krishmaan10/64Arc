@@ -460,40 +460,42 @@
       <div class="section-head">
         <p class="label reveal">The back end</p>
         <h2 class="t-h2 reveal" style="--delay:.06s">
-          An order taken in a dealer&rsquo;s shop opens in the ERP as a native sales order, not an import.<br>
-          <span class="muted">It was priced and credit-checked before it got there.</span>
+          An order taken in a dealer&rsquo;s shop opens in the ERP as an ordinary sales order.<br>
+          <span class="muted">Nobody retypes a line. It was credit-checked before it got there, and the branch prices it itself.</span>
         </h2>
         <p class="lead reveal measure" style="--delay:.1s">
-          Between the shop and the ERP sit a read layer over 93 branch databases, a credit check that
-          runs before the order is accepted, and a write path for the things the ERP was never able
-          to hold.
+          Between the shop and the ERP sit one read layer over the whole 93-branch estate, a credit
+          check that runs before the order is accepted, and a write path for the things the ERP was
+          never able to hold.
         </p>
       </div>
 
       <div class="cards cards--wide" data-stagger=".08">
         <div class="card card--dark card--hover reveal">
-          <h3 class="t-h3">Ninety-three databases, one read layer</h3>
-          <p>Each branch keeps its own on a desktop PC, and the 93 are never all up at once. A dealer
-             who buys from four branches still has to be one balance, not four &mdash; worked out
-             once, not recalculated in every screen that shows it.</p>
+          <h3 class="t-h3">Ninety-three branches, one read layer</h3>
+          <p>Every branch already syncs up to a central copy, and on any given half hour a dozen are
+             stale or missing from it. The read layer decides branch by branch which of two feeds is
+             currently telling the truth, and marks on the screen which one it used.</p>
         </div>
         <div class="card card--dark card--hover reveal">
           <h3 class="t-h3">Decided on the server</h3>
-          <p>Price and credit exposure are settled on the server, before an order is accepted &mdash;
-             not in the app that took it. A payment and its proof photograph commit together, or
-             neither is recorded.</p>
+          <p>Credit is re-checked on the server against head office&rsquo;s own dealer record before an
+             order is written, so a stale or modified phone cannot talk its way past it &mdash; and
+             where a manager overrides it, the override is recorded on the order rather than hidden.
+             A payment and its proof photograph commit together, or neither is recorded.</p>
         </div>
         <div class="card card--dark card--hover reveal">
           <h3 class="t-h3">A write path beside the ERP</h3>
-          <p>The ERP is around 3.4 million lines of VB.NET and still the system of record. It has
-             nowhere to put what happens in the field, so a separate path carries that &mdash; orders
-             taken in godowns with no signal, applied in whatever order the syncs land.</p>
+          <p>The ERP is about 1.1 million lines of hand-written VB.NET, and still the system of record.
+             It has nowhere to put what happens in the field, so a separate path carries that &mdash;
+             orders started in godowns with no signal, held on the phone and sent when the signal
+             returns, where the same order can never be booked twice.</p>
         </div>
         <div class="card card--dark card--hover reveal">
           <h3 class="t-h3">A rebuild, run in shadow</h3>
-          <p>PSS One is that ERP rebuilt, and it is a pilot. It runs against a copy of the books and
-             has never written a real branch&rsquo;s. Twenty years of records have to arrive intact,
-             and the only proof is running both until the two sets of numbers agree.</p>
+          <p>PSS One is a rebuild of that ERP, roughly a third of the branch screens deep, running as
+             a single-terminal pilot. It reads the real books and posts only into a sandbox copy
+             &mdash; no real branch&rsquo;s books have ever been written by it.</p>
         </div>
       </div>
 
