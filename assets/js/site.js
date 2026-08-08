@@ -324,58 +324,69 @@
   }
 
   /* ======================================================================
-     8 · MODEL PICKER (Work page)
-     Narrows the ecosystem models to the shape the visitor recognises.
-     The control only exists once JS is running — see the .js gate in CSS —
-     so with scripting off every model stays on the page.
+     8 · PICKERS
+     A generic narrowing control. A picker declares which attribute names its
+     items — data-picker="model" drives [data-model], data-picker="cap" drives
+     [data-cap] — so one function serves every page that wants one.
+
+     Progressive enhancement: the control is hidden until the .js gate opens,
+     and items are only ever hidden at runtime, so with scripting off the whole
+     page is present and nothing is unreachable.
      ====================================================================== */
 
-  function initModelPicker() {
-    var picker = $('[data-model-picker]');
-    if (!picker) return;
+  function initPickers() {
+    $$('[data-picker]').forEach(function (picker) {
+      var key = picker.dataset.picker;
+      if (!key) return;
 
-    var buttons = $$('.picker-btn', picker);
-    var models  = $$('.case[data-model]');
-    var status  = $('[data-picker-status]', picker);
-    if (!buttons.length || !models.length) return;
+      var buttons = $$('.picker-btn', picker);
+      var items   = $$('[data-' + key + ']');
+      var status  = $('[data-picker-status]', picker);
+      if (!buttons.length || !items.length) return;
 
-    var NAMES = {
-      distribution:  'the distribution model',
-      manufacturing: 'the manufacturing model',
-      retail:        'the retail model',
-      service:       'the field-service model'
-    };
+      var allLabel = picker.dataset.pickerAll || 'Showing everything';
+      var note     = picker.dataset.pickerNote || '';
 
-    function apply(choice) {
-      var shown = 0;
+      function apply(choice, label) {
+        var visible = [];
 
-      models.forEach(function (el) {
-        var match = (choice === 'all' || el.dataset.model === choice);
-        if (match) {
-          el.removeAttribute('hidden');
-          shown++;
-        } else {
-          el.setAttribute('hidden', '');
+        items.forEach(function (el) {
+          if (choice === 'all' || el.dataset[key] === choice) {
+            el.removeAttribute('hidden');
+            visible.push(el);
+          } else {
+            el.setAttribute('hidden', '');
+          }
+        });
+
+        // Narrowing to one can strand a section between two neighbours that
+        // share its surface colour. Flag the solo case so CSS can restore the
+        // light/dark rhythm.
+        items.forEach(function (el) { el.classList.remove('is-solo'); });
+        if (visible.length === 1) visible[0].classList.add('is-solo');
+
+        var shown = visible.length;
+
+        buttons.forEach(function (b) {
+          b.setAttribute('aria-pressed', String(b.dataset.pick === choice));
+        });
+
+        if (status) {
+          status.textContent = choice === 'all'
+            ? allLabel
+            : ('Showing ' + label + '.' + (note ? ' ' + note : ''));
         }
-      });
+        return shown;
+      }
 
       buttons.forEach(function (b) {
-        b.setAttribute('aria-pressed', String(b.dataset.model === choice));
+        b.addEventListener('click', function () {
+          apply(b.dataset.pick, (b.textContent || '').trim());
+        });
       });
 
-      if (status) {
-        status.textContent = choice === 'all'
-          ? 'Showing all four'
-          : 'Showing ' + (NAMES[choice] || 'one model') + ' — ' + shown +
-            ' of ' + models.length;
-      }
-    }
-
-    buttons.forEach(function (b) {
-      b.addEventListener('click', function () { apply(b.dataset.model); });
+      apply('all', '');
     });
-
-    apply('all');
   }
 
   /* ======================================================================
@@ -406,7 +417,7 @@
     initHero();
     initAiDemos();
     initForm();
-    initModelPicker();
+    initPickers();
     initYear();
     initMailLinks();
   }

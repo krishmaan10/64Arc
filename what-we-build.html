@@ -134,11 +134,27 @@
           </p>
         </div>
       </div>
+
+      <div class="picker picker--wide reveal" data-picker="cap"
+           data-picker-all="Showing all six capability areas"
+           data-picker-note="The architecture still covers the other five &mdash; this is only where we would begin.">
+        <p class="picker-q">Where would you start?</p>
+        <div class="picker-set" role="group" aria-label="Show capability areas">
+          <button class="picker-btn" type="button" data-pick="all" aria-pressed="true">All six</button>
+          <button class="picker-btn" type="button" data-pick="operations" aria-pressed="false">Operations</button>
+          <button class="picker-btn" type="button" data-pick="commerce" aria-pressed="false">Commerce</button>
+          <button class="picker-btn" type="button" data-pick="applications" aria-pressed="false">Applications</button>
+          <button class="picker-btn" type="button" data-pick="experiences" aria-pressed="false">Experiences</button>
+          <button class="picker-btn" type="button" data-pick="data" aria-pressed="false">Data &amp; integration</button>
+          <button class="picker-btn" type="button" data-pick="ai" aria-pressed="false">AI &amp; automation</button>
+        </div>
+        <p class="picker-status" role="status" aria-live="polite" data-picker-status></p>
+      </div>
     </div>
   </section>
 
   <!-- =========================== CAPABILITY 01 ============================ -->
-  <section class="section s-sunken anchor" id="operations">
+  <section class="section s-sunken anchor" id="operations" data-cap="operations">
     <div class="wrap">
       <div class="split split--sticky">
         <div>
@@ -181,7 +197,7 @@
   </section>
 
   <!-- =========================== CAPABILITY 02 ============================ -->
-  <section class="section s-ivory anchor" id="commerce">
+  <section class="section s-ivory anchor" id="commerce" data-cap="commerce">
     <div class="wrap">
       <div class="split split--sticky">
         <div>
@@ -224,7 +240,7 @@
   </section>
 
   <!-- =========================== CAPABILITY 03 ============================ -->
-  <section class="section s-sunken anchor" id="applications">
+  <section class="section s-sunken anchor" id="applications" data-cap="applications">
     <div class="wrap">
       <div class="split split--sticky">
         <div>
@@ -259,7 +275,7 @@
   </section>
 
   <!-- =========================== CAPABILITY 04 ============================ -->
-  <section class="section s-ivory anchor" id="experiences">
+  <section class="section s-ivory anchor" id="experiences" data-cap="experiences">
     <div class="wrap">
       <div class="split split--sticky">
         <div>
@@ -294,7 +310,7 @@
   </section>
 
   <!-- =========================== CAPABILITY 05 ============================ -->
-  <section class="section s-sunken anchor" id="data">
+  <section class="section s-sunken anchor" id="data" data-cap="data">
     <div class="wrap">
       <div class="split split--sticky">
         <div>
@@ -337,7 +353,7 @@
   </section>
 
   <!-- =========================== CAPABILITY 06 ============================ -->
-  <section class="section s-carbon blueprint anchor" id="ai">
+  <section class="section s-carbon blueprint anchor" id="ai" data-cap="ai">
     <div class="wrap">
       <div class="split split--sticky">
         <div>

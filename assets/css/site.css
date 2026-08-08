@@ -1850,6 +1850,14 @@ a { color: inherit; }
    control is hidden, so nothing is ever unreachable. */
 .picker { display: none; margin-bottom: clamp(2rem, 1.4rem + 2vw, 3rem); }
 .js .picker { display: block; }
+/* Sits at the foot of a section rather than above a list — needs air above,
+   and a rule to separate it from the argument it follows. */
+.picker--wide {
+  margin-top: clamp(2.5rem, 1.5rem + 3vw, 4rem);
+  margin-bottom: 0;
+  padding-top: clamp(2rem, 1.4rem + 2vw, 3rem);
+  border-top: 1px solid var(--soft-grey);
+}
 
 .picker-q {
   font-family: var(--font-mono);
@@ -1888,6 +1896,11 @@ a { color: inherit; }
   margin-top: 1.125rem;
   min-height: 1.2em;
 }
+
+/* A lone ivory capability would otherwise sit between two ivory neighbours,
+   flattening the page. Give it the sunken surface; the carbon one is already
+   distinct and keeps its own. */
+.section[data-cap].is-solo:not(.s-carbon) { background: var(--ivory-sunken); }
 
 /* Hidden models must really be gone, whatever display they'd otherwise take. */
 [hidden] { display: none !important; }
