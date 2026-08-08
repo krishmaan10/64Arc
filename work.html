@@ -199,6 +199,88 @@
         </div>
       </article>
 
+      <figure class="note-figure note-figure--wide observe" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
+        <div class="frame">
+          <svg viewBox="0 0 1000 470" role="img" aria-label="The PSS ecosystem. Three platforms — PSSAO for company profile and B2B ecommerce, PSS Go for branch reps, admin staff, dealers and suppliers, and PSS One for the ERP — all reading from one shared business core, which sits over the legacy ERP holding twenty years of books across 93 branches.">
+
+            <!-- ---------------------- who each one serves ---------------------- -->
+            <g class="d-label pop" style="--delay:.05s">
+              <text x="170" y="18" text-anchor="middle">Customers &middot; Dealers &middot; Public</text>
+              <text x="500" y="18" text-anchor="middle">Reps &middot; Admin &middot; Customers &middot; Suppliers</text>
+              <text x="830" y="18" text-anchor="middle">Head office &middot; Finance &middot; Management</text>
+            </g>
+            <g class="d-link">
+              <path class="draw" style="--delay:.2s" d="M170 28 V54"/>
+              <path class="draw" style="--delay:.26s" d="M500 28 V54"/>
+              <path class="draw" style="--delay:.32s" d="M830 28 V54"/>
+            </g>
+
+            <!-- --------------------------- PSSAO ------------------------------- -->
+            <g class="pop" style="--delay:.4s">
+              <rect class="d-node" x="20" y="54" width="300" height="132" rx="10"/>
+              <text class="d-title" x="44" y="88" style="font-size:17px;font-weight:700">PSSAO</text>
+              <rect x="238" y="72" width="58" height="19" rx="3" fill="rgba(83,103,255,.14)" stroke="#5367FF"/>
+              <text class="d-label" x="267" y="85" text-anchor="middle" style="fill:#7A89FF">Live</text>
+              <path d="M44 102 H296" stroke="#262A34" stroke-width="1"/>
+              <text class="d-label" x="44" y="126">Company profile</text>
+              <text class="d-label" x="44" y="146">B2B ecommerce front</text>
+              <text class="d-label" x="44" y="166">Catalogue &middot; ordering &middot; account</text>
+            </g>
+
+            <!-- --------------------------- PSS GO ------------------------------ -->
+            <g class="pop" style="--delay:.48s">
+              <rect class="d-node" x="350" y="54" width="300" height="132" rx="10"/>
+              <text class="d-title" x="374" y="88" style="font-size:17px;font-weight:700">PSS GO</text>
+              <rect x="568" y="72" width="58" height="19" rx="3" fill="rgba(83,103,255,.14)" stroke="#5367FF"/>
+              <text class="d-label" x="597" y="85" text-anchor="middle" style="fill:#7A89FF">Live</text>
+              <path d="M374 102 H626" stroke="#262A34" stroke-width="1"/>
+              <text class="d-label" x="374" y="126">Field app for reps and admin staff</text>
+              <text class="d-label" x="374" y="146">Customer &middot; dealer &middot; supplier portals</text>
+              <text class="d-label" x="374" y="166">Android &middot; iOS &middot; web &middot; 13 languages</text>
+            </g>
+
+            <!-- --------------------------- PSS ONE ----------------------------- -->
+            <g class="pop" style="--delay:.56s">
+              <rect class="d-node" x="680" y="54" width="300" height="132" rx="10"/>
+              <text class="d-title" x="704" y="88" style="font-size:17px;font-weight:700">PSS ONE</text>
+              <rect x="890" y="72" width="66" height="19" rx="3" fill="rgba(244,241,234,.06)" stroke="#4A5060"/>
+              <text class="d-label" x="923" y="85" text-anchor="middle">Pilot</text>
+              <path d="M704 102 H956" stroke="#262A34" stroke-width="1"/>
+              <text class="d-label" x="704" y="126">The ERP, rebuilt</text>
+              <text class="d-label" x="704" y="146">Sales &middot; finance &middot; CRM &middot; legal</text>
+              <text class="d-label" x="704" y="166">Procurement &middot; stock &middot; service</text>
+            </g>
+
+            <!-- --------------- everything drops into one core ------------------- -->
+            <g class="d-link">
+              <path class="draw" style="--delay:.72s" d="M170 186 V206 H500"/>
+              <path class="draw" style="--delay:.78s" d="M830 186 V206 H500"/>
+              <path class="draw" style="--delay:.84s" d="M500 186 V226"/>
+            </g>
+
+            <!-- ---------------------- shared business core ---------------------- -->
+            <g class="pop" style="--delay:.95s">
+              <rect x="20" y="226" width="960" height="86" rx="10" fill="rgba(83,103,255,.08)" stroke="#5367FF"/>
+              <text class="d-label" x="44" y="258" style="fill:#F4F1EA;letter-spacing:.18em">Shared business core</text>
+              <text class="d-label" x="44" y="286">One customer &middot; one product &middot; one price &middot; one stock position &middot; one order &middot; one set of numbers</text>
+            </g>
+
+            <path class="d-link draw" style="--delay:1.15s" d="M500 312 V352"/>
+            <path class="flow" style="--delay:1.6s;--flow-dur:3s" d="M500 352 V312"/>
+
+            <!-- ------------------------- the books ----------------------------- -->
+            <g class="pop" style="--delay:1.25s">
+              <rect class="d-node" x="20" y="352" width="960" height="86" rx="10"/>
+              <text class="d-label" x="44" y="384" style="fill:#F4F1EA;letter-spacing:.18em">The books &mdash; the ERP that stays</text>
+              <text class="d-label" x="44" y="412">Built in VB.NET two decades ago &middot; 93 branches &middot; twenty years of records &middot; still the system of record</text>
+            </g>
+
+            <text class="d-label" x="980" y="460" text-anchor="end" style="fill:#808795">PSS One runs against a copy of these books &mdash; not yet in their place.</text>
+          </svg>
+        </div>
+        <figcaption><span class="scroll-hint">Scroll the diagram sideways. </span>Three platforms, three audiences, one business underneath &mdash; and the twenty-year-old ERP still holding the books.</figcaption>
+      </figure>
+
       <div class="principle reveal" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
         <p class="label label--signal">What it proves</p>
         <p>We did not rip out the system the business depends on.<br>

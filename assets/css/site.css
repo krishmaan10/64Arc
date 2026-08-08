@@ -2045,6 +2045,8 @@ a { color: inherit; }
   overflow-x: auto;
 }
 .note-figure svg { width: 100%; height: auto; min-width: 460px; }
+/* A denser diagram needs more room before its labels collide. */
+.note-figure--wide svg { min-width: 680px; }
 .note-figure figcaption {
   font-family: var(--font-mono);
   font-size: var(--t-label);
