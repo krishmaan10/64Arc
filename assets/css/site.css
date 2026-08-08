@@ -2054,8 +2054,6 @@ a { color: inherit; }
   background: var(--carbon);
   border-color: var(--carbon-line-2);
 }
-.note-figure--on-dark figcaption { color: var(--ink-inv-faint); }
-.note-figure--on-dark .scroll-hint { color: var(--signal-on-dark); }
 .note-figure figcaption {
   font-family: var(--font-mono);
   font-size: var(--t-label);
@@ -2064,6 +2062,7 @@ a { color: inherit; }
   color: var(--ink-faint);
   margin-top: 1.125rem;
   display: flex;
+  flex-wrap: wrap;      /* the scroll hint must not become a second column */
   gap: .625rem;
   align-items: baseline;
 }
@@ -2072,6 +2071,11 @@ a { color: inherit; }
 @media (max-width: 720px) {
   .note-figure .scroll-hint { display: inline; color: var(--signal-ink); }
 }
+/* Declared after the base rules on purpose: these are equal specificity, so
+   source order is the only thing that makes them win. */
+.note-figure--on-dark figcaption { color: var(--ink-inv-faint); }
+.note-figure--on-dark .scroll-hint { color: var(--signal-on-dark); }
+
 .note-figure figcaption::before {
   content: "";
   width: 6px; height: 6px;
