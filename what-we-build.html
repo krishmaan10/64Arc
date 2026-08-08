@@ -101,6 +101,7 @@
       <div class="page-meta">
         <span>Operations</span><span>Commerce</span><span>Applications</span>
         <span>Experiences</span><span>Data &amp; Integration</span><span>AI &amp; Automation</span>
+        <span><a href="#back-end">The back end</a></span>
         <span><a href="#india">64ARC for India</a></span>
       </div>
     </div>
@@ -447,6 +448,63 @@
 
       <p class="reveal" style="margin-top:2.5rem">
         <a class="link" href="how-it-works.html#architect">See how that decision gets made
+          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <!-- =========================== THE BACK END ============================= -->
+  <section class="section section--lg s-carbon blueprint anchor" id="back-end">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="label reveal">The back end</p>
+        <h2 class="t-h2 reveal" style="--delay:.06s">
+          An order taken in a dealer&rsquo;s shop opens in the ERP as a native sales order, not an import.<br>
+          <span class="muted">It was priced and credit-checked before it got there.</span>
+        </h2>
+        <p class="lead reveal measure" style="--delay:.1s">
+          Between the shop and the ERP sit a read layer over 93 branch databases, a credit check that
+          runs before the order is accepted, and a write path for the things the ERP was never able
+          to hold.
+        </p>
+      </div>
+
+      <div class="cards cards--wide" data-stagger=".08">
+        <div class="card card--dark card--hover reveal">
+          <h3 class="t-h3">Ninety-three databases, one read layer</h3>
+          <p>Each branch keeps its own on a desktop PC, and the 93 are never all up at once. A dealer
+             who buys from four branches still has to be one balance, not four &mdash; worked out
+             once, not recalculated in every screen that shows it.</p>
+        </div>
+        <div class="card card--dark card--hover reveal">
+          <h3 class="t-h3">Decided on the server</h3>
+          <p>Price and credit exposure are settled on the server, before an order is accepted &mdash;
+             not in the app that took it. A payment and its proof photograph commit together, or
+             neither is recorded.</p>
+        </div>
+        <div class="card card--dark card--hover reveal">
+          <h3 class="t-h3">A write path beside the ERP</h3>
+          <p>The ERP is around 3.4 million lines of VB.NET and still the system of record. It has
+             nowhere to put what happens in the field, so a separate path carries that &mdash; orders
+             taken in godowns with no signal, applied in whatever order the syncs land.</p>
+        </div>
+        <div class="card card--dark card--hover reveal">
+          <h3 class="t-h3">A rebuild, run in shadow</h3>
+          <p>PSS One is that ERP rebuilt, and it is a pilot. It runs against a copy of the books and
+             has never written a real branch&rsquo;s. Twenty years of records have to arrive intact,
+             and the only proof is running both until the two sets of numbers agree.</p>
+        </div>
+      </div>
+
+      <div class="principle reveal" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
+        <p class="label label--signal">The order of the work</p>
+        <p>That is one customer&rsquo;s system, and the order is the same every time:<br>
+           the records first, the screens after.</p>
+      </div>
+
+      <p class="reveal" style="margin-top:2.5rem">
+        <a class="link" href="work.html#pss">See the whole system
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
       </p>
