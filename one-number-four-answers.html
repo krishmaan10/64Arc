@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>One number. Four answers. — a build note from 64ARC</title>
-<meta name="description" content="We agreed what 90+ days overdue meant, built it, and shipped it into exactly one screen — and it was not the screen the decision-maker reads. An engineering note from building a 93-branch distributor's ecosystem.">
+<meta name="description" content="One business figure, computed four different ways in the same product, with nothing able to notice they disagreed. An engineering note on who owns a number.">
 <link rel="canonical" href="https://64arc.com/one-number-four-answers.html">
 
 <meta property="og:type" content="article">
@@ -95,11 +95,11 @@
       <span class="eyebrow">Build note</span>
       <h1 class="t-h1">One number. Four answers.</h1>
       <p class="lead">
-        We agreed what &ldquo;90+ days overdue&rdquo; meant, built it, and shipped it into exactly
-        one screen &mdash; and it was not the screen the decision-maker reads.
+        We agreed what one of the business&rsquo;s core figures meant, built it, and shipped it
+        into exactly one screen &mdash; and it was not the screen the decision-maker reads.
       </p>
       <div class="page-meta">
-        <span>August 2026</span><span>PSS</span><span>Receivables</span>
+        <span>August 2026</span><span>Build note</span><span>Reporting</span>
       </div>
     </div>
   </section>
@@ -109,7 +109,7 @@
     <div class="wrap wrap--narrow">
       <div class="prose reveal">
 
-        <p>The owner of the business told us that the overdue calculation had already been
+        <p>The owner of the business told us that the ageing calculation had already been
            discussed and finalised, and asked why the figure on his screen was still wrong. He was
            right on both counts, and that is what makes this worth writing down rather than quietly
            fixing. The definition had been agreed. We had built it. We had built it into one
@@ -118,17 +118,18 @@
 
         <p>This is our live product &mdash; reps, dealers, suppliers and a head-office desk across a
            93-branch commercial-vehicle parts distributor, sitting on top of a twenty-year-old
-           VB.NET ERP of roughly 3.4 million lines. Real receivables, in production every day.</p>
+           VB.NET ERP of roughly 3.4 million lines. In production every day.</p>
 
-        <p>When we counted, the same question &mdash; how much of what dealers owe is more than
-           ninety days overdue &mdash; had four live answers on the same product at the same time.</p>
+        <p>When we counted, one headline receivables figure &mdash; the kind every distributor
+           watches, and the one this business watches most &mdash; had four live answers on the same
+           product at the same time.</p>
 
         <p>The company ageing bar took each bill&rsquo;s age, gross, and bucketed each bill
            separately. That was the agreed definition. Beside it sat a netted variant of the same
            bar, credit notes subtracted. A third worked at dealer level, measuring days past terms
            rather than bill age. The fourth was the exceptions row on the head-office dashboard
-           &mdash; the one he actually looks at, computed separately from all three, and the
-           furthest of the four from the answer we had agreed. Roughly half of it.</p>
+           &mdash; computed separately from all three, and the furthest of the four from the
+           answer we had agreed.</p>
 
         <p>That outlier deviated three ways at once, and the deviations compounded. It aged money
            from the due date rather than the invoice date, which on normal trade terms is weeks of
@@ -145,7 +146,7 @@
            money. What reads as a process complaint was a precise and correct bug report.</p>
 
         <p>The cause was not a coding slip. A line on our own backlog read, in effect, <em>one place
-           that owns outstanding and overdue</em>. We had written it down and recognised it as
+           that owns this figure</em>. We had written it down and recognised it as
            right. We skipped it, more than once, in favour of shipping screens &mdash; because it
            would have produced no new screen of its own. That is the mistake, and the incentive
            behind it is worth naming plainly: the work that stops a number drifting is invisible on
@@ -262,7 +263,7 @@
           <figcaption><span class="scroll-hint">Scroll the diagram sideways. </span>Four formula boxes become one &mdash; and the one that is left has moved out of the screens and into the pass over the bills.</figcaption>
         </figure>
 
-        <p>The per-dealer 90+ amount and its bill count are now produced inside the same single pass
+        <p>The per-dealer figure and its bill count are now produced inside the same single pass
            over the bill list, through the same bucketing rule, as the company-level band. The
            headline bar, the exceptions row and the drill-down beneath it are no longer three
            implementations that happen to agree; they are one piece of arithmetic displayed three
@@ -273,10 +274,10 @@
            corrected the arithmetic without correcting the selection that decided which records the
            arithmetic ran over.</p>
 
-        <p>One detail worth copying: the row&rsquo;s total sums over every dealer, not only the ones
-           listed underneath it. A few carry a negative pending balance from an over-applied receipt
-           and are left out of the list &mdash; but they must stay in the total, or the row and the
-           bar drift apart again, which is the entire bug.</p>
+        <p>One detail worth copying: a total must sum over every record the definition covers, not
+           only the ones the list happens to show. Rows can be filtered out of a display for good
+           reasons and still belong in its total &mdash; and if they are dropped from both, the
+           headline and the detail drift apart again, which is the entire bug.</p>
 
         <p>There is a second mistake here, and it is the better one. The check we wrote to stop this
            recurring &mdash; a standing comparison that fires when two figures that must match do
@@ -301,12 +302,12 @@
            before it depends on it.</p>
 
         <p>The last decision is the one we would most like a sceptical reader to check us on,
-           because it is where we deliberately did <em>not</em> unify. What we display is gross.
-           What blocks an order stays net, on purpose. Moving the block onto the gross basis would
-           begin blocking dealers who were not blocked yesterday, and that is a change of credit
-           policy wearing an engineering cleanup&rsquo;s clothes. It is the owner&rsquo;s decision,
-           not ours &mdash; one variable when he wants it. Until then the two figures answer two
-           different questions, and each one says which question it answers.</p>
+           because it is where we deliberately did <em>not</em> unify. The figure a screen reports
+           and the figure a control acts on are two different questions, and we left them on
+           different bases on purpose. Collapsing them would have changed who the control applies
+           to &mdash; a policy change wearing an engineering cleanup&rsquo;s clothes. That is the
+           owner&rsquo;s call, not ours. Until he makes it, each figure states which question it
+           answers.</p>
 
         <hr>
 
