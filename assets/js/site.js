@@ -24,6 +24,10 @@
   var FORM_ENDPOINT = '';
   var CONTACT_EMAIL = 'hello@64arc.com';
 
+  // Gate JS-only controls in CSS. Set before first paint rather than in boot(),
+  // so an enhanced control never flashes in after the page has rendered.
+  document.documentElement.classList.add('js');
+
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var $  = function (s, c) { return (c || document).querySelector(s); };
   var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
@@ -320,7 +324,62 @@
   }
 
   /* ======================================================================
-     8 · SMALL UTILITIES
+     8 · MODEL PICKER (Work page)
+     Narrows the ecosystem models to the shape the visitor recognises.
+     The control only exists once JS is running — see the .js gate in CSS —
+     so with scripting off every model stays on the page.
+     ====================================================================== */
+
+  function initModelPicker() {
+    var picker = $('[data-model-picker]');
+    if (!picker) return;
+
+    var buttons = $$('.picker-btn', picker);
+    var models  = $$('.case[data-model]');
+    var status  = $('[data-picker-status]', picker);
+    if (!buttons.length || !models.length) return;
+
+    var NAMES = {
+      distribution:  'the distribution model',
+      manufacturing: 'the manufacturing model',
+      retail:        'the retail model',
+      service:       'the field-service model'
+    };
+
+    function apply(choice) {
+      var shown = 0;
+
+      models.forEach(function (el) {
+        var match = (choice === 'all' || el.dataset.model === choice);
+        if (match) {
+          el.removeAttribute('hidden');
+          shown++;
+        } else {
+          el.setAttribute('hidden', '');
+        }
+      });
+
+      buttons.forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.dataset.model === choice));
+      });
+
+      if (status) {
+        status.textContent = choice === 'all'
+          ? 'Showing all four'
+          : 'Showing ' + (NAMES[choice] || 'one model') + ' — ' + shown +
+            ' of ' + models.length;
+      }
+    }
+
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () { apply(b.dataset.model); });
+    });
+
+    apply('all');
+  }
+
+  /* ======================================================================
+     9 · SMALL UTILITIES
      ====================================================================== */
 
   function initYear() {
@@ -347,6 +406,7 @@
     initHero();
     initAiDemos();
     initForm();
+    initModelPicker();
     initYear();
     initMailLinks();
   }

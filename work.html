@@ -225,8 +225,20 @@
         </p>
       </div>
 
+      <div class="picker reveal" data-model-picker>
+        <p class="picker-q">Which looks most like your business?</p>
+        <div class="picker-set" role="group" aria-label="Show ecosystem models by business shape">
+          <button class="picker-btn" type="button" data-model="all" aria-pressed="true">All four</button>
+          <button class="picker-btn" type="button" data-model="distribution" aria-pressed="false">Distribution</button>
+          <button class="picker-btn" type="button" data-model="manufacturing" aria-pressed="false">Manufacturing</button>
+          <button class="picker-btn" type="button" data-model="retail" aria-pressed="false">Retail</button>
+          <button class="picker-btn" type="button" data-model="service" aria-pressed="false">Field service</button>
+        </div>
+        <p class="picker-status" role="status" aria-live="polite" data-picker-status></p>
+      </div>
+
       <!-- ------------------------------ 01 ------------------------------- -->
-      <article class="case reveal">
+      <article class="case reveal" data-model="distribution">
         <div class="case-head">
           <span class="sector">Model 01 — Industrial distribution</span>
           <h2>A dealer network running on phone calls, spreadsheets and an ERP nobody outside the office could reach.</h2>
@@ -273,7 +285,7 @@
       </article>
 
       <!-- ------------------------------ 02 ------------------------------- -->
-      <article class="case reveal">
+      <article class="case reveal" data-model="manufacturing">
         <div class="case-head">
           <span class="sector">Model 02 — Manufacturing</span>
           <h2>Production planned from experience, because no system could see demand and capacity at the same time.</h2>
@@ -319,7 +331,7 @@
       </article>
 
       <!-- ------------------------------ 03 ------------------------------- -->
-      <article class="case reveal">
+      <article class="case reveal" data-model="retail">
         <div class="case-head">
           <span class="sector">Model 03 — Multi-channel retail</span>
           <h2>An online store that could not be trusted to know whether an item was actually in stock.</h2>
@@ -364,7 +376,7 @@
       </article>
 
       <!-- ------------------------------ 04 ------------------------------- -->
-      <article class="case reveal">
+      <article class="case reveal" data-model="service">
         <div class="case-head">
           <span class="sector">Model 04 — Field service</span>
           <h2>Engineers dispatched by phone, with the customer's history sitting in a filing cabinet.</h2>

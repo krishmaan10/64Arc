@@ -1845,6 +1845,61 @@ a { color: inherit; }
 .contact-aside .rows > div { grid-template-columns: 1fr; gap: .5rem; }
 .contact-aside .rows h3 { font-size: 1.125rem; }
 
+/* ---- Model picker (Work page) ----
+   Progressive enhancement: with JS off every model stays visible and the
+   control is hidden, so nothing is ever unreachable. */
+.picker { display: none; margin-bottom: clamp(2rem, 1.4rem + 2vw, 3rem); }
+.js .picker { display: block; }
+
+.picker-q {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 1.125rem;
+}
+.picker-set { display: flex; flex-wrap: wrap; gap: .5rem; }
+.picker-btn {
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: .7rem 1rem;
+  border: 1px solid var(--soft-grey);
+  border-radius: var(--radius-sm);
+  background: var(--ivory-raised);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: background .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease);
+}
+.picker-btn:hover { border-color: var(--signal-line); color: var(--ink); }
+.picker-btn[aria-pressed="true"] {
+  background: var(--carbon);
+  border-color: var(--carbon);
+  color: var(--ivory);
+}
+.picker-status {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 1.125rem;
+  min-height: 1.2em;
+}
+
+/* Hidden models must really be gone, whatever display they'd otherwise take. */
+[hidden] { display: none !important; }
+.case[data-model]:not([hidden]) { animation: case-in .5s var(--ease-out) both; }
+@keyframes case-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .case[data-model]:not([hidden]) { animation: none; }
+}
+
 /* ---- Long-form prose (the engineering note) ---- */
 .prose {
   max-width: 68ch;
