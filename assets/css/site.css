@@ -2047,6 +2047,15 @@ a { color: inherit; }
 .note-figure svg { width: 100%; height: auto; min-width: 460px; }
 /* A denser diagram needs more room before its labels collide. */
 .note-figure--wide svg { min-width: 680px; }
+
+/* On a dark section the default frame is the same colour as the surface behind
+   it, so lift it and let the caption use the inverted ink. */
+.note-figure--on-dark .frame {
+  background: var(--carbon);
+  border-color: var(--carbon-line-2);
+}
+.note-figure--on-dark figcaption { color: var(--ink-inv-faint); }
+.note-figure--on-dark .scroll-hint { color: var(--signal-on-dark); }
 .note-figure figcaption {
   font-family: var(--font-mono);
   font-size: var(--t-label);
