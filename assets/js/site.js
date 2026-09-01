@@ -1,5 +1,5 @@
 /* ==========================================================================
-   64ARC — site.js
+   64ARCS — site.js
    Zero-dependency behaviour layer.
 
      · Header surface change on scroll
@@ -22,7 +22,7 @@
      email client with the message pre-composed.
      -------------------------------------------------------------------- */
   var FORM_ENDPOINT = '';
-  var CONTACT_EMAIL = 'hello@64arc.com';
+  var CONTACT_EMAIL = 'hello@64arcs.com';
 
   // Gate JS-only controls in CSS. Set before first paint rather than in boot(),
   // so an enhanced control never flashes in after the page has rendered.
@@ -390,7 +390,49 @@
   }
 
   /* ======================================================================
-     9 · PHASE RAIL (How It Works)
+     9 · REGISTER DIAL
+     Lets the reader choose how technical the wording is. The level lives on
+     <html data-level>, which ships in the HTML, so the page is already correct
+     before this runs and stays correct if it never does.
+     ====================================================================== */
+
+  var LEVEL_KEY = '64arcs:level';
+
+  function initDial() {
+    var dial = $('[data-dial]');
+    if (!dial) return;
+
+    var input = $('input[type="range"]', dial);
+    var status = $('[data-dial-status]', dial);
+    if (!input) return;
+
+    var NAMES = {
+      '1': 'Plain words, no jargon.',
+      '2': 'For someone choosing software.',
+      '3': 'Mechanisms, for someone who builds.'
+    };
+
+    function apply(level, remember) {
+      level = String(level);
+      if (!NAMES[level]) level = '2';
+      document.documentElement.setAttribute('data-level', level);
+      input.value = level;
+      input.setAttribute('aria-valuetext', NAMES[level]);
+      if (status) status.textContent = NAMES[level];
+      if (remember) {
+        try { localStorage.setItem(LEVEL_KEY, level); } catch (err) { /* private mode */ }
+      }
+    }
+
+    var saved = null;
+    try { saved = localStorage.getItem(LEVEL_KEY); } catch (err) { /* private mode */ }
+    apply(saved || document.documentElement.getAttribute('data-level') || '2', false);
+
+    input.addEventListener('input', function () { apply(input.value, true); });
+  }
+
+  /* ======================================================================
+     10 · PHASE RAIL (How It Works)
      Marks which phase you are reading. Jumps only — a sequence must never be
      filtered, so nothing here hides anything. With JS off the rail is still a
      working list of in-page links.
@@ -448,7 +490,7 @@
   }
 
   /* ======================================================================
-     10 · SMALL UTILITIES
+     11 · SMALL UTILITIES
      ====================================================================== */
 
   function initYear() {
@@ -481,6 +523,7 @@
       ['aiDemos', initAiDemos],
       ['form', initForm],
       ['pickers', initPickers],
+      ['dial', initDial],
       ['stepRail', initStepRail],
       ['year', initYear],
       ['mailLinks', initMailLinks]
@@ -488,7 +531,7 @@
       try {
         step[1]();
       } catch (err) {
-        if (window.console && console.error) console.error('64ARC: ' + step[0] + ' failed', err);
+        if (window.console && console.error) console.error('64ARCS: ' + step[0] + ' failed', err);
       }
     });
   }

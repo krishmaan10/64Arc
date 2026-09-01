@@ -2114,6 +2114,93 @@ a { color: inherit; }
 .ledger li.is-odd span { color: var(--signal-on-dark); }
 .ledger li.is-one { border-color: var(--signal); background: rgba(83,103,255,.10); }
 
+/* ---- Register dial: how technical the wording is ----
+   Level lives on <html data-level>, written into the HTML so the page reads
+   correctly with no JavaScript at all. Elements tag themselves with the levels
+   they belong to; `~=` lets one element serve several. */
+[data-lvl] { display: none; }
+html[data-level="1"] [data-lvl~="1"],
+html[data-level="2"] [data-lvl~="2"],
+html[data-level="3"] [data-lvl~="3"] { display: revert; }
+
+.dial {
+  border-top: 1px solid var(--carbon-line);
+  padding-top: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);
+  margin-top: clamp(2rem, 1.4rem + 2vw, 3rem);
+}
+.dial-q {
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-inv-faint);
+  margin-bottom: 1.25rem;
+}
+.dial-row { display: flex; align-items: center; gap: clamp(1rem, .6rem + 1.4vw, 2rem); flex-wrap: wrap; }
+
+.dial input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: clamp(160px, 26vw, 260px);
+  height: 26px;
+  background: transparent;
+  cursor: pointer;
+  flex: none;
+  margin: 0;
+}
+.dial input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--carbon-line-2);
+  border-radius: 2px;
+}
+.dial input[type="range"]::-moz-range-track {
+  height: 2px;
+  background: var(--carbon-line-2);
+  border-radius: 2px;
+}
+.dial input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  margin-top: -8px;
+  border-radius: 50%;
+  background: var(--signal);
+  border: 3px solid var(--carbon);
+  box-shadow: 0 0 0 1px var(--signal);
+}
+.dial input[type="range"]::-moz-range-thumb {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--signal);
+  border: 3px solid var(--carbon);
+  box-shadow: 0 0 0 1px var(--signal);
+}
+.dial input[type="range"]:focus-visible { outline: 2px solid var(--signal); outline-offset: 6px; }
+
+.dial-stops {
+  display: flex;
+  gap: clamp(.75rem, .4rem + 1.2vw, 1.75rem);
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: .6875rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.dial-stops span { color: var(--ink-inv-faint); transition: color .3s var(--ease); }
+html[data-level="1"] .dial-stops span:nth-child(1),
+html[data-level="2"] .dial-stops span:nth-child(2),
+html[data-level="3"] .dial-stops span:nth-child(3) { color: var(--ivory); }
+
+.dial-status {
+  margin-top: 1rem;
+  font-size: .9375rem;
+  line-height: 1.5;
+  color: var(--ink-inv-muted);
+}
+
+/* Without JS the dial cannot do anything, so do not offer it. */
+.dial { display: none; }
+html.js .dial { display: block; }
+
 /* ---- Long-form prose (the engineering note) ---- */
 .prose {
   max-width: 68ch;
@@ -2237,3 +2324,12 @@ a { color: inherit; }
 
 /* ---- Named anchor offset helper ---- */
 .anchor { scroll-margin-top: calc(var(--header-h) + 32px); }
+
+/* ---- Diagram switching, resolved last ----
+   .only-wide / .only-narrow are declared early (line ~1465), so any component
+   that sets its own `display` later at the same specificity — .eco-stack and
+   .ledger-stack both set `display: grid` — used to beat them and render the
+   mobile stack on desktop as well. Restating the switch at the end of the
+   sheet makes source order settle it the right way round. */
+@media (min-width: 861px) { .only-narrow { display: none; } }
+@media (max-width: 860px) { .only-wide  { display: none; } }
