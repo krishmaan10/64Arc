@@ -1,9 +1,9 @@
-# 64arc.com
+# 64arcs.com
 
-The 64ARC website. Plain static HTML, CSS and JavaScript — no build step, no dependencies,
+The 64ARCS website. Plain static HTML, CSS and JavaScript — no build step, no dependencies,
 no framework. What is in this repository is exactly what gets served.
 
-**Live:** <https://64arc.com>
+**Live:** <https://64arcs.com>
 
 ## Pages
 

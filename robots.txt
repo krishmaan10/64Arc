@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /README.md
 
-Sitemap: https://64arc.com/sitemap.xml
+Sitemap: https://64arcs.com/sitemap.xml
