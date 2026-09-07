@@ -426,13 +426,15 @@ a { color: inherit; }
   transition: color .45s var(--ease), opacity .3s var(--ease);
 }
 .brand:hover { opacity: .78; }
-.brand-mark { width: 26px; height: 26px; flex: none; }
-.brand-word {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.1875rem;
-  letter-spacing: -.005em;
-  line-height: 1;
+/* Approved symbol and wordmark; the two surfaces share one fixed-size slot. */
+.brand-lockup { display: grid; width: 190px; aspect-ratio: 405 / 112; }
+.brand-logo { grid-area: 1 / 1; display: block; width: 100%; height: auto; }
+.brand-logo--dark { visibility: hidden; }
+.header.is-stuck .brand-logo--light { visibility: hidden; }
+.header.is-stuck .brand-logo--dark { visibility: visible; }
+.footer .brand-lockup { width: 220px; }
+@media (max-width: 400px) {
+  .header .brand-lockup { width: 166px; }
 }
 
 .nav {
@@ -1386,7 +1388,6 @@ a { color: inherit; }
   padding-bottom: clamp(2.5rem, 1.5rem + 3vw, 4rem);
   border-bottom: 1px solid var(--carbon-line);
 }
-.footer .brand-word { font-size: 1.375rem; }
 .footer-tag {
   color: var(--ink-inv-muted);
   margin-top: 1.25rem;
