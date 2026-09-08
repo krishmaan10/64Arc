@@ -14,6 +14,7 @@ no framework. What is in this repository is exactly what gets served.
 | `how-it-works.html` | How It Works |
 | `ai-intelligence.html` | AI + Intelligence |
 | `work.html` | Work |
+| `products.html` | Products |
 | `about.html` | About |
 | `contact.html` | Contact |
 | `privacy.html` | Privacy |
@@ -66,7 +67,7 @@ and a `<noscript>` block in each page keeps all content visible without JavaScri
 
 Each page is a complete, readable HTML document. Header, mobile menu and footer markup is
 repeated in every page — the trade for having no build step. **Change a nav item or footer
-link in all nine files** (find-and-replace across `*.html`).
+link in all HTML page files** (find-and-replace across `*.html`).
 
 ## Contact form
 
