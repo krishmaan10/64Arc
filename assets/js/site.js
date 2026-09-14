@@ -277,6 +277,17 @@
     var status = $('.form-status', form);
     var submit = $('[type="submit"]', form);
 
+    // A product card can hand its name across: contact.html?product=PathWay%20AI
+    var product = '';
+    try { product = new URLSearchParams(window.location.search).get('product') || ''; } catch (err) { product = ''; }
+    product = product.replace(/[^\w .+-]/g, '').slice(0, 40).trim();
+    var productField = $('[name="product"]', form);
+    var messageField = $('[name="message"]', form);
+    if (product) {
+      if (productField) productField.value = product;
+      if (messageField && !messageField.value) messageField.value = 'I would like to ask about a pilot of ' + product + '.';
+    }
+
     function say(message, isError) {
       if (!status) return;
       status.textContent = message;
@@ -296,7 +307,7 @@
         data.forEach(function (value, key) {
           if (String(value).trim()) lines.push(key + ': ' + value);
         });
-        var subject = 'Architecture conversation — ' + (data.get('company') || data.get('name') || 'new enquiry');
+        var subject = (product ? 'Pilot enquiry — ' + product : 'Architecture conversation') + ' — ' + (data.get('company') || data.get('name') || 'new enquiry');
         window.location.href = 'mailto:' + CONTACT_EMAIL +
           '?subject=' + encodeURIComponent(subject) +
           '&body=' + encodeURIComponent(lines.join('\n'));
