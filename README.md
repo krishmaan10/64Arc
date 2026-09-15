@@ -19,6 +19,8 @@ no framework. What is in this repository is exactly what gets served.
 | `contact.html` | Contact |
 | `privacy.html` | Privacy |
 | `404.html` | Not found |
+| `pathway/` | PathWay AI browser pilot. Generated: `npm run build:pilot` in the product repository, then copy `dist/pilot/` here. Do not edit in place. |
+| `64griddle/` | 64Griddle browser pilot: the product's playground page and the scripts it loads, copied from the product repository. No downloads are published. |
 
 Shared assets live in `assets/` — `css/site.css`, `js/site.js`, `img/`.
 

@@ -2365,24 +2365,8 @@ html.js .dial { display: block; }
   font-size: var(--t-body);
   line-height: 1.7;
 }
-.product-grid { display: grid; gap: 2rem; }
-.product-facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1.5rem 2.5rem;
-  margin: 0 0 2.25rem;
-}
-.product-facts h3 {
-  margin: 0 0 .6rem;
-  font-family: var(--font-mono);
-  font-size: .75rem;
-  font-weight: 500;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--signal-ink);
-}
-.product-facts ul { margin: 0; padding-left: 1.1rem; color: var(--ink-muted); font-size: .95rem; line-height: 1.6; }
-.product-facts li + li { margin-top: .45rem; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+.product-card .product-description { margin-bottom: 1.5rem; }
 .mobile-nav a.m-link[aria-current="page"] { color: var(--signal-on-dark); }
 .footer-nav a[aria-current="page"] { text-decoration: underline; text-underline-offset: .25em; }
 
