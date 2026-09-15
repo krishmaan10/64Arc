@@ -19,8 +19,8 @@ no framework. What is in this repository is exactly what gets served.
 | `contact.html` | Contact |
 | `privacy.html` | Privacy |
 | `404.html` | Not found |
-| `pathway/` | PathWay AI browser pilot. Generated: `npm run build:pilot` in the product repository, then copy `dist/pilot/` here. Do not edit in place. |
-| `64griddle/` | 64Griddle browser pilot: the product's playground page and the scripts it loads, copied from the product repository. No downloads are published. |
+| `pathway/` | PathWay AI browser pilot. Written by the product repository's GitHub Actions workflow on every push to its main branch. Never edit by hand; it is replaced on each publish. |
+| `64griddle/` | 64Griddle browser pilot: the product's playground page and the scripts it loads, written by that repository's workflow the same way. No downloads are published. |
 
 Shared assets live in `assets/` — `css/site.css`, `js/site.js`, `img/`.
 
@@ -37,6 +37,11 @@ Then open <http://localhost:8000>.
 Deployed to GitHub Pages from `main` (branch source, root path). Pushing to `main`
 republishes automatically — Pages just serves the files. `.nojekyll` disables Jekyll
 processing; `CNAME` holds the custom domain.
+
+The two pilot folders are not written here. Each product repository runs its tests, builds its pilot and
+pushes the result into this repository with a write deploy key (`scripts/publish-pilot.sh` in each product
+repository). A change to a product reaches 64arcs.com with no step on anyone's machine; a failing test stops
+the publish.
 
 ## Design system
 

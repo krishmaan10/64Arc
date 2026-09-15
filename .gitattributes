@@ -1,0 +1,3 @@
+# Pilot folders are build outputs published by the product repositories' CI; collapse them in diffs.
+pathway/** linguist-generated=true
+64griddle/** linguist-generated=true
