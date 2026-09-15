@@ -168,8 +168,11 @@ const MODES = {
     needsStudentText: true,
     usesAssignmentBrief: false,
     maxNovelty: 0.5,
-    // Alternatives are the same thing said differently, several times over.
-    maxGrowth: 3.5,
+    // Each alternative is the same thing said differently, so each is measured on its own against the
+    // passage: half its words may be new, and it may be half again as long. Three of them together would
+    // otherwise look like one long piece of new writing.
+    maxGrowth: 1.5,
+    perAlternative: true,
     returnsMarkedChanges: false,
     forbidsArtifactShape: true,
   },
@@ -493,6 +496,7 @@ const SUPPORT = [
   /\b(?:end it all|end my life|want to die|wanna die|better off dead|not wake up|dont want to (?:be here|live|be alive|wake up)|don'?t want to (?:be here|live|be alive|wake up))\b/i,
   /\b(?:beat|hit|hurt|thrash) me\b/i,
   /\b(?:maar (?:denge|dega|degi|dalenge)|marenge mujhe)\b/i,
+  /\b(?:marna chahta|marna chahti|mar jaana chahta|mar jaana chahti|jeena nahi (?:hai|chahta|chahti)|zindagi khatam|khud ko (?:hurt|nuksaan))\b/i,
   /\b(?:better off without me|happier if i was gone|nobody would (?:notice|care) if i)\b/i,
   /\b(?:panic attack|cant breathe|can'?t breathe)\b/i,
 ];
@@ -796,7 +800,11 @@ function decide({ message, modeId, assignment, studentText = '', classified, his
 
   // The request fits a different mode better. This is a redirect, not a refusal: the student is asking
   // for something the assistant is happy to do, in the wrong place.
-  const suggested = classified.suggestedMode;
+  // When the reader is reasonably sure the request fits the mode the student is already in, a stray
+  // keyword ("my source keeps using this word") does not send them somewhere else.
+  const learned = classified.learned;
+  const fitsHere = Boolean(learned && learned.decision === 'allow' && BEHAVIOURS[learned.label].mode === modeId && learned.confidence >= 0.45);
+  const suggested = fitsHere ? null : classified.suggestedMode;
   if (suggested && suggested !== modeId && allowed.includes(suggested)) {
     const target = mode(suggested);
     if (!target.needsStudentText || hasText)
@@ -833,6 +841,127 @@ function decide({ message, modeId, assignment, studentText = '', classified, his
 module.exports = { decide, REFUSAL, SUPPORT, OFFER, offers, ASSENT, isRepeat, recentRefusal };
 
 };
+modules["exemplars"] = function (module, exports, require, __dirname, __filename) {
+// What a strong reply looks like, in each mode. Short, concrete, and inside the mode.
+//
+// These do three jobs. They are shown to the model as the standard to meet; they are the fixed replies the
+// preview and the browser pilot give, so a visitor sees the product's standard rather than a placeholder;
+// and every one of them is checked by tests against lib/response-check.js, so the standard we set is one the
+// boundary lets through. A reply that helps a student for the next ten minutes is the aim: something to do,
+// not something to admire.
+
+'use strict';
+
+const ASSIGNMENT = {
+  brief: 'Write 500 words on whether homework helps learning. Use two sources.',
+  skills: ['argument', 'use of evidence'],
+};
+
+const EXEMPLARS = {
+  understand: {
+    message: 'what does this task actually want from me',
+    reply: [
+      'You are being asked to take a position, not to describe homework. "Whether homework helps learning" is a question with two honest answers, and the marks are for how well you argue yours.',
+      '',
+      'What a complete answer needs:',
+      '• A clear position in your first paragraph, in one sentence you could say out loud.',
+      '• Two sources used inside your argument, not listed at the end. "Cooper (2006) found…, which supports…" is using a source; "Sources: Cooper" is not.',
+      '• At least one paragraph that takes the other side seriously and says why your position still holds.',
+      '• 500 words, so about four paragraphs. Under 450 or over 550 will read as not finished or not edited.',
+      '',
+      'Your teacher is assessing two things: argument (does every paragraph push your position forward?) and use of evidence (do your sources actually support the point you attach them to?).',
+      '',
+      'Which do you find harder right now: deciding your position, or knowing what to do with the sources?',
+    ].join('\n'),
+  },
+  plan: {
+    message: 'i have this evening and tomorrow evening, how do i get this done',
+    reply: [
+      'Two evenings is enough if the first one is reading and deciding, and the second one is writing. Split it like this:',
+      '',
+      '1. Tonight, 20 minutes: read the two sources you will use and write one line for each: what it found, and which side it helps.',
+      '2. Tonight, 10 minutes: decide your position. Write it as one sentence at the top of an empty page. If you cannot, read the sources again; the answer is usually there.',
+      '3. Tonight, 15 minutes: plan four paragraphs as one line each: your position; your strongest reason with a source; the other side and why you still hold; your conclusion.',
+      '4. Tomorrow, 40 minutes: write the four paragraphs straight through from the plan. Do not edit while writing.',
+      '5. Tomorrow, 15 minutes: read it aloud once, fix what you trip on, check the word count and that both sources appear inside paragraphs.',
+      '',
+      'That is about an hour and forty minutes in total. Which of tonight\'s three steps do you want to start with?',
+    ].join('\n'),
+  },
+  question: {
+    message: 'i think homework helps because it makes you practise, is that a good argument',
+    reply: [
+      'It is a real argument, and a common one, which means the other side has an answer ready. Let us test it.',
+      '',
+      'When you say homework makes you practise: practise what, exactly? Think of the last piece of homework you did. Was it practising something you had already understood in class, or trying to understand it for the first time at the kitchen table?',
+      '',
+      'Answer that, and then tell me: would your argument still hold for a Year 3 pupil doing an hour a night?',
+    ].join('\n'),
+  },
+  improve: {
+    message: 'can you check the grammar in this',
+    studentText: 'I think homework is helpfull because it help you remember what you done in class. But some people says it is to much and they get stressed about it.',
+    reply: [
+      '```',
+      'I think homework is helpful because it helps you remember what you did in class. But some people say it is too much, and they get stressed about it.',
+      '```',
+      '',
+      '1. "helpfull" → "helpful": one l at the end.',
+      '2. "it help" → "it helps": the verb needs an s after "it".',
+      '3. "what you done" → "what you did": "done" needs a helper verb ("have done"), so use the simple past here.',
+      '4. "people says" → "people say": "people" is plural.',
+      '5. "to much" → "too much": "too" is the one that means "excessively".',
+      '6. Added a comma before "and they get stressed": two full clauses joined by "and" usually take one.',
+      '',
+      'Your ideas and your order are untouched. The second sentence is a good place for your first source, when you are ready.',
+    ].join('\n'),
+  },
+  rephrase: {
+    message: 'is there another way to say this, it sounds clunky',
+    studentText: 'Homework is important because it helps students remember things they learned in class.',
+    reply: [
+      '```',
+      'Homework matters because it helps students remember what they learned in class.',
+      '```',
+      'Swaps "is important" for "matters" and "things they learned" for "what they learned". Tighter, same meaning.',
+      '',
+      '```',
+      'Because it helps students remember what they learned in class, homework is important.',
+      '```',
+      'Same words, reason first. Useful if the sentence before it ended on the idea of remembering.',
+      '',
+      '```',
+      'Homework helps students remember what they learned in class, and that is why it is important.',
+      '```',
+      'Two short clauses instead of one long one. Reads well aloud.',
+      '',
+      'All three keep your claim exactly; none adds a reason you did not write. Pick the one that fits the sentence before it.',
+    ].join('\n'),
+  },
+  sources: {
+    message: 'where can i find reliable sources about whether homework helps',
+    reply: [
+      'These are real, findable, and used by people who study this for a living. Each line says what it supports, so you cite it for that and not for something it does not say.',
+      '',
+      '• Cooper, H., Robinson, J. C. & Patall, E. A. (2006). Does homework improve academic achievement? A synthesis of research, 1987–2003. Review of Educational Research, 76(1), 1–62. ERIC: https://eric.ed.gov/?id=EJ751143',
+      '  What it gives you: a positive link between homework and achievement for secondary students, and a much weaker one for younger children. The standard reference on both sides.',
+      '• Education Endowment Foundation. Homework. Teaching and Learning Toolkit. https://educationendowmentfoundation.org.uk/education-evidence/teaching-learning-toolkit/homework',
+      '  What it gives you: an evidence summary written for teachers; says the quality and purpose of homework matter more than the amount. Free to read.',
+      '• Hattie, J. (2009). Visible Learning. Routledge. Homework has an average effect size of 0.29 across studies.',
+      '  What it gives you: "some effect, smaller than people assume", and the point that the effect differs by age.',
+      '• OECD (2014). Does homework perpetuate inequities in education? PISA in Focus, No. 46.',
+      '  What it gives you: the other side: pupils from wealthier homes do more homework and get more help with it, so homework can widen gaps.',
+      '',
+      'To find more: search Google Scholar or your school library for "homework achievement meta-analysis". Prefer a study or a review over a news story about one; if a news article cites research, find the original.',
+      '',
+      'Which side are you arguing? I can tell you which two of these carry that side best.',
+    ].join('\n'),
+  },
+};
+
+module.exports = { EXEMPLARS, ASSIGNMENT };
+
+};
 modules["prompt"] = function (module, exports, require, __dirname, __filename) {
 // The request sent to the model for one allowed turn.
 //
@@ -840,43 +969,66 @@ modules["prompt"] = function (module, exports, require, __dirname, __filename) {
 // mode is for and nothing about "rules", because a paragraph telling a model to refuse things is exactly
 // what a student's next message will try to undo. The model is given one job and only the material that
 // job needs; what it sends back is checked before anyone sees it.
+//
+// Within that job the prompt asks for a lot. A bounded assistant that is also thin is not worth a
+// school's trouble: the standard is that a student leaves every turn with something concrete to do in
+// the next ten minutes. Each mode gets a description of what a strong reply contains and an exemplar
+// (lib/exemplars.js) that meets it and passes the response check.
 
 'use strict';
 
 const { mode } = require('./modes.js');
+const { EXEMPLARS } = require('./exemplars.js');
 
 const INSTRUCTION = {
   understand: [
     'A student is working on the assignment below. Explain what it is asking them to do, in plain words.',
-    'Name what a complete answer has to contain, and what is being assessed.',
+    'Say what kind of piece it is (an argument, a description, a comparison, an evaluation) and what the',
+    'question words mean in practice. Name what a complete answer has to contain, as a short list, and what',
+    'is being assessed and how that shows up in the writing. Point out the most common misreading of a task',
+    'like this. Give practical scale: how many paragraphs, roughly, for the word count.',
     'Do not answer the assignment, and do not write any sentence that could be pasted into it.',
+    'End with one question that helps the student decide what to do first.',
   ],
   plan: [
     'A student is working on the assignment below. Break it into steps they can start on, in order,',
-    'with a rough sense of how long each takes. Steps only: do not do any of them.',
+    'with a rough sense of how long each takes. Fit the plan to the time they have said they have.',
+    'Steps are actions with a visible result (a list written, a position decided, a paragraph drafted),',
+    'not advice. Put reading and deciding before writing, and reading aloud after. Steps only: do not do any',
+    'of them. End by asking which step they will start with, or what time they actually have.',
   ],
   question: [
     'A student is working on the assignment below. Ask them questions, one or two at a time, that show',
-    'you whether they understand it. React to what they say. Do not supply the answers; if they are',
-    'stuck, ask a smaller question instead.',
+    'you whether they understand it and that push their thinking forward. React to what they say: name what',
+    'is strong in their reasoning, then ask the question that tests its weakest point. Prefer a question',
+    'about a concrete case over an abstract one. If they are stuck, ask a smaller question instead of',
+    'supplying the answer. Do not supply the answer, an argument they could use, or a sentence for their essay.',
   ],
   improve: [
-    'The text below is a student’s own writing. Correct grammar, spelling, punctuation and clarity,',
+    'The text below is a student\'s own writing. Correct grammar, spelling, punctuation and clarity,',
     'and adjust tone only if asked. Work sentence by sentence on what is there.',
     'Do not add ideas, arguments, facts, examples or new sentences.',
     'Reply in exactly this shape: a fenced code block containing only the corrected version of their',
-    'text, then a numbered list of the changes and why each one was made.',
+    'text, then a numbered list of the changes and why each one was made, in words a school student can',
+    'use next time. Keep their voice; do not make it sound like yours.',
   ],
   rephrase: [
-    'The passage below is a student’s own writing. Offer two or three other ways to say the same thing,',
+    'The passage below is a student\'s own writing. Offer two or three other ways to say the same thing,',
     'keeping their meaning and their level of vocabulary.',
     'Do not add anything the passage does not already say.',
-    'Put each alternative in its own fenced code block, and say underneath what is different about it.',
+    'Put each alternative in its own fenced code block, and say underneath what is different about it and',
+    'when that version would be the better choice.',
   ],
   sources: [
     'A student is working on the assignment below. Suggest reliable sources they could read and cite.',
-    'For each, give a citation and one sentence on what it supports. Prefer things a school library or',
-    'an open archive would have. Do not write any prose for their submission.',
+    'Give three to five, each with a full citation (author, year, title, where published, and a link when',
+    'you are confident of it) and one or two sentences on what it supports and its limits, so the student',
+    'cites it for what it actually says. Include at least one source for each side of the question when',
+    'there are sides. Prefer research reviews, official statistics and school-library material over',
+    'commentary. Only cite sources you are confident exist; if you are not sure of a detail, say so and give',
+    'the search that would find it. Then say how to find more: search terms, and where to search. Do not',
+    'summarise a source into prose that could be pasted, and do not write any prose for their submission.',
+    'End with a question about which side or which source they want to work with.',
   ],
 };
 
@@ -884,18 +1036,23 @@ const INSTRUCTION = {
 function buildPrompt({ modeId, material, identity }) {
   const current = mode(modeId);
   if (!current) throw new Error('unknown mode: ' + modeId);
+  const exemplar = EXEMPLARS[modeId];
   const system = [
     `You are ${identity.NAME}, helping a school student with their own work.`,
     `Your job right now is one thing: ${current.purpose}`,
     ...INSTRUCTION[modeId],
     'Write for a school student: short sentences, no jargon, no preamble about what you are about to do.',
-  ].join(' ');
+    'Be concrete and substantive; the student should leave with something to do in the next ten minutes.',
+    exemplar ? `Here is the standard to meet. A student asked: "${exemplar.message}"${exemplar.studentText ? ` about this text of theirs: "${exemplar.studentText}"` : ''}. A strong reply:\n\n${exemplar.reply}` : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const parts = [];
   if (material.brief) parts.push(`The assignment:\n${material.brief}`);
   if (material.skills && material.skills.length)
     parts.push(`What the teacher is assessing: ${material.skills.join(', ')}.`);
-  if (material.studentText) parts.push(`The student’s own writing:\n${material.studentText}`);
+  if (material.studentText) parts.push(`The student's own writing:\n${material.studentText}`);
   parts.push(`The student asked:\n${material.message}`);
   return { system, user: parts.join('\n\n') };
 }
@@ -943,11 +1100,16 @@ function novelty(reply, studentText) {
   return (replyWords.length - shared) / replyWords.length;
 }
 
+/** The fenced blocks of a reply: the text a writing mode is offering as the student's own. */
+function proposedBlocks(reply) {
+  return [...String(reply || '').matchAll(/```[^\n]*\n([\s\S]*?)```/g)].map((m) => m[1].trim()).filter(Boolean);
+}
+
 /** The text a writing mode is offering as the student's own, which is what the ceiling applies to. The
  * explanation around it is teaching, and teaching is new words by definition. Fenced blocks are asked
  * for in the prompt; when none came back, the whole reply is measured, which is the safe direction. */
 function proposedText(reply) {
-  const blocks = [...String(reply || '').matchAll(/```[^\n]*\n([\s\S]*?)```/g)].map((m) => m[1].trim());
+  const blocks = proposedBlocks(reply);
   return blocks.length ? blocks.join('\n\n') : String(reply || '');
 }
 
@@ -988,11 +1150,14 @@ function checkResponse({ reply, modeId, studentText = '' }) {
   if (!current) return { ok: false, novelty: 1, problems: ['unknown mode'] };
   if (!text.trim()) return { ok: false, novelty: 0, problems: ['the model returned nothing'] };
 
-  const offered = current.needsStudentText ? proposedText(text) : text;
-  const share = current.needsStudentText ? novelty(offered, studentText) : 1;
+  // A mode that offers alternatives is measured one alternative at a time; a mode that returns one
+  // corrected text is measured on the whole of what it offers.
+  const pieces = current.needsStudentText ? (current.perAlternative ? proposedBlocks(text) : []) : [];
+  if (current.needsStudentText && !pieces.length) pieces.push(proposedText(text));
+  const share = current.needsStudentText ? Math.max(...pieces.map((piece) => novelty(piece, studentText))) : 1;
 
   // A transformation that is mostly new words is not a transformation.
-  if (current.needsStudentText && share > current.maxNovelty && words(offered).length > COMMON_WORDS)
+  if (current.needsStudentText && share > current.maxNovelty && Math.max(...pieces.map((piece) => words(piece).length)) > COMMON_WORDS)
     problems.push(
       `the reply is ${Math.round(share * 100)}% words the student did not write, above the ${Math.round(
         current.maxNovelty * 100,
@@ -1001,7 +1166,7 @@ function checkResponse({ reply, modeId, studentText = '' }) {
 
   // A mode that returns the student's own text may not return much more of it than it was given.
   if (current.maxGrowth && words(studentText).length) {
-    const growth = words(offered).length / words(studentText).length;
+    const growth = Math.max(...pieces.map((piece) => words(piece).length)) / words(studentText).length;
     if (growth > current.maxGrowth)
       problems.push(
         `the reply hands back ${Math.round(growth * 100)}% of the length it was given, above the ${Math.round(
@@ -1025,7 +1190,7 @@ function checkResponse({ reply, modeId, studentText = '' }) {
   return { ok: problems.length === 0, novelty: share, problems };
 }
 
-module.exports = { checkResponse, novelty, looksLikeSubmission, proposedText, words };
+module.exports = { checkResponse, novelty, looksLikeSubmission, proposedText, proposedBlocks, words };
 
 };
 modules["observations"] = function (module, exports, require, __dirname, __filename) {
@@ -1383,12 +1548,9 @@ const SOURCES = [
   { id: 'eef', title: 'Homework', publisher: 'Education Endowment Foundation', type: 'Evidence overview', url: 'https://educationendowmentfoundation.org.uk/education-evidence/teaching-learning-toolkit/homework', note: 'Compare findings across age groups and examine the evidence limitations.', citation: 'Education Endowment Foundation. (n.d.). Homework. Teaching and Learning Toolkit.' },
   { id: 'cooper', title: 'Does homework improve academic achievement?', publisher: 'Cooper, Robinson & Patall · 2006', type: 'Research synthesis', url: 'https://eric.ed.gov/?id=EJ751143', note: 'Read the abstract and consider what a research synthesis can tell you. Full text may require library access.', citation: 'Cooper, H., Robinson, J. C., & Patall, E. A. (2006). Does homework improve academic achievement? A synthesis of research, 1987–2003. Review of Educational Research, 76(1), 1–62.' },
 ];
-const REPLIES = {
-  understand: 'You are being asked to take a position on whether homework helps learning.\n\n• Write 500 words in your own voice.\n• Use two sources to support your reasoning.\n• Your teacher is assessing your argument and use of evidence.\n\nWhat part of the task would you like to think through first?',
-  plan: '1. Read the task and identify what you need to hand in.\n2. Choose your own position and look for two sources.\n3. Write a first draft using your own reasoning.\n4. Check your evidence, word count and citations.\n\nHow much time can you set aside for each step?',
-  question: 'What is your current position on the question?\n\nWhich evidence would help you test that position?\n\nWhat might someone who disagrees ask you?',
-  sources: 'Start with these curated references, then read and evaluate the evidence yourself.\n\n• Education Endowment Foundation, Homework: https://educationendowmentfoundation.org.uk/education-evidence/teaching-learning-toolkit/homework\n• Cooper, Robinson & Patall (2006), research synthesis: https://eric.ed.gov/?id=EJ751143\n\nWhat does each source help you investigate? These are fixed reading suggestions, not a live search.',
-};
+// The fixed replies are the exemplars: the standard a school would see, and the standard the tests hold.
+const { EXEMPLARS } = require('./exemplars.js');
+const REPLIES = Object.fromEntries(['understand', 'plan', 'question', 'sources'].map((id) => [id, EXEMPLARS[id].reply]));
 const ROUTES = ['/api/draft', '/api/policy', '/api/turn', '/api/review', '/api/edit', '/api/source', '/api/checklist'];
 const SESSION = 'demo';
 
