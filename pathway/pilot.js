@@ -401,12 +401,32 @@ const ARTIFACT =
 const PRODUCE_VERB =
   '(?:write|draft|compose|create|make|produce|generate|build|develop|do|complete|finish|deliver|give me|hand me|send me|provide|prepare|construct|formulate|craft)';
 
+// Several of these words are adjectives or nouns as often as they are verbs, and a determiner in front is
+// what marks the difference: "a complete answer" and "the finished report" describe a thing, while
+// "complete the answer" asks for one. Without this, "what does a complete answer need to have" was refused
+// as a request for the work.
+const NOT_A_VERB_AFTER = /\b(?:a|an|the|this|that|any|each|every|one|no|more|most|less|good|better|best|full)\s+$/i;
+
+// What may sit between the production verb and the artifact. A preposition starts a new phrase, and an
+// artifact on the far side of one is not what the verb acts on: in "give me a citation for a study on
+// homework" the verb hands over a citation, and "homework" only says which homework the study is about.
+// Without this, that sentence and "make me a checklist for this assignment" were refused as requests for
+// the work, which are two of the things a research assistant is most often asked for.
+const GAP = '(?:(?!\\b(?:for|on|about|in|from|with|regarding|concerning|based on|relating to)\\b)[^.?!\\n]){0,40}';
+
+// "Make my paragraph clearer" asks for a transformation of what the student wrote; "make my paragraph
+// longer" asks for more of it. The artifact and the verb are identical and the adjective is the whole
+// difference, so the words that mean "the same thing, better expressed" are listed and the words that mean
+// "more of it" are deliberately absent.
+const RESULTATIVE_TRANSFORM =
+  /\b(?:clearer|clear|better|simpler|simple|cleaner|neater|tidier|sharper|smoother|stronger|tighter|concise|readable|easier to (?:read|follow|understand)|flow better|sound better|less (?:wordy|repetitive|formal|informal|clunky))\b/i;
+
 const PATTERNS = [
   // "write my essay", "do my homework", "complete the assignment for me"
   {
     signal: 'produce',
     why: 'asks for the work itself',
-    test: new RegExp(`\\b${PRODUCE_VERB}\\b[^.?!\\n]{0,40}\\b${ARTIFACT}\\b`, 'i'),
+    test: new RegExp(`\\b${PRODUCE_VERB}\\b${GAP}\\b${ARTIFACT}\\b`, 'i'),
   },
   // "can you do question 3", "solve problem 2", "answer number 4"
   {
@@ -510,6 +530,31 @@ const CONFIDENCE = { refuse: 0.55, decline: 0.6, support: 0.5, route: 0.45, pref
 // and the record should say so; the refusal is the same either way.
 const PART = /\b(?:intro|introduction|conclusion|paragraphs?|abstract|thesis|hook|opening|ending|topic sentences?|body)\b/i;
 
+// "Do I write in paragraphs or bullets?" is a question about what the task requires. "Write a paragraph"
+// is a request for the work. The keyword patterns cannot tell them apart, because both contain a production
+// verb next to an artifact word, and they were refusing the first: a student asking how to present their own
+// work was told the assistant would not write more of the piece.
+//
+// The shape that separates them is who the verb is aimed at. "do i", "should we", "am i meant to" ask
+// whether the student should do something; "can you write" and a bare "write" ask the assistant to. So a
+// self-directed requirement question suppresses the pattern's produce and extend signals, and nothing else:
+// an override or an attempt to hide where writing came from is still caught here, the learned reader still
+// reads the message and still adds a refusal when it reads one, and the mode material and the response check
+// are untouched. This hands a judgement the patterns are bad at to the layer that is good at it.
+// Any question about what the student themselves should do: an interrogative, then "i" or "we" close by.
+// "how do i cite a website in my essay", "where do i find sources on homework", "do i write in paragraphs".
+// Asking the assistant to act uses "you", or no pronoun at all, so neither is caught here.
+const ASKS_WHAT_IS_REQUIRED =
+  /\b(?:how|where|when|what|which|whats|why|whether|do|does|should|must|shall|can|could|would|am|are|is it ok(?:ay)? if)\b[^.?!\n]{0,24}\b(?:i|we|my|our)\b/i;
+
+// ... unless the same message also contains a plain imperative ask: "do i need a title, and write my intro".
+const IMPERATIVE_ASK = /(?:^|[.?!;\n]\s*|\b(?:and|also|then|plus)\s+)(?:please\s+|plz\s+|just\s+|now\s+)?(?:write|do|finish|complete|make|generate|draft)\s+(?:me\s+|my\s+|the\s+|a\s+|an\s+|all\s+|this\s+|that\s+|it\b)/i;
+
+/** Whether the message is a student asking what the task requires of them, rather than asking for it done. */
+function asksWhatIsRequired(text) {
+  return ASKS_WHAT_IS_REQUIRED.test(text) && !IMPERATIVE_ASK.test(text);
+}
+
 /** Words of four or more letters that carry meaning, for the brief-overlap rule. */
 function contentWords(text) {
   return new Set((String(text || '').toLowerCase().match(/[\p{L}]{4,}/gu) || []).filter((w) => !STOP.has(w)));
@@ -540,8 +585,21 @@ function classify(message, { assignment } = {}) {
   const add = (signal, why, source) => {
     if (!signals.some((s) => s.signal === signal && s.why === why)) signals.push({ signal, why, source });
   };
-  for (const pattern of PATTERNS)
-    if (pattern.test.test(text)) add(pattern.signal === 'produce' && PART.test(text) ? 'extend' : pattern.signal, pattern.why, 'pattern');
+  const requirementQuestion = asksWhatIsRequired(text);
+  for (const pattern of PATTERNS) {
+    const found = pattern.test.exec(text);
+    if (!found) continue;
+    const signal = pattern.signal === 'produce' && PART.test(text) ? 'extend' : pattern.signal;
+    if (signal === 'produce' || signal === 'extend') {
+      // A question about what the task requires is not a request for the work, whatever verbs it contains.
+      if (requirementQuestion) continue;
+      // Nor is a production word that a determiner has turned into an adjective or a noun.
+      if (NOT_A_VERB_AFTER.test(text.slice(0, found.index))) continue;
+      // Nor is "make this clearer", which names the student's own text and asks for it said better.
+      if (RESULTATIVE_TRANSFORM.test(text)) continue;
+    }
+    add(signal, pattern.why, 'pattern');
+  }
 
   // The learned reading. Always made, always recorded, acted on only above the stated confidence.
   const learned = read(text);
@@ -585,7 +643,7 @@ function classify(message, { assignment } = {}) {
   };
 }
 
-module.exports = { classify, PATTERNS, INTENT, SUPPORT, CONFIDENCE, LEARNED_SIGNAL, briefOverlap };
+module.exports = { classify, PATTERNS, INTENT, SUPPORT, CONFIDENCE, LEARNED_SIGNAL, briefOverlap, asksWhatIsRequired };
 
 };
 modules["boundary"] = function (module, exports, require, __dirname, __filename) {
