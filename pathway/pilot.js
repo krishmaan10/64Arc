@@ -571,6 +571,35 @@ function briefOverlap(message, brief) {
   return shared / wanted.size;
 }
 
+/** Content words in order, for finding a run of the brief rather than a bag of its words. */
+function contentSequence(text) {
+  return (String(text || '').toLowerCase().match(/[\p{L}]{4,}/gu) || []).filter((w) => !STOP.has(w));
+}
+
+/** The longest run of the brief's words that appears, in order and unbroken, in the message. A student who
+ * pastes the assignment carries its phrasing with it; a student asking about the topic carries only its
+ * nouns. "whether homework helps learning" is a run of four; "sources about whether homework helps" shares
+ * four words with the brief but runs only three of them together. */
+function longestSharedRun(message, brief) {
+  const a = contentSequence(message);
+  const b = contentSequence(brief);
+  let best = 0;
+  const row = new Array(b.length + 1).fill(0);
+  for (let i = 1; i <= a.length; i++) {
+    let prevDiagonal = 0;
+    for (let j = 1; j <= b.length; j++) {
+      const previous = row[j];
+      row[j] = a[i - 1] === b[j - 1] ? prevDiagonal + 1 : 0;
+      if (row[j] > best) best = row[j];
+      prevDiagonal = previous;
+    }
+  }
+  return best;
+}
+
+// How much of the brief, unbroken, marks a message as the assignment carried back rather than asked about.
+const PASTED_RUN = 5;
+
 /**
  * Read a student's message. Returns the production signals found, the helping intent it resembles, and the
  * learned reading. Nothing here decides anything; `boundary.js` does that with the assignment's terms in hand.
@@ -606,9 +635,21 @@ function classify(message, { assignment } = {}) {
   const confident = (family) => learned.decision === family && learned.confidence >= CONFIDENCE[family];
   if (confident('refuse')) add(LEARNED_SIGNAL[learned.label], `reads as: ${BEHAVIOURS[learned.label].name.toLowerCase()}`, 'reader');
 
-  // The brief, pasted back, is a request for the work whatever else the message says.
+  // The brief, carried back, is a request for the work whatever else the message says. Carried back means
+  // its phrasing, not its subject: a student researching homework will use the word "homework", and an
+  // earlier version of this rule refused "where can i find reliable sources about whether homework helps"
+  // for sharing four of the brief's five content words. A run of the brief's own wording is the signal, and
+  // a message that merely shares its vocabulary has to also not be a question the student is asking.
+  //
+  // Sharing the brief's vocabulary is not evidence of anything. The rule counted that at first, and refused
+  // "i need two sources about whether homework helps learning" and "quiz me on whether homework helps
+  // learning" for using the words the assignment is about, which is every honest question a student has.
+  // Only an unbroken run of the brief's own wording counts now. A reworded paste is no longer the brief's
+  // phrasing, and catching it is the learned reader's job, with the mode material and the response check
+  // behind it; this rule stays narrow enough to be explainable to a student who asks why.
   const overlap = assignment ? briefOverlap(text, assignment.brief) : 0;
-  if (overlap >= 0.75) add('produce', 'is the assignment brief itself', 'brief');
+  const run = assignment ? longestSharedRun(text, assignment.brief) : 0;
+  if (run >= PASTED_RUN) add('produce', 'is the assignment brief itself', 'brief');
 
   const supportFloor = SUPPORT.some((p) => p.test(text));
   const support = supportFloor
@@ -643,7 +684,7 @@ function classify(message, { assignment } = {}) {
   };
 }
 
-module.exports = { classify, PATTERNS, INTENT, SUPPORT, CONFIDENCE, LEARNED_SIGNAL, briefOverlap, asksWhatIsRequired };
+module.exports = { classify, PATTERNS, INTENT, SUPPORT, CONFIDENCE, LEARNED_SIGNAL, briefOverlap, longestSharedRun, asksWhatIsRequired, PASTED_RUN };
 
 };
 modules["boundary"] = function (module, exports, require, __dirname, __filename) {
