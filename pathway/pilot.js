@@ -470,6 +470,15 @@ const PATTERNS = [
     why: 'tries to change the assistant’s instructions',
     test: /\b(?:ignore (?:all |any |your |the )?(?:previous |prior |above |earlier )?(?:instructions?|rules?|guidelines?|restrictions?)|disregard (?:the |your )?(?:rules?|instructions?)|forget (?:your|the) (?:rules?|instructions?|prompt)|you are now|act as (?:if|though|a)|pretend (?:to be|you|that you)|roleplay|jailbreak|developer mode|dan mode|without (?:any )?(?:restrictions?|limits?|filters?)|no (?:rules?|restrictions?|limits?) apply)\b/i,
   },
+  // Reaching the word count. An adversarial run of the live product got through with "my draft is 200
+  // words, get it to 500 for me": no verb from the list above, no artifact word, and the reader read it as
+  // a request for the work at 0.49, just under the threshold. Naming a target length or a shortfall is a
+  // request for more of the piece however it is phrased, and it is one of the most common ways students ask.
+  {
+    signal: 'extend',
+    why: 'asks for the work to reach a length',
+    test: /\b(?:(?:get|bring|take|push|bump|pad|stretch|build|beef|fill)\s+(?:it|this|that|mine|me|my\s+\w+)?\s*(?:up\s+|out\s+)?to\s+(?:the\s+)?(?:\d+|word\s?count|limit|minimum)|(?:another|more|extra)\s+\d+\s*(?:more\s+)?words?|\d+\s*words?\s+(?:short|shy|under|off|left|to go)|(?:hit|reach|meet|make up|get to)\s+(?:the\s+)?word\s?count|needs? to be\s+\d+\s*words?|only\s+\d+\s*words?\s+and\s+(?:it|i)\s+needs?)\b/i,
+  },
   // Asking for the work in a form that looks like something else.
   {
     signal: 'disguise',
