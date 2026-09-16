@@ -628,6 +628,25 @@ function longestSharedRun(message, brief) {
 // How much of the brief, unbroken, marks a message as the assignment carried back rather than asked about.
 const PASTED_RUN = 5;
 
+// Letters spaced out to break the patterns: "w r i t e   m y   e s s a y". A run of single letters is not how
+// anyone writes, so the run is closed up and the patterns see the words. The original text is what gets
+// recorded and what the reader scores; this variant exists only so a space cannot defeat a pattern.
+function closeUpSpacedLetters(text) {
+  // Wider gaps are where the words were, so they are what the run is split on before each run is closed up.
+  return String(text || '')
+    .split(/\s{2,}|\t/)
+    .map((chunk) => chunk.replace(/(?:\b\p{L}\s){1,}\b\p{L}\b/gu, (run) => run.replace(/\s+/g, '')))
+    .join(' ');
+}
+
+// The patterns read English. A student with French or Spanish homework writes their request in it, and this
+// covers the few verbs that carry a production request in the languages schools actually teach. It is a
+// convenience, not a claim of multilingual coverage: the language-independent defences are the mode material,
+// which hands a writing mode only the student's own text, and the response check, which measures what came
+// back against their words and does not care what language anything was written in.
+const PRODUCE_IN_ANOTHER_LANGUAGE =
+  /(?:^|[^\p{L}])(?:[eé]cris|[eé]crire|r[eé]dige|r[eé]diger|fais\s+mon|escribe|escribir|haz\s+mi|redacta|schreib|schreibe|verfasse)(?![\p{L}])[^.?!\n]{0,30}(?:dissertation|r[eé]daction|devoirs?|essai|texte|ensayo|tarea|deberes|redacci[oó]n|aufsatz|hausaufgaben?)(?![\p{L}])/iu;
+
 /**
  * Read a student's message. Returns the production signals found, the helping intent it resembles, and the
  * learned reading. Nothing here decides anything; `boundary.js` does that with the assignment's terms in hand.
@@ -642,9 +661,10 @@ function classify(message, { assignment } = {}) {
   const add = (signal, why, source) => {
     if (!signals.some((s) => s.signal === signal && s.why === why)) signals.push({ signal, why, source });
   };
+  const closedUp = closeUpSpacedLetters(text);
   const requirementQuestion = asksWhatIsRequired(text);
   for (const pattern of PATTERNS) {
-    const found = pattern.test.exec(text);
+    const found = pattern.test.exec(text) || (closedUp !== text ? pattern.test.exec(closedUp) : null);
     if (!found) continue;
     if (pattern.unless && pattern.unless.test(text)) continue;
     const signal = pattern.signal === 'produce' && PART.test(text) ? 'extend' : pattern.signal;
@@ -680,6 +700,9 @@ function classify(message, { assignment } = {}) {
   const run = assignment ? longestSharedRun(text, assignment.brief) : 0;
   if (run >= PASTED_RUN) add('produce', 'is the assignment brief itself', 'brief');
 
+  // A production request written in a language the patterns do not read.
+  if (PRODUCE_IN_ANOTHER_LANGUAGE.test(text)) add('produce', 'asks for the work in another language', 'pattern');
+
   const supportFloor = SUPPORT.some((p) => p.test(text));
   const support = supportFloor
     ? { why: 'says something about harm, or about not wanting to be here', source: 'floor' }
@@ -713,7 +736,7 @@ function classify(message, { assignment } = {}) {
   };
 }
 
-module.exports = { classify, PATTERNS, INTENT, SUPPORT, CONFIDENCE, LEARNED_SIGNAL, briefOverlap, longestSharedRun, asksWhatIsRequired, PASTED_RUN };
+module.exports = { classify, closeUpSpacedLetters, PATTERNS, INTENT, SUPPORT, CONFIDENCE, LEARNED_SIGNAL, briefOverlap, longestSharedRun, asksWhatIsRequired, PASTED_RUN };
 
 };
 modules["boundary"] = function (module, exports, require, __dirname, __filename) {
