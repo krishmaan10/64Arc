@@ -224,11 +224,24 @@ function renderResponse(shown, modeId) {
 function renderReview() {
   const panel = $('writing-response'); panel.replaceChildren(); panel.hidden = false;
   panel.append(element('h3', 'Your writing, under review'), element('p', review.guide));
-  if (!review.suggestions.length && review.kind === 'grammar') panel.append(element('p', 'Nothing found, which is not the same as nothing wrong. Read your draft through yourself too.'));
+  const emptyState = { grammar: 'Nothing found, which is not the same as nothing wrong. Read your draft through yourself too.',
+    tone: 'Nothing stood out. Tone is a judgement rather than a rule, so read it through once yourself with your reader in mind.' };
+  if (!review.suggestions.length && emptyState[review.kind]) panel.append(element('p', emptyState[review.kind]));
   review.suggestions.forEach((suggestion, index) => {
     const card = element('div', undefined, 'suggestion'); const change = element('p', undefined, 'edit-text');
-    change.append(element('del', suggestion.before), document.createTextNode(' → '), element('ins', suggestion.after));
+    if (typeof suggestion.after === 'string') {
+      change.append(element('del', suggestion.before), document.createTextNode(' → '), element('ins', suggestion.after));
+    } else {
+      change.append(element('q', suggestion.before));
+    }
     card.append(change, element('p', suggestion.reason));
+    // A tone flag is a question about the student's own wording, so there is no button that answers it for
+    // them. They change their draft or they do not; either way the words stay theirs.
+    if (typeof suggestion.after !== 'string') {
+      card.append(element('p', 'Your call. Change it in your draft if you agree.', 'your-call'));
+      panel.append(card);
+      return;
+    }
     for (const decision of ['accept', 'reject']) {
       const button = lockable(element('button', decision === 'accept' ? 'Accept edit' : 'Keep mine'));
       button.addEventListener('click', () => action(async () => {

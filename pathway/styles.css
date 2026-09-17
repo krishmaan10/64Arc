@@ -255,6 +255,12 @@ textarea[readonly] { background: var(--surface-2); }
 .suggestion del { color: var(--coral-ink); text-decoration-thickness: 1px; }
 .suggestion ins { color: var(--mint-ink); text-decoration: none; background: var(--mint-soft); padding: 2px 6px; border-radius: 6px; }
 .suggestion button { min-height: 38px; padding: 7px 14px; margin-right: 7px; }
+/* A tone flag quotes the student's own words back and asks about them. It is deliberately quieter than an
+   edit card: nothing here is being changed for them, so nothing here should look like a pending change. */
+.suggestion q { font-style: normal; color: var(--ink); background: var(--surface); border: 1px solid var(--line); padding: 2px 6px; border-radius: 6px; }
+.suggestion q::before, .suggestion q::after { content: '“'; }
+.suggestion q::after { content: '”'; }
+.suggestion .your-call { font-size: 13px; color: var(--muted); margin-top: 8px; }
 
 /* Sources */
 .library-toolbar { display: flex; align-items: end; gap: 16px; margin-bottom: 24px; }

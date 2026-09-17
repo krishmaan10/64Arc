@@ -2093,6 +2093,294 @@ function corrections(text) {
 module.exports = { corrections, MISSPELLINGS, CONTRACTIONS, RULES, LIMIT };
 
 };
+modules["tone-review"] = function (module, exports, require, __dirname, __filename) {
+'use strict';
+
+// The tone and register checker for "Improve my writing".
+//
+// Same guarantee as the grammar checker: deterministic local code over the student's own saved text. No
+// model is called, and every word it puts on screen is a literal in this file, so a request can never
+// smuggle prose in through a suggestion.
+//
+// What differs is what tone is. A misspelling is wrong. A tone choice is a judgement, and the judgement has
+// to be the student's, because the argument is theirs. So this checker points rather than rewrites:
+//
+//   - Only a mechanical register form gets a replacement. "gonna" is "going to" in any essay ever written,
+//     and swapping it changes nobody's argument. Everything else is a question with the student's own
+//     words quoted back to them, and no button that writes for them.
+//   - Nothing inside quotation marks is flagged. Those are somebody else's words, and a student quoting a
+//     source accurately must never be told to tidy the source up. Citations are left alone for the same
+//     reason. This is checked for every rule in the file, not asserted here and hoped for.
+//   - A flag names something the student can go and check, and says who it costs. "A reader who disagrees
+//     with you" is a reason. "This is informal" is not.
+//   - Hedging is good academic writing, so a single hedge is never flagged. Only a stack of them is.
+//   - It stays quiet on prose that is already doing its job. Flagging good writing teaches a student to
+//     distrust the tool, which costs more than any flag was worth.
+//
+// What it looks for and what it cannot see is in docs/TONE-REVIEW.md.
+
+/**
+ * Tone findings are a list to act on, not an inventory. Two caps keep it that way, and they are chosen so
+ * that what survives is the RANGE of what is wrong rather than the first inch of the draft: at most three
+ * of any one habit, and fifteen in total. A student told "very" fifteen times learns nothing they could not
+ * have learned from being told once.
+ */
+const LIMIT = 15;
+const PER_RULE = 3;
+
+/** Give the replacement the capitalisation the student used, so "Gonna" becomes "Going to". */
+function matchCase(original, replacement) {
+  if (original === original.toUpperCase() && original.length > 1 && /[A-Z]{2}/.test(original)) return replacement.toUpperCase();
+  if (original[0] === original[0].toUpperCase()) return replacement[0].toUpperCase() + replacement.slice(1);
+  return replacement;
+}
+
+/**
+ * Spans of the draft that are not the student's own writing: anything in double quotation marks, and any
+ * parenthesis carrying a year, which is what a citation looks like. Findings inside these are dropped.
+ * Single quotes are deliberately not treated as quotation marks, because an apostrophe is the same
+ * character and "the student's point" is not a quotation.
+ */
+function borrowedRanges(text) {
+  const ranges = [];
+  for (const pattern of [/"[^"]*"/g, /“[^”]*”/g, /\([^)]*\b(?:1[5-9]\d{2}|20\d{2})\b[^)]*\)/g]) {
+    for (const match of text.matchAll(pattern)) ranges.push([match.index, match.index + match[0].length]);
+  }
+  return ranges;
+}
+
+// Forms that belong to speech and messaging rather than to an essay. Each is mechanical: the replacement
+// carries exactly the meaning the student wrote, so accepting one cannot change an argument. Anything whose
+// expansion is a judgement call lives in the flag rules below instead.
+//
+// Deliberately absent, and each for a reason a reader can check:
+//   "till"  - a real verb and a real noun; tilling soil and a shop till are not register mistakes.
+//   "&"     - legitimate in R&D, AT&T and any company that has one in its name.
+//   "bc"    - "500 bc" is a date.
+//   "def"   - too close to ordinary abbreviation to call informal with any confidence.
+const SWAPS = {
+  gonna: 'going to', wanna: 'want to', gotta: 'have to', gimme: 'give me', lemme: 'let me',
+  kinda: 'kind of', sorta: 'sort of', outta: 'out of', dunno: 'do not know', innit: 'is it not',
+  cos: 'because', coz: 'because', cus: 'because', cuz: 'because', becos: 'because',
+  tho: 'though', altho: 'although', thru: 'through', nite: 'night',
+  pls: 'please', plz: 'please', thx: 'thanks', btw: 'by the way', asap: 'as soon as possible',
+  idk: 'I do not know', imo: 'in my opinion', imho: 'in my opinion', tbh: 'to be honest',
+  ppl: 'people', probs: 'probably', srsly: 'seriously', rn: 'right now', irl: 'in real life',
+  u: 'you', ur: 'your', urs: 'yours', tmrw: 'tomorrow', ngl: 'to be honest',
+};
+
+// The one swap whose expansion is not certain, so the suggestion says so rather than choosing for them.
+const SWAP_CAUTIONS = {
+  "ain't": 'Reject this if you meant “am not”, “are not” or “has not”.',
+  'aint': 'Reject this if you meant “am not”, “are not” or “has not”.',
+};
+
+const INTENSIFIERS = ['very', 'really', 'extremely', 'incredibly', 'totally', 'absolutely', 'utterly', 'hugely', 'massively', 'insanely', 'ridiculously', 'super'];
+const LOADED = ['stupid', 'dumb', 'idiotic', 'moronic', 'crazy', 'insane', 'awful', 'terrible', 'horrible', 'dreadful', 'pathetic', 'ridiculous', 'disgusting', 'evil', 'brutal', 'outrageous', 'lazy', 'amazing', 'fantastic', 'brilliant', 'perfect'];
+const FILLERS = ['basically', 'literally', 'obviously', 'clearly', 'honestly', 'frankly', 'simply put', 'needless to say'];
+const HEDGES = ['maybe', 'perhaps', 'possibly', 'probably', 'might', 'may', 'could', 'seems', 'seem', 'sort of', 'kind of', 'somewhat', 'apparently'];
+
+/**
+ * Each rule carries an `example`, which is the trigger written out as a student would write it. The test
+ * suite runs every example twice: bare, where it must be found, and inside quotation marks, where it must
+ * not be. That sweep is what keeps the promise about borrowed words honest for rules added later.
+ */
+const RULES = [
+  {
+    id: 'texting-form',
+    example: 'The government is gonna change the rules.',
+    pattern: /\b(?:gonna|wanna|gotta|gimme|lemme|kinda|sorta|outta|dunno|innit|cos|coz|cus|cuz|becos|tho|altho|thru|nite|pls|plz|thx|btw|asap|idk|imo|imho|tbh|ppl|probs|srsly|rn|irl|u|ur|urs|tmrw|ngl|ain['’]?t)\b/gi,
+    build: (m) => {
+      const key = m[0].toLowerCase().replace('’', "'");
+      const fix = SWAPS[key] ?? SWAPS[key.replace("'", '')] ?? (key.startsWith('ain') ? 'is not' : null);
+      if (!fix) return null;
+      const caution = SWAP_CAUTIONS[key];
+      return { after: matchCase(m[0], fix), reason: `“${m[0]}” is speech, not writing. In an essay it is “${fix}”.${caution ? ` ${caution}` : ''}` };
+    },
+  },
+  {
+    id: 'intensifier',
+    example: 'The results were very important for schools.',
+    pattern: new RegExp(`\\b(${INTENSIFIERS.join('|')})\\s+(?=[a-z])`, 'gi'),
+    build: (m) => ({
+      before: m[0].trimEnd(),
+      reason: `“${m[1].toLowerCase()}” asks the reader to feel strongly where evidence would make them. Read the sentence without it: if it gets weaker, what it needed was a figure or a source, not emphasis.`,
+    }),
+  },
+  {
+    id: 'overclaim',
+    example: 'Everyone knows that homework is a waste of time.',
+    pattern: /\b(?:everyone knows|everybody knows|everyone agrees|nobody would deny|no one can deny|it is obvious that|without a doubt|there is no doubt|undoubtedly|it goes without saying|proves that|proven fact)\b/gi,
+    build: (m) => ({
+      reason: `“${m[0]}” claims the argument is already settled. One reader who disagrees is enough to disprove it, and that reader is the one you are writing for. Which source found this?`,
+    }),
+  },
+  {
+    id: 'filler',
+    example: 'Obviously the policy did not work as planned.',
+    pattern: new RegExp(`\\b(${FILLERS.join('|')})\\b`, 'gi'),
+    build: (m) => {
+      const word = m[0].toLowerCase();
+      if (word === 'obviously' || word === 'clearly') {
+        return { reason: `“${m[0]}” tells a reader who disagrees that they are slow. Say what makes it clear and they will get there themselves.` };
+      }
+      if (word === 'literally') {
+        return { reason: `“Literally” is for the times something is not a figure of speech. If this one is a figure of speech, the word is doing the opposite of its job.` };
+      }
+      if (word === 'honestly' || word === 'frankly') {
+        return { reason: `“${m[0]}” quietly suggests the rest of the essay was not. Cutting it costs the sentence nothing.` };
+      }
+      return { reason: `“${m[0]}” promises a shorter version and then gives the same one. Cut it and see whether anything was lost.` };
+    },
+  },
+  {
+    id: 'loaded-word',
+    example: 'The policy was a stupid idea from the start.',
+    pattern: new RegExp(`\\b(${LOADED.join('|')})\\b`, 'gi'),
+    build: (m) => ({
+      reason: `“${m[0]}” is a verdict rather than a description. What did it actually do, and would a reader reach the same verdict on their own?`,
+    }),
+  },
+  {
+    id: 'vague-quantity',
+    example: 'A lot of students said the same thing.',
+    pattern: /\b(?:a lot of|lots of|loads of|tons of|heaps of|a bunch of|quite a few|a fair few|so many|tonnes of)\b/gi,
+    build: (m) => ({
+      reason: `“${m[0]}” leaves the reader to guess the size of it. How many, or what share, and according to which source?`,
+    }),
+  },
+  {
+    id: 'vague-noun',
+    example: 'Homework and things like that take up the evening.',
+    pattern: /\b(?:stuff|things like (?:that|this)|all sorts of things|lots of things|many things|these kinds of things)\b/gi,
+    build: (m) => ({
+      reason: `“${m[0]}” stands in for something you could name. Naming one of them is usually the sentence you wanted.`,
+    }),
+  },
+  {
+    id: 'reader-address',
+    example: 'You can see that the evidence is mixed.',
+    pattern: /\b(?:you can see|you should|you would|you will find|you might think|you know|if you think about|as you can tell)\b/gi,
+    build: (m) => ({
+      reason: `“${m[0]}” speaks to the reader directly. Most essays argue in front of a reader rather than to them. Check whether this assignment wants that.`,
+    }),
+  },
+  {
+    id: 'opinion-marker',
+    example: 'In my opinion homework should be shorter.',
+    pattern: /\b(?:in my opinion|i feel like|to be honest|i guess|personally,? i think|if you ask me)\b/gi,
+    build: (m) => ({
+      reason: `“${m[0]}” marks the sentence as yours, but the whole essay already is. Announcing it tends to make the claim sound smaller than it is.`,
+    }),
+  },
+  {
+    id: 'hedge-stack',
+    example: 'It might possibly be a factor in the result.',
+    pattern: new RegExp(`\\b(${HEDGES.join('|')})\\s+(${HEDGES.join('|')})\\b`, 'gi'),
+    build: (m) => ({
+      reason: `“${m[0]}” hedges twice. Hedging once is honest and good academic writing; twice reads as unsure of being unsure. Keep whichever one you meant.`,
+    }),
+  },
+  {
+    id: 'stock-opening',
+    example: 'In today’s society homework is a big debate.',
+    pattern: /\b(?:in today['’]?s society|since the dawn of time|since the beginning of time|throughout history|in this day and age|webster['’]?s dictionary defines)\b/gi,
+    build: (m) => ({
+      reason: `“${m[0]}” could open an essay on any subject at all. What does this one actually begin with?`,
+    }),
+  },
+  {
+    id: 'contraction',
+    example: 'The study doesn’t support that conclusion.',
+    once: true,
+    pattern: /\b(?:[a-zA-Z]+n['’]t|[a-zA-Z]+['’](?:re|ve|ll|m)|(?:it|that|there|here|he|she|who|what|where|when|why|how|let)['’]s)\b/g,
+    build: (m, text, count) => ({
+      reason: count === 1
+        ? `“${m[0]}” is a contraction. Some assignments want them written out. Check the brief before changing it.`
+        : `This draft uses ${count} contractions, starting with “${m[0]}”. Some assignments want them written out and some do not mind. Check the brief, then be consistent either way.`,
+    }),
+  },
+  {
+    id: 'exclamation',
+    once: true,
+    example: 'The result was completely unexpected!',
+    pattern: /\b[\w'’]+!/g,
+    build: (m, text, count) => ({
+      reason: count === 1
+        ? `An exclamation mark asks the reader for a reaction. In an essay the sentence has to earn that on its own.`
+        : `There are ${count} exclamation marks here. Each one asks the reader for a reaction the sentence has to earn on its own.`,
+    }),
+  },
+  {
+    id: 'rhetorical-question',
+    once: true,
+    example: 'But how can that be fair to anyone?',
+    pattern: /\b[\w'’]+\?/g,
+    build: (m, text, count) => ({
+      reason: count === 1
+        ? `A question hands the thinking back to the reader. If your next sentence answers it, the answer on its own is usually the stronger version.`
+        : `There are ${count} questions in this draft. Each hands the thinking back to the reader; where the next sentence answers one, the answer alone is usually stronger.`,
+    }),
+  },
+];
+
+/**
+ * Read the student's saved draft and return places worth a second look, each with the student's own words
+ * and a reason. A finding with an `after` is a mechanical register swap the student may accept; a finding
+ * with `after: null` is a question, and the product deliberately offers no button that answers it for them.
+ */
+function findings(draft) {
+  if (typeof draft !== 'string' || !draft.trim()) return [];
+  const borrowed = borrowedRanges(draft);
+  const isBorrowed = (start, end) => borrowed.some(([from, to]) => start < to && end > from);
+  const found = [];
+
+  for (const rule of RULES) {
+    const hits = [...draft.matchAll(rule.pattern)].filter((m) => !isBorrowed(m.index, m.index + m[0].length));
+    if (!hits.length) continue;
+    for (const m of rule.once ? hits.slice(0, 1) : hits) {
+      const built = rule.build(m, draft, hits.length);
+      if (!built) continue;
+      const before = built.before ?? m[0];
+      const start = m.index + m[0].indexOf(before);
+      found.push({
+        start,
+        end: start + before.length,
+        before,
+        after: built.after ?? null,
+        reason: built.reason,
+        rule: rule.id,
+        kind: built.after ? 'swap' : 'flag',
+      });
+    }
+  }
+
+  // Offsets belong to the draft as it was saved, so two findings may never cover the same words.
+  found.sort((a, b) => a.start - b.start || b.end - a.end);
+  const clear = [];
+  for (const finding of found) {
+    if (clear.length && finding.start < clear[clear.length - 1].end) continue;
+    clear.push(finding);
+  }
+
+  // Take the first of every habit before taking a second of any, so a draft with one bad word repeated
+  // twenty times cannot crowd out the twelve other things worth telling the student about.
+  const seen = new Map();
+  const kept = new Set();
+  for (let round = 0; round < PER_RULE; round += 1) {
+    for (const finding of clear) {
+      if (kept.size === LIMIT) break;
+      if (kept.has(finding) || (seen.get(finding.rule) ?? 0) > round) continue;
+      seen.set(finding.rule, round + 1);
+      kept.add(finding);
+    }
+  }
+  return clear.filter((finding) => kept.has(finding));
+}
+
+module.exports = { findings, RULES, SWAPS, LIMIT, borrowedRanges };
+
+};
 modules["preview-app"] = function (module, exports, require, __dirname, __filename) {
 // The preview, as logic without a transport.
 //
@@ -2109,6 +2397,7 @@ const { draftEntry, summarise } = require('./record.js');
 const { MODES } = require('./modes.js');
 const identity = require('./identity.js');
 const { corrections } = require('./writing-review.js');
+const { findings } = require('./tone-review.js');
 
 const PREVIEW_MODES = ['understand', 'plan', 'question', 'improve', 'rephrase', 'sources'];
 const SOURCES = [
@@ -2197,12 +2486,12 @@ function createPreviewApp({ store = null, memory = null } = {}) {
       if (!state.assignment.modes.includes(modeId)) return reply(403, { error: 'Your teacher has paused this writing tool.' });
       if (!state.draft.trim()) return reply(400, { error: 'Write and save your own draft first.' });
       if (body.text !== state.draft) return reply(409, { error: 'Save your current draft before reviewing it.' });
-      const suggestions = body.kind === 'grammar' ? corrections(state.draft) : [];
+      const suggestions = body.kind === 'grammar' ? corrections(state.draft) : body.kind === 'tone' ? findings(state.draft) : [];
       pendingReview = { id: ++nextReview, text: state.draft, suggestions, decided: new Set(), modeId };
       const guide = body.kind === 'grammar'
         ? 'This checker reads the words you saved and looks for spelling, apostrophes, verbs that do not match their subject, confusable words like their and there, and punctuation. Every change is yours to accept or reject, and each one says why. It does not read for meaning, so it will miss things.'
         : body.kind === 'tone'
-          ? 'Choose one sentence. Who will read it? Underline casual or emotionally loaded words. Try a more precise word yourself, keeping your meaning and evidence. Read both versions aloud.'
+          ? 'This reads the words you saved and points at places where the tone may not match an essay: words that ask the reader to feel something, claims that assume the reader already agrees, and phrases that belong to speech. Most of these are questions rather than corrections, because the judgement is yours. Anything you put inside quotation marks is left alone.'
           : 'Choose one sentence you wrote. Set it aside and explain its meaning aloud. Write that explanation in your own words, then compare: have you kept the meaning and any citation? This tool guides you; it does not generate a paraphrase.';
       await record({ type: 'review', at, kind: body.kind, count: suggestions.length, guide });
       return reply(200, { id: pendingReview.id, suggestions, guide });
@@ -2213,6 +2502,9 @@ function createPreviewApp({ store = null, memory = null } = {}) {
       if (state.draft !== pendingReview.text || body.text !== state.draft) return reply(409, { error: 'Your draft changed. Save it and run a new review.' });
       if (pendingReview.decided.has(body.index)) return reply(409, { error: 'You already reviewed this suggestion.' });
       const suggestion = pendingReview.suggestions[body.index];
+      // A tone flag carries no replacement on purpose: the judgement is the student's to make, so there is
+      // no route that writes one into their draft. Only a mechanical swap can be accepted.
+      if (body.action === 'accept' && typeof suggestion.after !== 'string') return reply(400, { error: 'That one is a question to think about, not an edit to apply.' });
       pendingReview.decided.add(body.index);
       if (body.action === 'accept') {
         const previous = state.draft;
