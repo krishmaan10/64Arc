@@ -224,7 +224,7 @@ function renderResponse(shown, modeId) {
 function renderReview() {
   const panel = $('writing-response'); panel.replaceChildren(); panel.hidden = false;
   panel.append(element('h3', 'Your writing, under review'), element('p', review.guide));
-  if (!review.suggestions.length && review.kind === 'grammar') panel.append(element('p', 'Nothing found. This checker looks at spelling, apostrophes, agreement, confusable words and punctuation; it does not read for meaning, so it can miss things. Read your draft through yourself too.'));
+  if (!review.suggestions.length && review.kind === 'grammar') panel.append(element('p', 'Nothing found, which is not the same as nothing wrong. Read your draft through yourself too.'));
   review.suggestions.forEach((suggestion, index) => {
     const card = element('div', undefined, 'suggestion'); const change = element('p', undefined, 'edit-text');
     change.append(element('del', suggestion.before), document.createTextNode(' → '), element('ins', suggestion.after));
