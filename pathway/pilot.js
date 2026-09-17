@@ -1653,28 +1653,410 @@ module.exports = { turn, WITHHELD };
 modules["writing-review"] = function (module, exports, require, __dirname, __filename) {
 'use strict';
 
-// A deliberately small, deterministic correction set for the local pilot.
-// Replacements are literals owned by the server; requests cannot supply generated prose.
-const RULES = [
-  { pattern: /\bteh\b/g, replacement: 'the', reason: 'Correct the spelling of “the”.' },
-  { pattern: /\brecieve\b/g, replacement: 'receive', reason: '“Receive” uses ei after c.' },
-  { pattern: /\bdefinately\b/g, replacement: 'definitely', reason: 'The spelling is “definitely”.' },
-  { pattern: /\bi\b/g, replacement: 'I', reason: 'Capitalize the pronoun “I”.' },
-  { pattern: /\bdont\b/g, replacement: 'don’t', reason: 'Use an apostrophe for the missing letter in “do not”.' },
-  { pattern: /\bcant\b/g, replacement: 'can’t', reason: 'If you mean “cannot”, use an apostrophe. Reject this if you mean the noun “cant”.' },
-];
+// The grammar and spelling checker for "Improve my writing".
+//
+// Everything here is deterministic local code over the student's own saved text. No model is called, and no
+// replacement comes from anywhere but the literals in this file, so a request can never smuggle prose in
+// through a correction. That is the same guarantee the rest of the boundary rests on.
+//
+// The cost of a wrong suggestion is a student changing their own writing for the worse on our advice, so
+// every rule here is written to be sure rather than thorough:
+//
+//   - A misspelling is only listed when the wrong form is not itself an English word. "helpfull" is safe;
+//     "form" for "from" is not, and is left alone.
+//   - A rule that depends on meaning fires only in the narrow shapes where the meaning is not in doubt.
+//     "more then" is always wrong; a bare "then" is usually right, so a bare "then" is never touched.
+//   - Where a correction is probably right but could be wrong, the reason says what to do about it:
+//     "Reject this if you mean …". The student accepts or rejects each suggestion one at a time.
+//   - British spellings are correct spellings. Nothing here turns "colour" into "color" or "realise" into
+//     "realize".
+//
+// Reasons are written to teach, not just to instruct, because a student who learns the rule stops needing
+// the checker. What it catches and what it misses is listed in docs/WRITING-REVIEW.md.
 
-function corrections(text) {
-  return RULES.flatMap(rule => [...text.matchAll(rule.pattern)].map(match => ({
-    start: match.index,
-    end: match.index + match[0].length,
-    before: match[0],
-    after: rule.replacement,
-    reason: rule.reason,
-  }))).sort((a, b) => a.start - b.start).slice(0, 20);
+const APOSTROPHE = '’';
+
+/** Give the replacement the capitalisation the student used, so "Teh" becomes "The" and not "the". */
+function matchCase(original, replacement) {
+  if (original === original.toUpperCase() && original.length > 1 && /[A-Z]{2}/.test(original)) return replacement.toUpperCase();
+  if (original[0] === original[0].toUpperCase()) return replacement[0].toUpperCase() + replacement.slice(1);
+  return replacement;
 }
 
-module.exports = { corrections };
+// Misspellings whose wrong form is not itself a word, so there is nothing to weigh up. British spellings are
+// deliberately absent: they are not mistakes.
+const MISSPELLINGS = {
+  accomodate: 'accommodate', acheive: 'achieve', accross: 'across', acheived: 'achieved', acknowlege: 'acknowledge',
+  agressive: 'aggressive', allways: 'always', alot: 'a lot', apparant: 'apparent', arguement: 'argument',
+  arround: 'around', aswell: 'as well', atleast: 'at least', athiest: 'atheist', basicly: 'basically',
+  beacuse: 'because', becasue: 'because', becuase: 'because', begining: 'beginning', beleive: 'believe',
+  beleived: 'believed', beutiful: 'beautiful', buisness: 'business', calender: 'calendar', carefull: 'careful',
+  catagory: 'category', cemetary: 'cemetery', collegue: 'colleague', comming: 'coming', commited: 'committed',
+  completly: 'completely', concious: 'conscious', curiousity: 'curiosity', definately: 'definitely',
+  definitly: 'definitely', diffrent: 'different', dissapear: 'disappear', dissapoint: 'disappoint',
+  eachother: 'each other', embarass: 'embarrass', enviroment: 'environment', everytime: 'every time',
+  existance: 'existence', experiance: 'experience', familar: 'familiar', feild: 'field', finaly: 'finally',
+  foriegn: 'foreign', freind: 'friend', gaurd: 'guard', goverment: 'government', grammer: 'grammar',
+  hapen: 'happen', happend: 'happened', harrass: 'harass', hieght: 'height', helpfull: 'helpful',
+  immediatly: 'immediately', incase: 'in case', independant: 'independent', infact: 'in fact',
+  intresting: 'interesting', knowlege: 'knowledge', lenght: 'length', liesure: 'leisure', libary: 'library',
+  maintainance: 'maintenance', millenium: 'millennium', mispell: 'misspell', neccessary: 'necessary',
+  necesary: 'necessary', neice: 'niece', ninty: 'ninety', noticable: 'noticeable', occassion: 'occasion',
+  occassionally: 'occasionally', occurance: 'occurrence', occured: 'occurred', opinon: 'opinion',
+  oppurtunity: 'opportunity', paralel: 'parallel', parliment: 'parliament', particulary: 'particularly',
+  peice: 'piece', perseverence: 'perseverance', persue: 'pursue', posession: 'possession', posible: 'possible',
+  preffered: 'preferred', priviledge: 'privilege', probaly: 'probably', proffesional: 'professional',
+  publically: 'publicly', quater: 'quarter', questionaire: 'questionnaire', realy: 'really',
+  reccomend: 'recommend', recieve: 'receive', recieved: 'received', refered: 'referred', relevent: 'relevant',
+  religous: 'religious', rember: 'remember', responsable: 'responsible', resturant: 'restaurant',
+  rythm: 'rhythm', safty: 'safety', seperate: 'separate', shedule: 'schedule', sholud: 'should',
+  shoud: 'should', sieze: 'seize', similiar: 'similar', sincerly: 'sincerely', somthing: 'something',
+  speach: 'speech', stategy: 'strategy', strenght: 'strength', succesful: 'successful', sucessful: 'successful',
+  sucess: 'success', sumary: 'summary', suprise: 'surprise', temperture: 'temperature', thefore: 'therefore',
+  thier: 'their', tommorow: 'tomorrow', tounge: 'tongue', truely: 'truly', unfortunatly: 'unfortunately',
+  untill: 'until', useing: 'using', usefull: 'useful', usualy: 'usually', vaccum: 'vacuum',
+  vegatable: 'vegetable', wierd: 'weird', wonderfull: 'wonderful', wory: 'worry', writting: 'writing',
+  yeild: 'yield', teh: 'the', adn: 'and', taht: 'that', hte: 'the', whcih: 'which',
+};
+
+// Contractions typed without the apostrophe. The ones whose bare form is also a word carry a caution, because
+// only the student knows which they meant.
+const CONTRACTIONS = {
+  dont: ['do not', null], cant: ['cannot', 'the noun “cant”'], wont: ['will not', 'the verb “wont”, meaning accustomed'],
+  didnt: ['did not', null], doesnt: ['does not', null], isnt: ['is not', null], wasnt: ['was not', null],
+  werent: ['were not', null], arent: ['are not', null], hasnt: ['has not', null], havent: ['have not', null],
+  hadnt: ['had not', null], couldnt: ['could not', null], shouldnt: ['should not', null],
+  wouldnt: ['would not', null], mustnt: ['must not', null], neednt: ['need not', null],
+  youre: ['you are', null], youve: ['you have', null], youll: ['you will', null], youd: ['you would', null],
+  theyre: ['they are', null], theyve: ['they have', null], theyll: ['they will', null],
+  weve: ['we have', null], well: [null, null], wouldve: ['would have', null], couldve: ['could have', null],
+  shouldve: ['should have', null], thats: ['that is', null], whats: ['what is', null],
+  theres: ['there is', null], heres: ['here is', null], wheres: ['where is', null],
+  shes: ['she is', null], lets: ['let us', 'the verb “lets”, as in “she lets me”'],
+  im: ['I am', null], ive: ['I have', null],
+};
+const CONTRACTION_FORMS = {
+  dont: 'don', cant: 'can', wont: 'won', didnt: 'didn', doesnt: 'doesn', isnt: 'isn', wasnt: 'wasn',
+  werent: 'weren', arent: 'aren', hasnt: 'hasn', havent: 'haven', hadnt: 'hadn', couldnt: 'couldn',
+  shouldnt: 'shouldn', wouldnt: 'wouldn', mustnt: 'mustn', neednt: 'needn', youre: 'you', youve: 'you',
+  youll: 'you', youd: 'you', theyre: 'they', theyve: 'they', theyll: 'they', weve: 'we', wouldve: 'would',
+  couldve: 'could', shouldve: 'should', thats: 'that', whats: 'what', theres: 'there', heres: 'here',
+  wheres: 'where', shes: 'she', lets: 'let', im: 'I', ive: 'I',
+};
+const CONTRACTION_TAILS = {
+  dont: 't', cant: 't', wont: 't', didnt: 't', doesnt: 't', isnt: 't', wasnt: 't', werent: 't', arent: 't',
+  hasnt: 't', havent: 't', hadnt: 't', couldnt: 't', shouldnt: 't', wouldnt: 't', mustnt: 't', neednt: 't',
+  youre: 're', youve: 've', youll: 'll', youd: 'd', theyre: 're', theyve: 've', theyll: 'll', weve: 've',
+  wouldve: 've', couldve: 've', shouldve: 've', thats: 's', whats: 's', theres: 's', heres: 's', wheres: 's',
+  shes: 's', lets: 's', im: 'm', ive: 've',
+};
+
+// A past participle standing where the simple past belongs. The pattern puts the pronoun directly before the
+// verb, so "I have done" and "I had seen" never match: only a bare "I done" does.
+const PARTICIPLES = { done: 'did', seen: 'saw', gone: 'went', begun: 'began', drunk: 'drank', eaten: 'ate', written: 'wrote', spoken: 'spoke', taken: 'took', given: 'gave', known: 'knew', chosen: 'chose', broken: 'broke', forgotten: 'forgot', ridden: 'rode', swum: 'swam', thrown: 'threw' };
+
+// Verbs that need an s after he, she or it. Kept to plain ones a school student uses, so the rule stays safe.
+const THIRD_PERSON = ['help', 'think', 'want', 'need', 'make', 'get', 'know', 'believe', 'feel', 'show', 'give', 'take', 'seem', 'look', 'come', 'become', 'say', 'use', 'work', 'mean', 'find', 'keep', 'affect', 'cause', 'happen', 'improve', 'explain', 'suggest', 'prove', 'support', 'depend', 'matter', 'include', 'allow', 'create', 'provide'];
+// The same verbs after a plural subject must not have one.
+const PLURAL_SUBJECTS = ['people', 'children', 'students', 'teachers', 'parents', 'they', 'we', 'men', 'women', 'they'];
+
+const DAYS_MONTHS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'january', 'february', 'march', 'april', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+const PROPER_NOUNS = ['english', 'french', 'spanish', 'german', 'hindi', 'india', 'britain', 'america', 'europe', 'african', 'shakespeare', 'macbeth', 'christmas', 'easter', 'diwali'];
+
+// "a" before a vowel sound, "an" before a consonant sound. Spelling and sound disagree often enough that both
+// lists of exceptions are needed, and a word in neither list is left alone.
+const VOWEL_LETTER_CONSONANT_SOUND = ['university', 'universal', 'unique', 'union', 'united', 'user', 'useful', 'usual', 'european', 'one', 'once', 'uniform', 'unit'];
+const CONSONANT_LETTER_VOWEL_SOUND = ['hour', 'honest', 'honour', 'honor', 'heir', 'mp', 'ms', 'nhs', 'hourly'];
+
+/** Every rule: a global pattern, and a build that returns the replacement or null to decline the match. */
+// Words that genuinely end in a consonant and "ys", plus the names that do, so the -ies rule
+// leaves them alone. "The whys and wherefores" is correct English; Gladys is somebody.
+const KEEP_YS = new Set(['whys', 'drys', 'phys', 'sys', 'gladys', 'rhys', 'krys', 'alys']);
+
+const RULES = [
+  {
+    id: 'misspelling',
+    pattern: /\b[a-zA-Z]+\b/g,
+    build: (m) => {
+      const fix = MISSPELLINGS[m[0].toLowerCase()];
+      return fix ? { after: matchCase(m[0], fix), reason: `The spelling is “${fix}”.` } : null;
+    },
+  },
+  {
+    // "studys" -> "studies". A word ending in a consonant plus "y" changes the "y" to "ies",
+    // both for plural nouns and for third person verbs, so one rule covers a whole family of
+    // misspellings rather than a listed few. Names ending the same way are the only real risk,
+    // so a capital is only accepted at the start of a sentence, and the known names are kept.
+    id: 'consonant-y-plural',
+    pattern: /\b([a-zA-Z][a-z]*[bcdfghjklmnpqrstvwxz])ys\b/g,
+    build: (m, text) => {
+      if (KEEP_YS.has(m[0].toLowerCase())) return null;
+      if (/^[A-Z]/.test(m[0])) {
+        const before = text.slice(0, m.index);
+        if (!/(?:^|[.!?]["'\u2019\u201d)\]]*\s+|\n\s*)$/.test(before)) return null;
+      }
+      return { after: `${m[1]}ies`, reason: `A word ending in a consonant and \u201cy\u201d changes the \u201cy\u201d to \u201cies\u201d: \u201c${m[1].toLowerCase()}ies\u201d.` };
+    },
+  },
+  {
+    id: 'contraction',
+    pattern: /\b[a-zA-Z]+\b/g,
+    build: (m) => {
+      const key = m[0].toLowerCase();
+      const entry = CONTRACTIONS[key];
+      if (!entry || !entry[0] || !CONTRACTION_FORMS[key]) return null;
+      const after = CONTRACTION_FORMS[key] + APOSTROPHE + CONTRACTION_TAILS[key];
+      const caution = entry[1] ? ` Reject this if you mean ${entry[1]}.` : '';
+      return { after: matchCase(m[0], after), reason: `An apostrophe stands for the missing letters in “${entry[0]}”.${caution}` };
+    },
+  },
+  {
+    id: 'i-capital',
+    pattern: /\bi\b(?!['’])(?!\.[a-zA-Z]\.)/g,
+    build: () => ({ after: 'I', reason: 'The pronoun “I” is always a capital.' }),
+  },
+  {
+    // "could of" is what "could've" sounds like. It is never correct written out.
+    id: 'of-for-have',
+    pattern: /\b(could|should|would|must|might|may)\s+of\b/gi,
+    build: (m) => ({ after: `${m[1]} have`, reason: '“Could’ve” sounds like “could of”, but the word is “have”.' }),
+  },
+  {
+    // "too" means excessively. Before these words it is never the preposition "to".
+    id: 'to-for-too',
+    pattern: /\bto\s+(much|many|late|early|hard|easy|difficult|expensive|big|small|long|short|often|busy|tired|young|old|far|fast|slow)\b/gi,
+    build: (m) => ({ after: `too ${m[1]}`, reason: '“Too” means excessively; “to” goes with a place or a verb.' }),
+  },
+  {
+    // A comparison takes "than". "Then" is about time.
+    id: 'then-for-than',
+    pattern: /\b(more|less|better|worse|bigger|smaller|higher|lower|rather|other|greater|fewer|older|younger|easier|harder)\s+then\b/gi,
+    build: (m) => ({ after: `${m[1]} than`, reason: '“Than” compares two things; “then” is about time.' }),
+  },
+  {
+    id: 'your-youre',
+    pattern: /\byour\s+(going|doing|being|getting|saying|not|right|wrong|welcome|sure|correct|probably|definitely)\b/gi,
+    build: (m) => ({ after: `you${APOSTROPHE}re ${m[1]}`, reason: '“You’re” is short for “you are”; “your” shows possession.' }),
+  },
+  {
+    id: 'youre-your',
+    pattern: /\byou['’]re\s+(essay|homework|work|draft|answer|point|argument|idea|paragraph|conclusion|introduction|teacher|school|opinion)\b/gi,
+    build: (m) => ({ after: `your ${m[1]}`, reason: '“Your” shows possession; “you’re” is short for “you are”.' }),
+  },
+  {
+    id: 'its-it-is',
+    pattern: /\bits\s+(a|an|the|been|not|going|very|really|clear|true|important|because|only|still|too|hard|easy|worth)\b/gi,
+    build: (m) => ({ after: `it${APOSTROPHE}s ${m[1]}`, reason: '“It’s” is short for “it is”; “its” shows possession, like “his”.' }),
+  },
+  {
+    id: 'it-is-its',
+    pattern: /\bit['’]s\s+(own|effect|impact|result|purpose|meaning)\b/gi,
+    build: (m) => ({ after: `its ${m[1]}`, reason: '“Its” shows possession, like “his”; “it’s” is short for “it is”.' }),
+  },
+  {
+    id: 'their-there',
+    pattern: /\btheir\s+(is|are|was|were)\b/gi,
+    build: (m) => ({ after: `there ${m[1]}`, reason: '“There is” and “there are” point something out; “their” shows possession.' }),
+  },
+  {
+    id: 'there-their',
+    pattern: /\bthere\s+(own|lesson|lessons|homework|parent|parents|teacher|teachers|work|idea|ideas|opinion|opinions|child|children|book|books|essay|essays|grades?|marks?|point|points|argument|arguments)\b/gi,
+    build: (m) => ({ after: `their ${m[1]}`, reason: '“Their” shows possession; “there” is about a place.' }),
+  },
+  {
+    id: 'loose-lose',
+    pattern: /\b(to|will|would|could|might|can|don['’]?t want to|going to)\s+loose\b/gi,
+    build: (m) => ({ after: `${m[1]} lose`, reason: '“Lose” is the verb; “loose” means not tight.' }),
+  },
+  {
+    id: 'weather-whether',
+    pattern: /\bweather\s+or\s+not\b/gi,
+    build: () => ({ after: 'whether or not', reason: '“Whether” introduces a choice; “weather” is rain and sun.' }),
+  },
+  {
+    id: 'quiet-quite',
+    pattern: /\bquiet\s+(good|bad|a lot|interesting|difficult|useful|clear|often|similar)\b/gi,
+    build: (m) => ({ after: `quite ${m[1]}`, reason: '“Quite” means fairly; “quiet” means not loud.' }),
+  },
+  {
+    id: 'effect-affect',
+    pattern: /\b(will|can|could|may|might|would|to|doesn['’]?t|does)\s+effect\b/gi,
+    build: (m) => ({ after: `${m[1]} affect`, reason: '“Affect” is the verb, “effect” the noun. Something affects you and has an effect.' }),
+  },
+  {
+    id: 'affect-effect',
+    pattern: /\b(the|an|a|this|that|positive|negative|side|main|same|little|big|real)\s+affect\b/gi,
+    build: (m) => ({ after: `${m[1]} effect`, reason: '“Effect” is the noun, “affect” the verb. Something affects you and has an effect.' }),
+  },
+  {
+    // "I is", "they was", "he are": the verb has to agree with who is doing it.
+    id: 'be-agreement',
+    pattern: /\b(i|we|they|you|he|she|it)\s+(is|are|am|was|were|has|have)\b/gi,
+    build: (m, text) => {
+      const subject = m[1].toLowerCase();
+      const verb = m[2].toLowerCase();
+      const singular = subject === 'he' || subject === 'she' || subject === 'it';
+      const plural = subject === 'we' || subject === 'they' || subject === 'you';
+      // "If I were" and "if he were" are the subjunctive and are correct.
+      if (verb === 'were' && /\b(if|wish|as though|as if)\s+$/i.test(text.slice(Math.max(0, m.index - 12), m.index))) return null;
+      let want = null;
+      if (subject === 'i' && verb === 'is') want = 'am';
+      else if (subject === 'i' && verb === 'are') want = 'am';
+      else if (subject === 'i' && verb === 'has') want = 'have';
+      else if (plural && verb === 'is') want = 'are';
+      else if (plural && verb === 'was') want = 'were';
+      else if (plural && verb === 'has') want = 'have';
+      else if (singular && verb === 'are') want = 'is';
+      else if (singular && verb === 'were') want = 'was';
+      else if (singular && verb === 'have') want = 'has';
+      else if (singular && verb === 'am') want = 'is';
+      if (!want) return null;
+      return { after: `${m[1]} ${want}`, reason: `“${m[1].toLowerCase()}” takes “${want}”, because the verb has to match who is doing it.` };
+    },
+  },
+  {
+    id: 'dont-doesnt',
+    pattern: /\b(he|she|it)\s+(don['’]?t)\b/gi,
+    build: (m) => ({ after: `${m[1]} doesn${APOSTROPHE}t`, reason: '“He”, “she” and “it” take “doesn’t”; “I”, “we”, “you” and “they” take “don’t”.' }),
+  },
+  {
+    id: 'doesnt-dont',
+    pattern: /\b(i|we|they|you)\s+(doesn['’]?t)\b/gi,
+    build: (m) => ({ after: `${m[1]} don${APOSTROPHE}t`, reason: '“I”, “we”, “you” and “they” take “don’t”; “he”, “she” and “it” take “doesn’t”.' }),
+  },
+  {
+    // "it help" needs an s. The lookbehind keeps it away from "does it help" and "let it help", where the
+    // plain form is correct.
+    id: 'third-person-s',
+    pattern: new RegExp(`(?<!\\b(?:do|does|did|doesn['’]?t|didn['’]?t|don['’]?t|let|make|help|watch|see|to|and|or|please)\\s)\\b(he|she|it)\\s+(${THIRD_PERSON.join('|')})\\b`, 'gi'),
+    build: (m) => {
+      const verb = m[2].toLowerCase();
+      const s = /(?:ch|sh|ss|x|z|o)$/.test(verb) ? 'es' : 's';
+      return { after: `${m[1]} ${m[2]}${s}`, reason: `After “${m[1].toLowerCase()}”, the present tense verb takes an ${s === 'es' ? '“es”' : '“s”'}: “${verb}${s}”.` };
+    },
+  },
+  {
+    // "people says" is the other half of the same rule.
+    id: 'plural-no-s',
+    pattern: new RegExp(`\\b(${PLURAL_SUBJECTS.join('|')})\\s+(${THIRD_PERSON.map((v) => v + 's').join('|')})\\b`, 'gi'),
+    build: (m) => {
+      const base = m[2].toLowerCase().replace(/e?s$/, (tail) => (tail === 'es' && /(?:ch|sh|ss|x|z|o)e?s$/.test(m[2].toLowerCase()) ? '' : ''));
+      const verb = THIRD_PERSON.find((v) => v === m[2].toLowerCase().replace(/es$/, '') || v === m[2].toLowerCase().replace(/s$/, ''));
+      if (!verb) return null;
+      return { after: `${m[1]} ${verb}`, reason: `“${m[1].toLowerCase()}” is more than one, so the verb drops the “s”: “${verb}”.` };
+    },
+  },
+  {
+    id: 'participle-past',
+    // A noun subject makes the same mistake as a pronoun: "my friend seen" is "my friend saw". The helper
+    // verbs are excluded by the pattern, so "has seen" and "had gone" never match.
+    pattern: new RegExp(`\\b(?!have|has|had|having|been|be|is|was|were|are|being)([a-zA-Z]+)\\s+(${Object.keys(PARTICIPLES).join('|')})\\b`, 'gi'),
+    build: (m) => ({
+      after: `${m[1]} ${PARTICIPLES[m[2].toLowerCase()]}`,
+      reason: `“${m[2].toLowerCase()}” needs a helper verb, as in “have ${m[2].toLowerCase()}”. On its own the past tense is “${PARTICIPLES[m[2].toLowerCase()]}”.`,
+    }),
+  },
+  {
+    id: 'been-helper',
+    pattern: /\b(i|you|we|they|he|she|it)\s+been\b/gi,
+    build: (m) => {
+      const subject = m[1].toLowerCase();
+      const helper = subject === 'he' || subject === 'she' || subject === 'it' ? 'has' : 'have';
+      return { after: `${m[1]} ${helper} been`, reason: `“Been” needs a helper verb in front of it: “${helper} been”.` };
+    },
+  },
+  {
+    id: 'a-an',
+    pattern: /\ba\s+([aeiouAEIOU][a-zA-Z]*)\b/g,
+    build: (m) => (VOWEL_LETTER_CONSONANT_SOUND.includes(m[1].toLowerCase()) ? null : { after: `an ${m[1]}`, reason: `“An” goes before a vowel sound: “an ${m[1].toLowerCase()}”.` }),
+  },
+  {
+    id: 'an-a',
+    pattern: /\ban\s+([b-df-hj-np-tv-zB-DF-HJ-NP-TV-Z][a-zA-Z]*)\b/g,
+    build: (m) => (CONSONANT_LETTER_VOWEL_SOUND.includes(m[1].toLowerCase()) ? null : { after: `a ${m[1]}`, reason: `“A” goes before a consonant sound: “a ${m[1].toLowerCase()}”.` }),
+  },
+  {
+    id: 'doubled-word',
+    // "had had" and "that that" are both real constructions, so they are left alone.
+    pattern: /\b(?!had\b|that\b)([a-zA-Z]{2,})\s+\1\b/gi,
+    build: (m) => ({ after: m[1], reason: 'This word is repeated.' }),
+  },
+  {
+    id: 'proper-noun',
+    pattern: new RegExp(`\\b(${DAYS_MONTHS.concat(PROPER_NOUNS).join('|')})\\b`, 'g'),
+    build: (m) => ({ after: m[1][0].toUpperCase() + m[1].slice(1), reason: 'Days, months, languages and names take a capital letter.' }),
+  },
+  {
+    id: 'sentence-capital',
+    pattern: /(^|[.!?]\s+)([a-z])/g,
+    // A full stop does not always end a sentence. "e.g. this" and "Dr. smith" are not two sentences, and
+    // neither is "3.14", so the rule declines whenever the stop belongs to an abbreviation or a number.
+    build: (m, text) => {
+      const before = text.slice(0, m.index + m[1].length);
+      if (/(?:^|[^a-zA-Z])[a-zA-Z]\.\s*$/.test(before)) return null;
+      if (/\b(?:e\.g|i\.e|etc|vs|approx|fig|no|cf|al|Dr|Mr|Mrs|Ms|St|Prof|Sr|Jr)\.\s*$/i.test(before)) return null;
+      if (/\d\.\s*$/.test(before)) return null;
+      if (/^[a-zA-Z]\./.test(text.slice(m.index + m[1].length))) return null;
+      return { after: m[1] + m[2].toUpperCase(), reason: 'A sentence starts with a capital letter.' };
+    },
+  },
+  {
+    id: 'space-before-punctuation',
+    pattern: /\s+([,.;:!?])/g,
+    build: (m) => ({ after: m[1], reason: 'No space goes before a comma or a full stop.' }),
+  },
+  {
+    // A full stop straight against the next word. Decimals and abbreviations are left alone.
+    id: 'space-after-punctuation',
+    pattern: /([a-zA-Z]{2,})([,;:])([a-zA-Z])/g,
+    build: (m) => ({ after: `${m[1]}${m[2]} ${m[3]}`, reason: 'A space goes after a comma.' }),
+  },
+  {
+    id: 'double-space',
+    pattern: /[^\S\n]{2,}/g,
+    build: () => ({ after: ' ', reason: 'One space between words is enough.' }),
+  },
+];
+
+const LIMIT = 25;
+
+/**
+ * Suggestions for one piece of the student's own writing.
+ *
+ * @param {string} text the saved draft
+ * @returns {{start:number,end:number,before:string,after:string,reason:string}[]} in order, non-overlapping
+ */
+function corrections(text) {
+  const draft = String(text || '');
+  // Nothing written yet is nothing to correct. The server refuses a review of a blank draft anyway; this
+  // keeps the same answer for anything that calls the checker directly.
+  if (!draft.trim()) return [];
+  const found = [];
+  for (const rule of RULES) {
+    for (const match of draft.matchAll(rule.pattern)) {
+      const built = rule.build(match, draft);
+      if (!built || built.after === match[0]) continue;
+      // A rule that rebuilds a phrase writes it in lower case. If the student's sentence started with a
+      // capital, the correction keeps it, so accepting one never quietly lowercases the start of a sentence.
+      const after =
+        /^[A-Z]/.test(match[0]) && /^[a-z]/.test(built.after) ? built.after[0].toUpperCase() + built.after.slice(1) : built.after;
+      if (after === match[0]) continue;
+      found.push({ start: match.index, end: match.index + match[0].length, before: match[0], after, reason: built.reason, rule: rule.id });
+    }
+  }
+  // Earliest first, and the longer match wins a tie so the more specific rule is the one offered. Offsets
+  // belong to the text as saved, so overlapping suggestions could not both be applied and one is dropped.
+  found.sort((a, b) => a.start - b.start || b.end - b.start - (a.end - a.start));
+  const kept = [];
+  for (const suggestion of found) {
+    if (kept.some((k) => suggestion.start < k.end && k.start < suggestion.end)) continue;
+    kept.push(suggestion);
+    if (kept.length >= LIMIT) break;
+  }
+  return kept;
+}
+
+module.exports = { corrections, MISSPELLINGS, CONTRACTIONS, RULES, LIMIT };
 
 };
 modules["preview-app"] = function (module, exports, require, __dirname, __filename) {
@@ -1784,7 +2166,7 @@ function createPreviewApp({ store = null, memory = null } = {}) {
       const suggestions = body.kind === 'grammar' ? corrections(state.draft) : [];
       pendingReview = { id: ++nextReview, text: state.draft, suggestions, decided: new Set(), modeId };
       const guide = body.kind === 'grammar'
-        ? 'This local checker recognizes six common spelling and punctuation patterns. Review each suggestion; it is not a full grammar assessment.'
+        ? 'This checker reads the words you saved and looks for spelling, apostrophes, verbs that do not match their subject, confusable words like their and there, and punctuation. Every change is yours to accept or reject, and each one says why. It does not read for meaning, so it will miss things.'
         : body.kind === 'tone'
           ? 'Choose one sentence. Who will read it? Underline casual or emotionally loaded words. Try a more precise word yourself, keeping your meaning and evidence. Read both versions aloud.'
           : 'Choose one sentence you wrote. Set it aside and explain its meaning aloud. Write that explanation in your own words, then compare: have you kept the meaning and any citation? This tool guides you; it does not generate a paraphrase.';
