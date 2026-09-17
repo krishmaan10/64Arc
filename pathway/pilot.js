@@ -2381,6 +2381,215 @@ function findings(draft) {
 module.exports = { findings, RULES, SWAPS, LIMIT, borrowedRanges };
 
 };
+modules["paraphrase-review"] = function (module, exports, require, __dirname, __filename) {
+'use strict';
+
+// The paraphrase check for "Say it another way".
+//
+// This one is different from the other two writing tools, and the difference is the whole point. The
+// grammar checker corrects. The tone checker mostly asks. This one may do neither, because the thing a
+// student wants here is a paraphrase, and handing them a paraphrase is handing them the work. A paraphrase
+// is not a correction of their sentence: it is a new sentence, and whoever writes it is the author of it.
+//
+// So every finding here carries `after: null`. There is no code path in this file that can produce a
+// replacement, which means there is no version of this tool that can be talked into writing one. The
+// server refuses to apply a finding with no replacement, so the guarantee holds end to end.
+//
+// What it does instead is read the draft for how the student is handling somebody else's words, which is
+// the part of paraphrasing that actually goes wrong in school work:
+//
+//   - A quotation with nobody attached to it, so the reader cannot check it.
+//   - A quotation dropped into a paragraph with no sentence introducing it.
+//   - A quotation long enough that it is making the point the paragraph was supposed to make.
+//   - A citation sitting at the end of a sentence that never says what the source found.
+//   - A draft that is mostly other people's sentences.
+//   - A sentence written in a register the rest of the draft never uses.
+//
+// That last one needs saying carefully. It is not an accusation and must never read as one. A sentence can
+// be unlike the rest of a draft because it was copied, or because the student looked a word up, or because
+// they wrote it on a better day. The card asks them to check, names what to do if it did come from a
+// source, and leaves it there. Nothing in this file decides that a student copied anything.
+//
+// What it looks for and what it cannot see is in docs/PARAPHRASE-REVIEW.md.
+
+/** Paraphrasing is slow work. A short list a student can act on beats a complete one they will not. */
+const LIMIT = 10;
+const PER_RULE = 3;
+
+/** Verbs that introduce somebody else's words. "Cooper found that…" is a signal phrase; a bare quote is not. */
+const SIGNAL_VERBS = [
+  'argues', 'argued', 'finds', 'found', 'notes', 'noted', 'writes', 'wrote', 'says', 'said', 'states',
+  'stated', 'claims', 'claimed', 'suggests', 'suggested', 'explains', 'explained', 'observes', 'observed',
+  'concludes', 'concluded', 'reports', 'reported', 'shows', 'showed', 'describes', 'described', 'adds',
+  'added', 'asks', 'asked', 'warns', 'warned', 'points out', 'according to', 'puts it', 'quoted',
+  // Base forms too. Without them "Some parents say it causes stress (Smith, 2019)" reads as a citation
+  // with nothing said about it, which is the opposite of true and exactly the wrong thing to tell a
+  // student who got it right. Over-matching here only costs a missed flag, which is the gentler mistake.
+  'say', 'argue', 'find', 'note', 'write', 'state', 'claim', 'suggest', 'explain', 'observe', 'conclude',
+  'report', 'show', 'describe', 'add', 'ask', 'warn', 'point', 'believe', 'believes', 'think', 'thinks',
+];
+// Two different questions, and conflating them was a real bug: whether a signal phrase sits just BEFORE a
+// quotation, and whether a sentence contains one anywhere. The first needs the verb near the end of the
+// text leading up to the quote; the second must not care where it falls, or "Cooper (2006) found that the
+// effect was small" reads as a citation with nothing said about it.
+const SIGNAL_BEFORE_QUOTE = new RegExp(`(?:${SIGNAL_VERBS.join('|')})[^.!?]{0,40}$`, 'i');
+const HAS_SIGNAL = new RegExp(`\\b(?:${SIGNAL_VERBS.join('|')})\\b`, 'i');
+
+/** What a citation looks like: a year in brackets, an author with a year, or a numbered reference. */
+const CITATION = /\([^)]*\b(?:1[5-9]\d{2}|20\d{2})\b[^)]*\)|\b[A-Z][a-zA-Z'’-]+(?:\s+(?:and|&|et al\.?)\s+[A-Z][a-zA-Z'’-]+)?\s*\(\s*(?:1[5-9]\d{2}|20\d{2})|\[\d{1,3}\]/;
+
+/** A quotation long enough that the reader is being given the source instead of the student's reading. */
+const LONG_QUOTE_WORDS = 25;
+/** The share of a draft that may be other people's sentences before that is the thing worth saying. */
+const QUOTE_HEAVY = 0.3;
+/** A sentence needs this many words before its vocabulary says anything about where it came from. */
+const VOICE_MIN_WORDS = 12;
+/** "Latinate" by approximation. Long words are the cheapest honest proxy for a shift in register. */
+const LONG_WORD = 9;
+
+const words = (text) => text.split(/\s+/).filter(Boolean);
+
+/** Every double-quoted span in the draft, straight or curly, with where it sits. */
+function quotations(text) {
+  const found = [];
+  for (const pattern of [/"([^"]+)"/g, /“([^”]+)”/g]) {
+    for (const match of text.matchAll(pattern)) found.push({ start: match.index, end: match.index + match[0].length, inner: match[1] });
+  }
+  return found.sort((a, b) => a.start - b.start);
+}
+
+/**
+ * Split into sentences without being fooled by the full stops that do not end one. The same abbreviation
+ * and decimal cases the grammar checker had to learn apply here, and getting them wrong would quote half a
+ * sentence back at the student.
+ */
+function sentences(text) {
+  const out = [];
+  let start = 0;
+  for (const match of text.matchAll(/[.!?]["'”’)\]]*(\s+|$)/g)) {
+    const end = match.index + match[0].length;
+    const before = text.slice(start, match.index + 1);
+    if (/(?:^|[^a-zA-Z])[a-zA-Z]\.$/.test(before)) continue;
+    if (/\b(?:e\.g|i\.e|etc|vs|approx|fig|no|cf|al|Dr|Mr|Mrs|Ms|St|Prof|Sr|Jr)\.$/i.test(before)) continue;
+    if (/\d\.$/.test(before)) continue;
+    const body = text.slice(start, end);
+    if (body.trim()) out.push({ start, end: start + body.trimEnd().length, text: body.trim() });
+    start = end;
+  }
+  const tail = text.slice(start);
+  if (tail.trim()) out.push({ start, end: start + tail.trimEnd().length, text: tail.trim() });
+  return out;
+}
+
+/** The share of a sentence's words that are long enough to mark a change of register. */
+function longWordShare(sentence) {
+  const list = words(sentence).map((w) => w.replace(/[^a-zA-Z'’-]/g, '')).filter(Boolean);
+  if (!list.length) return 0;
+  return list.filter((w) => w.length >= LONG_WORD).length / list.length;
+}
+
+function median(numbers) {
+  if (!numbers.length) return 0;
+  const sorted = [...numbers].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+/**
+ * Read the student's saved draft for how it handles other people's words. Returns the same shape the other
+ * two writing tools return, except that `after` is always null: see the note at the top of this file.
+ */
+function findings(draft) {
+  if (typeof draft !== 'string' || !draft.trim()) return [];
+  const quotes = quotations(draft);
+  const found = [];
+  const add = (rule, start, end, reason) => found.push({ start, end, before: draft.slice(start, end), after: null, reason, rule, kind: 'flag' });
+
+  // An unclosed quotation mark means the reader cannot tell where somebody else stopped talking, and it
+  // makes every other rule here unreliable, so it is worth saying first.
+  const straight = (draft.match(/"/g) || []).length;
+  const opens = (draft.match(/“/g) || []).length;
+  const closes = (draft.match(/”/g) || []).length;
+  if (straight % 2 === 1 || opens !== closes) {
+    const last = draft.lastIndexOf(straight % 2 === 1 ? '"' : opens > closes ? '“' : '”');
+    if (last >= 0) add('unbalanced-quote', last, last + 1, 'There is a quotation mark here without its pair, so the reader cannot tell where the quotation ends. Every other check on this draft is less reliable until it is closed.');
+  }
+
+  for (const quote of quotes) {
+    const after = draft.slice(quote.end, quote.end + 120);
+    const before = draft.slice(Math.max(0, quote.start - 120), quote.start);
+    const count = words(quote.inner).length;
+    if (!CITATION.test(after) && !CITATION.test(before)) {
+      add('quote-without-citation', quote.start, quote.end, 'These are somebody else’s words with nobody attached to them. Who wrote it, and where would a reader go to check? A quotation without a source is the one thing a marker always notices.');
+    } else if (!SIGNAL_BEFORE_QUOTE.test(before.trim())) {
+      add('quote-without-signal', quote.start, quote.end, 'This quotation is dropped straight into the paragraph. Introduce it first, as in “Cooper found that …”, so the reader knows who is speaking before they hear them.');
+    } else if (count > LONG_QUOTE_WORDS) {
+      add('long-quote', quote.start, quote.end, `This quotation runs to ${count} words, so it is making the point your paragraph was meant to make. Keep the few words only this source could have said, and put the rest in your own sentence.`);
+    }
+  }
+
+  // This one is about the draft rather than about a span, so it is kept apart from the others. Anchoring it
+  // to the first quotation is only so the card has something to show; the overlap rule below would
+  // otherwise drop it every time, because a draft made of quotations has each of them flagged already.
+  const quoted = quotes.reduce((total, quote) => total + quote.end - quote.start, 0);
+  const summary = [];
+  if (quotes.length > 1 && quoted / draft.length > QUOTE_HEAVY) {
+    summary.push({
+      start: quotes[0].start,
+      end: quotes[0].end,
+      before: draft.slice(quotes[0].start, quotes[0].end),
+      after: null,
+      reason: `About ${Math.round((quoted / draft.length) * 100)}% of this draft is inside quotation marks. Your reading of the sources is what is being marked, and at the moment the sources are doing the talking.`,
+      rule: 'quote-heavy',
+      kind: 'flag',
+    });
+  }
+
+  const list = sentences(draft);
+  for (const sentence of list) {
+    // A citation with nothing said about it. "Sources: Cooper" is the named example in the brief itself.
+    if (/^\s*(?:sources?|references?|bibliography|works cited)\s*[:–-]/i.test(sentence.text)) {
+      add('listed-not-used', sentence.start, sentence.end, 'This lists sources rather than using them. The brief asks for them inside the argument, as in “Cooper (2006) found …, which supports …”.');
+    } else if (CITATION.test(sentence.text) && !HAS_SIGNAL.test(sentence.text) && !/["“]/.test(sentence.text)) {
+      add('citation-without-claim', sentence.start, sentence.end, 'This sentence carries a citation but never says what the source actually found. Say what it showed, then a reader can tell whether it supports you.');
+    }
+  }
+
+  // A sentence unlike the rest of the draft. Read the note at the top of this file before changing this:
+  // it asks, it never concludes, and the baseline is the student's own writing rather than any standard.
+  const measurable = list.filter((s) => words(s.text).length >= VOICE_MIN_WORDS);
+  if (measurable.length >= 4) {
+    const baseline = median(measurable.map((s) => longWordShare(s.text)));
+    const threshold = Math.max(0.25, baseline * 2.2);
+    for (const sentence of measurable) {
+      if (longWordShare(sentence.text) < threshold) continue;
+      if (quotes.some((q) => sentence.start < q.end && sentence.end > q.start)) continue;
+      add('voice-shift', sentence.start, sentence.end, 'This sentence uses a much heavier vocabulary than the rest of your draft. That is worth a look rather than a worry: if you wrote it, keep it. If it came from a source, it needs either quotation marks and a citation, or your own words and a citation.');
+    }
+  }
+
+  found.sort((a, b) => a.start - b.start || b.end - a.end);
+  const clear = [];
+  for (const finding of found) {
+    if (clear.length && finding.start < clear[clear.length - 1].end) continue;
+    clear.push(finding);
+  }
+  const seen = new Map();
+  const kept = new Set();
+  for (let round = 0; round < PER_RULE; round += 1) {
+    for (const finding of clear) {
+      if (kept.size === LIMIT) break;
+      if (kept.has(finding) || (seen.get(finding.rule) ?? 0) > round) continue;
+      seen.set(finding.rule, round + 1);
+      kept.add(finding);
+    }
+  }
+  return [...summary, ...clear.filter((finding) => kept.has(finding))].slice(0, LIMIT);
+}
+
+module.exports = { findings, quotations, sentences, LIMIT, LONG_QUOTE_WORDS, QUOTE_HEAVY };
+
+};
 modules["preview-app"] = function (module, exports, require, __dirname, __filename) {
 // The preview, as logic without a transport.
 //
@@ -2398,6 +2607,7 @@ const { MODES } = require('./modes.js');
 const identity = require('./identity.js');
 const { corrections } = require('./writing-review.js');
 const { findings } = require('./tone-review.js');
+const { findings: paraphraseFindings } = require('./paraphrase-review.js');
 
 const PREVIEW_MODES = ['understand', 'plan', 'question', 'improve', 'rephrase', 'sources'];
 const SOURCES = [
@@ -2486,13 +2696,15 @@ function createPreviewApp({ store = null, memory = null } = {}) {
       if (!state.assignment.modes.includes(modeId)) return reply(403, { error: 'Your teacher has paused this writing tool.' });
       if (!state.draft.trim()) return reply(400, { error: 'Write and save your own draft first.' });
       if (body.text !== state.draft) return reply(409, { error: 'Save your current draft before reviewing it.' });
-      const suggestions = body.kind === 'grammar' ? corrections(state.draft) : body.kind === 'tone' ? findings(state.draft) : [];
+      const suggestions = body.kind === 'grammar' ? corrections(state.draft)
+        : body.kind === 'tone' ? findings(state.draft)
+        : paraphraseFindings(state.draft);
       pendingReview = { id: ++nextReview, text: state.draft, suggestions, decided: new Set(), modeId };
       const guide = body.kind === 'grammar'
         ? 'This checker reads the words you saved and looks for spelling, apostrophes, verbs that do not match their subject, confusable words like their and there, and punctuation. Every change is yours to accept or reject, and each one says why. It does not read for meaning, so it will miss things.'
         : body.kind === 'tone'
           ? 'This reads the words you saved and points at places where the tone may not match an essay: words that ask the reader to feel something, claims that assume the reader already agrees, and phrases that belong to speech. Most of these are questions rather than corrections, because the judgement is yours. Anything you put inside quotation marks is left alone.'
-          : 'Choose one sentence you wrote. Set it aside and explain its meaning aloud. Write that explanation in your own words, then compare: have you kept the meaning and any citation? This tool guides you; it does not generate a paraphrase.';
+          : 'This tool does not write a paraphrase for you, and there is no button here that will: a paraphrase is a new sentence, and whoever writes it is its author. What it does is read your draft for how it handles other people\u2019s words, and point at the places worth another pass. The method that works: cover the source, say the idea aloud in your own words, write down what you said, then check you kept the meaning and the citation.';
       await record({ type: 'review', at, kind: body.kind, count: suggestions.length, guide });
       return reply(200, { id: pendingReview.id, suggestions, guide });
     }

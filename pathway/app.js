@@ -225,7 +225,8 @@ function renderReview() {
   const panel = $('writing-response'); panel.replaceChildren(); panel.hidden = false;
   panel.append(element('h3', 'Your writing, under review'), element('p', review.guide));
   const emptyState = { grammar: 'Nothing found, which is not the same as nothing wrong. Read your draft through yourself too.',
-    tone: 'Nothing stood out. Tone is a judgement rather than a rule, so read it through once yourself with your reader in mind.' };
+    tone: 'Nothing stood out. Tone is a judgement rather than a rule, so read it through once yourself with your reader in mind.',
+    rephrase: 'Nothing stood out in how this draft handles other people\u2019s words. That is the part this can check; whether each paraphrase kept the meaning is still yours to read for.' };
   if (!review.suggestions.length && emptyState[review.kind]) panel.append(element('p', emptyState[review.kind]));
   review.suggestions.forEach((suggestion, index) => {
     const card = element('div', undefined, 'suggestion'); const change = element('p', undefined, 'edit-text');
