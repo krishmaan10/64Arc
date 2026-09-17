@@ -1717,6 +1717,30 @@ const MISSPELLINGS = {
   untill: 'until', useing: 'using', usefull: 'useful', usualy: 'usually', vaccum: 'vacuum',
   vegatable: 'vegetable', wierd: 'weird', wonderfull: 'wonderful', wory: 'worry', writting: 'writing',
   yeild: 'yield', teh: 'the', adn: 'and', taht: 'that', hte: 'the', whcih: 'which',
+
+  // Added after auditing the list against the system dictionary: every entry below was checked to be
+  // absent from /usr/share/dict/words, so none of them is a word a student could have meant.
+  achive: 'achieve', actualy: 'actually', agression: 'aggression', arguemnt: 'argument', assesment: 'assessment',
+  certainlly: 'certainly', changable: 'changeable', comparitive: 'comparative', competant: 'competent',
+  conclussion: 'conclusion', consious: 'conscious', critisise: 'criticise', decieve: 'deceive',
+  definatly: 'definitely', descriminate: 'discriminate', desicion: 'decision', develope: 'develop',
+  dissapointed: 'disappointed', embarrasing: 'embarrassing', enviromental: 'environmental', equiptment: 'equipment',
+  especialy: 'especially', eventhough: 'even though', exagerate: 'exaggerate', excelent: 'excellent',
+  exercize: 'exercise', exersize: 'exercise', explaination: 'explanation', fourty: 'forty', futher: 'further',
+  garantee: 'guarantee', generaly: 'generally', goverments: 'governments', heigth: 'height', hierachy: 'hierarchy',
+  ignorence: 'ignorance', importent: 'important', independantly: 'independently', intergrate: 'integrate',
+  interupt: 'interrupt', intrest: 'interest', irrelevent: 'irrelevant', liase: 'liaise', managable: 'manageable',
+  miniture: 'miniature', mischevious: 'mischievous', ocurrence: 'occurrence', offerred: 'offered',
+  omision: 'omission', oppinion: 'opinion', orginal: 'original', paragrah: 'paragraph', persistant: 'persistent',
+  personel: 'personnel', potatoe: 'potato', practicly: 'practically', preceed: 'precede', prefered: 'preferred',
+  preformance: 'performance', pronounciation: 'pronunciation', propoganda: 'propaganda', recepient: 'recipient',
+  recomend: 'recommend', refering: 'referring', refernce: 'reference', remeber: 'remember', repetion: 'repetition',
+  ressource: 'resource', ridiculus: 'ridiculous', saftey: 'safety', secratary: 'secretary', seige: 'siege',
+  sentance: 'sentence', seperately: 'separately', speciffically: 'specifically', studing: 'studying',
+  succesfully: 'successfully', surprize: 'surprise', tatoo: 'tattoo', thoughout: 'throughout',
+  threshhold: 'threshold', tommorrow: 'tomorrow', tradgedy: 'tragedy', underate: 'underrate', vegtable: 'vegetable',
+  vigilence: 'vigilance', wellfare: 'welfare', whereever: 'wherever', wich: 'which', wilfull: 'wilful',
+  writen: 'written',
 };
 
 // Contractions typed without the apostrophe. The ones whose bare form is also a word carry a caution, because
@@ -1771,6 +1795,13 @@ const CONSONANT_LETTER_VOWEL_SOUND = ['hour', 'honest', 'honour', 'honor', 'heir
 /** Every rule: a global pattern, and a build that returns the replacement or null to decline the match. */
 // Words that genuinely end in a consonant and "ys", plus the names that do, so the -ies rule
 // leaves them alone. "The whys and wherefores" is correct English; Gladys is somebody.
+// The list above only corrects forms that are not words in current English. One entry is the exception
+// worth naming: a calender really is a machine that presses cloth, so that suggestion says so rather
+// than assuming. Archaic spellings ("untill", "incase") are treated as errors, because today they are.
+const MISSPELLING_CAUTIONS = {
+  calender: 'Reject this if you mean a calender, the machine that presses cloth or paper.',
+};
+
 const KEEP_YS = new Set(['whys', 'drys', 'phys', 'sys', 'gladys', 'rhys', 'krys', 'alys']);
 
 const RULES = [
@@ -1778,8 +1809,11 @@ const RULES = [
     id: 'misspelling',
     pattern: /\b[a-zA-Z]+\b/g,
     build: (m) => {
-      const fix = MISSPELLINGS[m[0].toLowerCase()];
-      return fix ? { after: matchCase(m[0], fix), reason: `The spelling is “${fix}”.` } : null;
+      const key = m[0].toLowerCase();
+      const fix = MISSPELLINGS[key];
+      if (!fix) return null;
+      const caution = MISSPELLING_CAUTIONS[key];
+      return { after: matchCase(m[0], fix), reason: `The spelling is “${fix}”.${caution ? ` ${caution}` : ''}` };
     },
   },
   {
