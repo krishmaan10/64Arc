@@ -565,3 +565,6 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
 
 .source-card details p { white-space: pre-line; }
 .source-card details .text-link { margin-top: 6px; font-size: 13px; }
+
+.teacher-project-picker { display: block; margin-bottom: 18px; }
+.teacher-project-picker select { width: 100%; margin-top: 6px; }

@@ -134,6 +134,16 @@ function renderProjects() {
   cards.replaceChildren();
   $('desk-count').textContent = `${state.projects.length} practice projects`;
   $('teacher-project').textContent = state.assignment.title;
+  // Permissions are set per project, so a teacher must be able to move between them here rather than
+  // having to navigate the student's workspace to reach each one.
+  const picker = $('policy-project');
+  const keep = picker.value;
+  picker.replaceChildren(...state.projects.map(project => {
+    const option = element('option', `${project.subject} · ${project.title}`);
+    option.value = project.id;
+    return option;
+  }));
+  picker.value = state.projects.some(p => p.id === keep) && keep !== state.projectId ? keep : state.projectId;
   for (const project of state.projects) {
     const open = project.id === state.projectId;
 
@@ -527,6 +537,14 @@ $('source-search').addEventListener('input', () => { if (state) renderSources();
 $('saved-filter').addEventListener('click', () => { if (state) { savedOnly = !savedOnly; renderSources(); } });
 $('activity-filter').addEventListener('change', () => { if (state) renderActivity(); });
 $('activity-scope').addEventListener('change', () => { if (state) { activityScope = $('activity-scope').value; renderActivity(); } });
+$('policy-project').addEventListener('change', async () => {
+  // Setting another project's permissions means opening it, so the checkboxes and the record agree about
+  // which piece of work they belong to. Nothing is saved until the teacher submits the form.
+  const id = $('policy-project').value;
+  if (!state || id === state.projectId) return;
+  await switchProject(id);
+  location.hash = 'teacher';
+});
 $('download-draft').addEventListener('click', () => { if (state?.draft) download('my-saved-draft.txt', state.draft, 'text/plain'); });
 $('export-activity').addEventListener('click', () => { if (state) download('learning-activity.json', JSON.stringify({ assignment: state.assignment.title, activity: state.activity }, null, 2), 'application/json'); });
 $('pilot-reset').addEventListener('click', () => { if (window.PathWayPilot && window.confirm('Start again? This clears the practice record kept in this browser.')) window.PathWayPilot.reset(); });
