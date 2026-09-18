@@ -585,3 +585,49 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
 
 .learning-card .section-top h2 { margin: 0; }
 .learning-card .source-actions { margin-top: 12px; }
+
+/* ---------------------------------------------------------------------------
+   The teacher's desk. Same tokens as the student side. Series colours appear
+   only on marks; text always wears text tokens.
+   --------------------------------------------------------------------------- */
+.desk-body { display: block; }
+.desk-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 32px; background: var(--rail, #171a33); color: #fff; }
+.desk-top .brand { color: #fff; }
+.desk-top-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.desk-top-right select { min-height: 36px; border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+.desk-top-right .text-button { color: #fff; }
+.desk { max-width: 1180px; margin: 0 auto; padding: 28px 32px 64px; }
+.desk-gate { max-width: 560px; margin: 48px auto; }
+.desk-gate form { display: grid; gap: 10px; margin: 18px 0 10px; }
+.desk-columns { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin: 20px 0; }
+.desk-needs { margin-top: 8px; }
+.desk-bar { position: relative; display: flex; gap: 2px; height: 22px; margin: 8px 0 14px; }
+.desk-seg { display: block; height: 100%; min-width: 3px; }
+.desk-seg:first-child { border-radius: 4px 0 0 4px; }
+.desk-seg:last-child { border-radius: 0 4px 4px 0; }
+.desk-bar-mini { display: inline-flex; height: 10px; width: 120px; margin: 0; vertical-align: middle; }
+.desk-bar-empty { font-size: 13px; color: var(--muted); }
+.desk-tip { position: absolute; z-index: 2; padding: 6px 10px; font-size: 12.5px; background: var(--ink); color: #fff; border-radius: 8px; pointer-events: none; white-space: nowrap; }
+.desk-legend { width: 100%; border-collapse: collapse; font-size: 14px; }
+.desk-legend td { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.desk-legend td.num, .desk-set td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.desk-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; }
+.desk-figures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+.desk-figure { display: grid; gap: 2px; padding: 12px 14px; background: var(--surface-2); border-radius: var(--radius-sm); }
+.desk-figure strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.desk-signal { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--accent-soft); color: var(--accent-ink); font-size: 14px; }
+.desk-groups { padding-left: 20px; }
+.desk-groups li { margin-bottom: 12px; }
+.desk-group-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+.scroll-x { overflow-x: auto; }
+.desk-set { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
+.desk-set th { text-align: left; font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line-strong); }
+.desk-set td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.desk-growth { display: flex; align-items: flex-end; gap: 4px; height: 72px; margin: 10px 0 6px; }
+.desk-growth-bar { display: block; width: 14px; background: var(--ink-2); border-radius: 4px 4px 0 0; }
+.desk-growth-bar.is-large { background: var(--surface); border: 2px solid var(--ink-2); }
+.desk-record { padding-left: 20px; }
+.desk-record li { margin-bottom: 18px; }
+.desk-correction { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
+.desk-correction select { min-height: 34px; padding: 5px 10px; font-size: 13px; }
+@media (max-width: 900px) { .desk-columns { grid-template-columns: 1fr; } .desk { padding-inline: 16px; } .desk-top { padding-inline: 16px; } .desk-figures { grid-template-columns: 1fr; } }
