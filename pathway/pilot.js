@@ -3385,7 +3385,10 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
       });
     if (method !== 'POST' || !ROUTES.includes(pathname)) return pathname.startsWith('/api/') ? reply(404, { error: 'Page not found.' }) : null;
     if (!body || typeof body !== 'object') return reply(400, { error: 'Send a JSON object.' });
-    const at = null;
+    // When this happened. Every event carries it: the activity page shows it, the observations read
+    // bursts from it, and the desk orders students by it. A rewrite yesterday set this to null, and for a
+    // day every event was recorded as having happened at the start of 1970.
+    const at = Date.now();
 
     if (pathname === '/api/project') {
       if (typeof body.id !== 'string' || !projectById(body.id)) return reply(400, { error: 'Choose one of your projects.' });
@@ -3507,7 +3510,10 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
     return reply(200, { ...result.shown, mode: modeId, ...(routedTo ? { routedTo } : {}) });
   }
 
-  return { state, ready, handle, previewModes: PREVIEW_MODES };
+  // The desk writes a teacher's correction into the student's own chain. Going through here rather than
+  // straight to the store keeps a live session's memory and its file agreeing.
+  const annotate = async (event) => { await ready; return record(event); };
+  return { state, ready, handle, annotate, previewModes: PREVIEW_MODES };
 }
 
 module.exports = { createPreviewApp, PREVIEW_MODES, SOURCES, REPLIES, PROJECTS, replyFor };
