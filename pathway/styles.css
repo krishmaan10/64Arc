@@ -582,3 +582,6 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
   background: var(--sun-soft); color: var(--sun-ink); border: 1px solid var(--sun);
   font-size: 14px; line-height: 1.5;
 }
+
+.learning-card .section-top h2 { margin: 0; }
+.learning-card .source-actions { margin-top: 12px; }

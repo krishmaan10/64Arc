@@ -442,7 +442,47 @@ function renderModelState() {
     ? 'Live model behind the replies · every reply passes the same boundary and the same check · the record stays on this device'
     : 'Fixed replies · local request reader · no AI model connected for replies · the record stays on this device';
 }
-function renderAll() { renderModelState(); renderStorageState(); renderAssignment(); renderSavedReferences(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
+/**
+ * Whether this browser shares its practice requests with the learner. Only the browser pilot has this: the
+ * local server's learner reads its own records directly. It is off until the visitor switches it on, it
+ * says exactly what travels, and when this build has nowhere to send to it offers the file instead.
+ */
+function renderLearningCard() {
+  const card = $('learning-card');
+  const learning = window.PathWayPilot && window.PathWayPilot.learning;
+  card.hidden = !learning;
+  if (!learning) return;
+  card.replaceChildren();
+  const top = element('div', undefined, 'section-top');
+  top.append(element('h2', 'Help PathWay learn', undefined), element('span', learning.consent() === 'yes' ? 'Sharing on' : 'Sharing off', 'outline-pill'));
+  top.firstChild.id = 'learning-title';
+  card.append(top);
+  card.append(element('p', 'The reader that decides what kind of help each request is learns from real requests. What would travel: the words of each request you make here and how it was decided. What never travels: your draft, the replies, any name, or the words of a message that was about you rather than the work.', 'muted'));
+  const refused = typeof learning.rejected === 'function' ? learning.rejected() : 0;
+  const status = element('p', `${learning.pending()} waiting · ${learning.sent()} shared from this browser${refused ? ` · ${refused} could not be used` : ''}`, 'small muted');
+  card.append(status);
+  const actions = element('div', undefined, 'source-actions');
+  if (learning.endpoint) {
+    const on = learning.consent() === 'yes';
+    const toggle = lockable(element('button', on ? 'Stop sharing' : 'Share my practice requests', on ? '' : 'primary'));
+    toggle.type = 'button';
+    toggle.setAttribute('aria-pressed', String(on));
+    toggle.addEventListener('click', () => action(async () => {
+      await learning.setConsent(on ? 'no' : 'yes');
+      renderLearningCard();
+      notice(on ? 'Sharing stopped. Nothing more will be sent from this browser.' : 'Sharing on. Requests you make here now help the reader learn.');
+    }));
+    actions.append(toggle);
+  } else {
+    actions.append(element('span', 'Sharing is not switched on for this pilot build.', 'small muted'));
+  }
+  const save = lockable(element('button', 'Download my practice log', 'text-link'));
+  save.type = 'button';
+  save.addEventListener('click', () => download('pathway-practice-log.jsonl', learning.download(), 'application/x-ndjson'));
+  actions.append(save);
+  card.append(actions);
+}
+function renderAll() { renderLearningCard(); renderModelState(); renderStorageState(); renderAssignment(); renderSavedReferences(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
 function download(filename, text, type) {
   const url = URL.createObjectURL(new Blob([text], { type }));
   const link = element('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove();

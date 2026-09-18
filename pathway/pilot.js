@@ -3216,8 +3216,11 @@ const wordsIn = (text) => (String(text || '').match(/[\p{L}\p{N}']+/gu) || []).l
  *                                      shared between two sessions, which is the whole point of having one.
  * @param {function} [options.ask]      async ({system, user}) => string. A model. Without one the replies are
  *                                      the fixed exemplars, and the interface says so.
+ * @param {function} [options.onRecord] called with each event as it is recorded. The browser pilot uses
+ *                                      this to offer its requests to the learner; a listener that throws
+ *                                      does not stop the record.
  */
-function createPreviewApp({ store = null, memory = null, sessionId = SESSION, ask = null } = {}) {
+function createPreviewApp({ store = null, memory = null, sessionId = SESSION, ask = null, onRecord = null } = {}) {
   // The session id names a file on disk, so it is a filename first and an identifier second.
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/i.test(String(sessionId))) throw new Error(`invalid session id: ${String(sessionId).slice(0, 40)}`);
   // What the student has done in each project. The project's definition is fixed; this is the part that
@@ -3284,12 +3287,16 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
   // Every change to the record goes through here: into memory, and onto disk or into the browser's storage.
   const record = async (event) => {
     const tagged = { projectId: currentId, ...event };
-    const stored = store ? await store.append(sessionId, tagged) : tagged;
+    // The chain numbers events on disk. In a browser there is no chain, and the pilot's queue and the
+    // collector's replay protection both key on the number, so it is assigned here in the same order.
+    const stored = store ? await store.append(sessionId, tagged) : { ...tagged, seq: allEvents.length };
     allEvents.push(stored);
     remember();
+    if (onRecord) { try { onRecord(stored); } catch { /* a listener may not break recording */ } }
     return stored;
   };
   const apply = (event) => {
+    if (!Number.isInteger(event.seq)) event.seq = allEvents.length; // sessions stored before events were numbered
     allEvents.push(event);
     const w = work.get(projectById(event.projectId) ? event.projectId : LEGACY_PROJECT);
     if (!w) return;
@@ -3510,6 +3517,79 @@ module.exports = { createPreviewApp, PREVIEW_MODES, SOURCES, REPLIES, PROJECTS, 
 // The pilot: the app the preview server runs, with the record kept in this browser and nowhere else.
 var createPreviewApp = require('./preview-app.js').createPreviewApp;
 var KEY = "pathway-pilot-v1";
+// Where a switched-on pilot sends the requests it made, so the learner can learn from them. Set at build
+// time from PATHWAY_LEARNING_ENDPOINT. Empty means sharing is not on for this build, and the interface
+// offers a download instead of a switch.
+var LEARNING_ENDPOINT = "";
+var CONTRIBUTOR_KEY = 'pathway-pilot-contributor', CONSENT_KEY = 'pathway-pilot-contribute', OUTBOX_KEY = 'pathway-pilot-outbox', SENT_KEY = 'pathway-pilot-sent', REJECTED_KEY = 'pathway-pilot-rejected';
+function readJson(key, fallback) { try { var v = JSON.parse(window.localStorage.getItem(key)); return v === null || v === undefined ? fallback : v; } catch (error) { return fallback; } }
+function writeJson(key, value) { try { window.localStorage.setItem(key, JSON.stringify(value)); return true; } catch (error) { return false; } }
+function contributorId() {
+  var id = readJson(CONTRIBUTOR_KEY, null);
+  if (typeof id === 'string' && /^[a-f0-9]{32}$/.test(id)) return id;
+  var bytes = new Uint8Array(16); window.crypto.getRandomValues(bytes);
+  id = Array.prototype.map.call(bytes, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  writeJson(CONTRIBUTOR_KEY, id);
+  return id;
+}
+// What one request looks like on its way to the learner: the words asked and how they were decided, and
+// nothing else. No reply, no draft, no name, and no words at all from a message about the student.
+function forLearner(event) {
+  return {
+    type: 'request', seq: event.seq, at: event.at, mode: event.mode || null,
+    asked: event.outcome === 'supported' ? '' : String(event.asked || ''),
+    outcome: event.outcome, category: event.category || null,
+    read: event.read ? { label: event.read.label, confidence: event.read.confidence } : null,
+    again: Boolean(event.again), redirectedTo: event.redirectedTo || null, routedTo: event.routedTo || null,
+    projectId: event.projectId || null, novelty: typeof event.novelty === 'number' ? event.novelty : null
+  };
+}
+var flushing = false;
+var learning = {
+  endpoint: LEARNING_ENDPOINT,
+  consent: function () { var v = readJson(CONSENT_KEY, null); return v === 'yes' || v === 'no' ? v : null; },
+  setConsent: function (value) { writeJson(CONSENT_KEY, value === 'yes' ? 'yes' : 'no'); if (value === 'yes') return learning.flush(); return Promise.resolve(false); },
+  pending: function () { return readJson(OUTBOX_KEY, []).length; },
+  sent: function () { return Number(readJson(SENT_KEY, 0)) || 0; },
+  rejected: function () { return Number(readJson(REJECTED_KEY, 0)) || 0; },
+  download: function () { var NL = String.fromCharCode(10); return readJson(OUTBOX_KEY, []).map(function (e) { return JSON.stringify(e); }).join(NL) + NL; },
+  queue: function (event) {
+    if (!event || event.type !== 'request') return;
+    var outbox = readJson(OUTBOX_KEY, []);
+    outbox.push(forLearner(event));
+    while (outbox.length > 500) outbox.shift();
+    writeJson(OUTBOX_KEY, outbox);
+    if (learning.consent() === 'yes' && LEARNING_ENDPOINT) learning.flush();
+  },
+  flush: function () {
+    if (flushing || !LEARNING_ENDPOINT || learning.consent() !== 'yes' || typeof window.fetch !== 'function') return Promise.resolve(false);
+    var outbox = readJson(OUTBOX_KEY, []);
+    if (!outbox.length) return Promise.resolve(false);
+    var batch = outbox.slice(0, 50);
+    var top = batch[batch.length - 1].seq;
+    flushing = true;
+    return window.fetch(LEARNING_ENDPOINT + '/api/contribute', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true, mode: 'cors',
+      body: JSON.stringify({ contributor: contributorId(), events: batch })
+    }).then(function (response) {
+      if (!response || !response.ok) return false;
+      // A 200 means the collector has seen the batch, not that it kept all of it. What it kept is what
+      // counts as shared; what it rejected was malformed and is not worth sending twice.
+      return Promise.resolve(response.json ? response.json() : null).catch(function () { return null; }).then(function (counts) {
+        var kept = counts && typeof counts.added === 'number' ? counts.added + (counts.duplicate || 0) : batch.length;
+        var refused = counts && typeof counts.rejected === 'number' ? counts.rejected : 0;
+        var remaining = readJson(OUTBOX_KEY, []).filter(function (e) { return e.seq > top; });
+        writeJson(OUTBOX_KEY, remaining);
+        writeJson(SENT_KEY, learning.sent() + kept);
+        if (refused) writeJson(REJECTED_KEY, learning.rejected() + refused);
+        return true;
+      });
+    }).catch(function () { return false; }).then(function (ok) { flushing = false; if (ok && learning.pending()) return learning.flush(); return ok; });
+  }
+};
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') learning.flush(); });
+}
 var memory = {
   load: function () { try { return JSON.parse(window.localStorage.getItem(KEY)); } catch (error) { return null; } },
   // Returns whether the write happened, because two things can stop it and a student should be told about
@@ -3535,7 +3615,7 @@ var memory = {
     }
   }
 };
-var app = createPreviewApp({ memory: memory });
+var app = createPreviewApp({ memory: memory, onRecord: learning.queue });
 window.PathWayPilot = {
   app: app,
   fetch: function (url, body) {
@@ -3547,6 +3627,7 @@ window.PathWayPilot = {
       return { ok: result.status >= 200 && result.status < 300, status: result.status, headers: { get: function (name) { return String(name).toLowerCase() === 'content-type' ? 'application/json' : null; } }, json: function () { return Promise.resolve(JSON.parse(payload)); } };
     });
   },
+  learning: learning,
   reset: function () { try { window.localStorage.removeItem(KEY); } catch (error) {} window.location.reload(); }
 };
 })();
