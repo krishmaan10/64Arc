@@ -696,8 +696,13 @@ function classify(message, { assignment } = {}) {
   // Only an unbroken run of the brief's own wording counts now. A reworded paste is no longer the brief's
   // phrasing, and catching it is the learned reader's job, with the mode material and the response check
   // behind it; this rule stays narrow enough to be explainable to a student who asks why.
-  const overlap = assignment ? briefOverlap(text, assignment.brief) : 0;
-  const run = assignment ? longestSharedRun(text, assignment.brief) : 0;
+  // Every brief this student has, not just the one they have open. Once a workspace holds more than one
+  // project a student can read all of their briefs, so checking only the open one leaves the obvious way
+  // round it: open the English essay and paste the Geography brief. `otherBriefs` is optional, so a caller
+  // with a single assignment behaves exactly as before.
+  const briefs = assignment ? [assignment.brief, ...(Array.isArray(assignment.otherBriefs) ? assignment.otherBriefs : [])].filter(Boolean) : [];
+  const overlap = briefs.length ? Math.max(...briefs.map((brief) => briefOverlap(text, brief))) : 0;
+  const run = briefs.length ? Math.max(...briefs.map((brief) => longestSharedRun(text, brief))) : 0;
   if (run >= PASTED_RUN) add('produce', 'is the assignment brief itself', 'brief');
 
   // A production request written in a language the patterns do not read.
@@ -1111,6 +1116,198 @@ const EXEMPLARS = {
 };
 
 module.exports = { EXEMPLARS, ASSIGNMENT };
+
+};
+modules["project-replies"] = function (module, exports, require, __dirname, __filename) {
+'use strict';
+
+// What the preview answers, for each project.
+//
+// Until projects existed there was one assignment and one set of fixed replies, and they were the same
+// thing. Adding three more projects without adding replies produced the worst kind of bug: a student
+// opening the Roman Republic essay and asking what the task wanted was told, with complete confidence,
+// about homework and Cooper (2006). Everything looked like it worked. Nothing did.
+//
+// So each project answers about itself. These hold the same standard as lib/exemplars.js, which is the
+// standard a school would be shown: concrete, inside the mode, and ending with something to do in the next
+// ten minutes rather than something to admire. They are checked by the same response check the model's
+// replies are, so the standard we set is one the boundary would let through.
+//
+// The English project is not here. Its replies are the exemplars themselves, and having one copy of them
+// is worth more than the symmetry of moving them.
+
+const PROJECT_REPLIES = {
+  'roman-republic': {
+    understand: [
+      'You are being asked to weigh explanations against each other, not to tell the story of the Republic falling. The marks are for deciding which explanation the evidence supports best and defending that choice.',
+      '',
+      'What a complete answer needs:',
+      '• Two or more named explanations, stated as claims a historian actually makes: military reform created armies loyal to generals; the constitution could not govern an empire; land and debt made the poor a political force; personal ambition outran the rules.',
+      '• A decision. Not "all of these mattered", which is true of everything and argues nothing.',
+      '• Three sources, one of them ancient, used inside the argument rather than listed at the end.',
+      '• 800 words, so about six paragraphs.',
+      '',
+      'Your teacher is assessing causation (can you say how one thing led to another, not just that both happened?) and weighing interpretations (can you say why one explanation beats another on the evidence?).',
+      '',
+      'An ancient source is one written at or near the time: Polybius, Sallust, Cicero. A modern historian is someone writing about it since. You need both because they fail in different ways.',
+      '',
+      'Which explanation are you drawn to at the moment, and what makes you doubt it?',
+    ].join('\n'),
+    plan: [
+      'Six paragraphs across three evenings, with the reading first, because you cannot weigh explanations you have not met yet.',
+      '',
+      '1. Tonight, 25 minutes: read the Britannica overview once for the order of events, then close it. You want the sequence in your head, not quotations from it.',
+      '2. Tonight, 20 minutes: write down every explanation you meet, one line each. Aim for four. You will argue with two of them.',
+      '3. Tomorrow, 30 minutes: read Polybius Book VI on the constitution, and one chapter of a modern historian. Note where they disagree, because that gap is your essay.',
+      '4. Tomorrow, 15 minutes: decide. Write your position as one sentence: "The Republic fell mainly because ___, rather than because ___."',
+      '5. Day three, 45 minutes: write six paragraphs from the plan: position; explanation one with evidence; explanation two with evidence; why one beats the other; the strongest objection; conclusion.',
+      '6. Day three, 20 minutes: read it aloud, check every source is used and not just named, check the word count.',
+      '',
+      'That is about two and a half hours. The reading is the part students skip and the part the marks are in. Which evening can you give to step three?',
+    ].join('\n'),
+    question: [
+      'Let us test the explanation you are leaning on, because the strongest ones have the best objections.',
+      '',
+      'Say your answer is military reform: that Marius let landless men join, so soldiers looked to their general for land rather than to the Senate. Reasonable. Now answer this.',
+      '',
+      'The reforms are usually dated to around 107 BC. The Republic does not end until Actium in 31 BC. That is three generations. What was holding it together for seventy-six years, and what finally stopped holding?',
+      '',
+      'If your answer is "it was collapsing the whole time", you need to explain Sulla, who marched on Rome, won, held absolute power, and then resigned it. Why would a man do that in a system that had already died?',
+      '',
+      'And if your answer is personal ambition instead, ask yourself why ambition found an opening then and not a century earlier. Rome had ambitious men throughout.',
+      '',
+      'Pick one of those two and write me your answer in a couple of sentences. I will push on whichever you choose.',
+    ].join('\n'),
+    sources: [
+      'You need three, and one has to be ancient. Ancient sources tell you what people at the time thought was happening; modern historians tell you what the evidence looks like with the ending known. Use both, and say which is which.',
+      '',
+      '• Polybius. The Histories, Book VI. https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Polybius/6*.html',
+      '  What it gives you: a Greek hostage in Rome explaining why the Roman constitution was stable, written while it still was. His argument is that consuls, Senate and people checked each other. If that was the strength, ask what removed the check.',
+      '• Sallust. The Conspiracy of Catiline. https://www.gutenberg.org/ebooks/6685',
+      '  What it gives you: a contemporary blaming moral decline and greed. Also a politician with enemies, writing after his own career ended badly. Useful for what Romans said about themselves, and a good example of a source you must read against its author.',
+      '• Beard, M. (2015). SPQR: A History of Ancient Rome. Profile Books.',
+      '  What it gives you: the sceptical modern position. Beard resists single causes. If you are arguing for one, she is the objection you have to answer.',
+      '• Syme, R. (1939). The Roman Revolution. Oxford University Press.',
+      '  What it gives you: the argument that a political class was replaced by a faction around Octavian. Written as fascism rose in Europe, which shows in it.',
+      '',
+      'To find more: search your library catalogue or JSTOR for "fall of the Roman Republic historiography". Prefer a historian arguing a case over a summary that lists causes.',
+      '',
+      'Which explanation are you arguing? I can tell you which of these carries it and which one attacks it.',
+    ].join('\n'),
+  },
+
+  'car-free-cities': {
+    understand: [
+      'You are being asked to take a position on a policy, and to use real places as evidence for it. Describing traffic is not the task; deciding whether a ban is the right answer is.',
+      '',
+      'What a complete answer needs:',
+      '• A definition. "Ban private cars" could mean no cars at all, no cars except residents, no cars at certain hours, or a charge high enough to act like a ban. Say which you mean in your first paragraph, because the rest of your argument depends on it.',
+      '• Two real cities, with what actually happened rather than what was intended.',
+      '• Who gains and who loses. A policy with no losers is a policy you have not looked at.',
+      '• The strongest objection, answered. Usually this is people who cannot use public transport.',
+      '• 700 words, so about five paragraphs.',
+      '',
+      'Your teacher is assessing your use of case studies (real detail, not a general impression) and your evaluation (can you judge a policy rather than describe it?).',
+      '',
+      'What would make you change your mind? If nothing would, you are not arguing yet. Tell me your position in one sentence and I will find the hardest question for it.',
+    ].join('\n'),
+    plan: [
+      'Five paragraphs, and the case studies are the work. Two evenings.',
+      '',
+      '1. Tonight, 10 minutes: write your definition of "ban private cars". One sentence. This decides everything else.',
+      '2. Tonight, 30 minutes: pick two cities and find what happened, with a number for each. Oslo removing parking and London charging are the easiest to research; choose a third if you want a harder case.',
+      '3. Tonight, 15 minutes: for each city, list who gained and who lost. Shopkeepers, disabled drivers, delivery firms, people living outside the centre, people who breathe.',
+      '4. Tomorrow, 40 minutes: write five paragraphs from the plan: your definition and position; city one; city two; who loses and what you would do about it; conclusion.',
+      '5. Tomorrow, 15 minutes: read it aloud. Check every claim about a city has a source, and that you named a real cost.',
+      '',
+      'That is about an hour and fifty minutes. Step three is the one that turns a description into an argument. Which two cities are you taking?',
+    ].join('\n'),
+    question: [
+      'Let us test your position against the case that is hardest to answer.',
+      '',
+      'Say you are for the ban, on air quality. A reasonable case. Now: the centre of a city is where the fewest people live and the most people arrive. If you remove cars from it, where do those journeys go? Around it, usually, through the streets where people do live. Does your evidence say the pollution fell overall, or moved?',
+      '',
+      'If you are against the ban, take this one. Oslo did not ban cars; it removed the parking, and the traffic fell anyway because there was nowhere to stop. Shops feared losing customers and footfall rose. If the fear did not come true there, what makes your city different?',
+      '',
+      'And whichever side you are on, answer this: a wheelchair user who cannot use a bus. What does your policy do for them? "Exemptions" is a start, not an answer. Who decides, and how hard is it to get one?',
+      '',
+      'Pick whichever of those three you find hardest and write me two sentences. That paragraph is usually the one that gets the marks.',
+    ].join('\n'),
+    sources: [
+      'Four to start with. Two are official evaluations, one is a campaign, one is raw statistics. Say which is which when you cite them, because a marker notices.',
+      '',
+      '• Transport for London. Congestion Charge: publications and reports. https://tfl.gov.uk/corporate/publications-and-reports/congestion-charge',
+      '  What it gives you: measured before-and-after numbers for traffic, delay and bus use in central London. Note that a charge is not a ban, and say so rather than hoping nobody notices.',
+      '• City of Oslo. Car-free city centre. https://www.oslo.kommune.no/politics-and-administration/green-oslo/best-practices/car-free-city-centre/',
+      '  What it gives you: a city that removed parking instead of banning cars, and what happened to footfall. The best case study for "a ban is not the only way".',
+      '• Department for Transport. National Travel Survey. https://www.gov.uk/government/collections/national-travel-survey-statistics',
+      '  What it gives you: how people actually travel, by distance and purpose. Find one figure here that makes your argument harder and deal with it in your essay.',
+      '• C40 Cities. Green and Healthy Streets. https://www.c40.org/accelerators/green-and-healthy-streets/',
+      '  What it gives you: what cities promoting these policies say about them. Published by a network with a position, which is worth one sentence of acknowledgement when you use it.',
+      '',
+      'To find more: search for the city name plus "low traffic neighbourhood evaluation" or "pedestrianisation impact study". Prefer a council or transport authority evaluation over a news report of one.',
+      '',
+      'Which two cities are you using? I can tell you what to look for in each.',
+    ].join('\n'),
+  },
+
+  'nuclear-climate': {
+    understand: [
+      'You are being asked to evaluate, which means weighing a thing that is good in some ways against the ways it is not. "Nuclear is good" and "nuclear is dangerous" are both halves of an answer.',
+      '',
+      'What a complete answer needs:',
+      '• The question split into parts you can actually measure: emissions, cost, safety, and how long it takes to build. Most of the disagreement is people arguing about different parts.',
+      '• A number for each part, with who measured it. "Low carbon" is a claim; "5.1 to 6.4 grams of CO2 equivalent per kilowatt hour over the whole life cycle" is evidence.',
+      '• A judgement about which part matters most, and why. If your answer is "it depends", say what it depends on.',
+      '• What the evidence cannot settle. There is always some.',
+      '• 600 words, so about five paragraphs.',
+      '',
+      'Your teacher is assessing your use of quantitative evidence (do the numbers do work in your argument?) and your evaluation of risk (can you separate how likely something is from how bad it would be?).',
+      '',
+      'Which of the four parts do you think decides it? Tell me and I will tell you what the strongest counter-argument is.',
+    ].join('\n'),
+    plan: [
+      'Five paragraphs, and the numbers come before the writing. Two evenings.',
+      '',
+      '1. Tonight, 10 minutes: draw four boxes: emissions, cost, safety, time. This is your essay structure and your reading list at once.',
+      '2. Tonight, 35 minutes: find one number for each box and write down who measured it. UNECE for life-cycle emissions, IEA for build times and cost, Our World in Data for deaths per unit of electricity.',
+      '3. Tonight, 10 minutes: decide which box decides your answer. Write one sentence saying why.',
+      '4. Tomorrow, 40 minutes: write five paragraphs: your position; the box you chose with its number; the strongest box against you with its number; why yours still wins; what the evidence cannot settle.',
+      '5. Tomorrow, 15 minutes: check every number has a source and a unit. A number without a unit is not evidence.',
+      '',
+      'That is about an hour and fifty minutes. Step two is where the marks are. Which box are you starting with?',
+    ].join('\n'),
+    question: [
+      'Let us test how you are using the numbers, because that is where evaluations usually come apart.',
+      '',
+      'Deaths per terawatt hour is the usual safety statistic, and nuclear comes out very low, lower than almost anything. Fair. Now: does that measure capture what people are actually afraid of? An accident that makes a region uninhabitable for decades kills few people directly. Is "deaths per unit of electricity" the right measure of that harm, and if not, what would be?',
+      '',
+      'Second. Life-cycle emissions for nuclear are very low, comparable to wind. That is a strong argument. But a plant takes something like ten to fifteen years to build. If the target is 2050, how much does a low number matter if it arrives late? Does that change which box decides your answer?',
+      '',
+      'Third, and this is the one people dodge: if you are against nuclear, what replaces it, and what are the emissions and the build time of that? An argument against something is only finished when it says what instead.',
+      '',
+      'Take whichever of those three you find hardest and answer it in two or three sentences.',
+    ].join('\n'),
+    sources: [
+      'Four, and one of them is published by the industry. Using it is fine; using it without saying so is not.',
+      '',
+      '• IPCC (2022). AR6 Working Group III, Chapter 6: Energy Systems. https://www.ipcc.ch/report/ar6/wg3/chapter/chapter-6/',
+      '  What it gives you: the assessed scientific position, with the authors stating how confident they are. Long. Find the nuclear section and read the confidence language, not just the conclusion.',
+      '• UNECE (2021). Life Cycle Assessment of Electricity Generation Options. https://unece.org/sed/documents/2021/10/reports/life-cycle-assessment-electricity-generation-options',
+      '  What it gives you: emissions counted across the whole life of a power station, mining and construction and decommissioning included. This is the number to use, and it is worth explaining why whole-life counting changes the ranking.',
+      '• International Energy Agency (2019). Nuclear Power in a Clean Energy System. https://www.iea.org/reports/nuclear-power-in-a-clean-energy-system',
+      '  What it gives you: cost and construction time, which is the part of this argument that is usually left out.',
+      '• Our World in Data. What are the safest and cleanest sources of energy? https://ourworldindata.org/safest-sources-of-energy',
+      '  What it gives you: deaths per unit of electricity, clearly presented. Good for a figure; think about what that measure leaves out before you lean on it.',
+      '',
+      'To find more: search Google Scholar for "nuclear power life cycle assessment" or "levelised cost of electricity nuclear". Prefer an assessment body or a peer-reviewed study over an energy company or a campaign group, and name which you used.',
+      '',
+      'Which of the four parts is your answer resting on? I can tell you which of these supports it and which one complicates it.',
+    ].join('\n'),
+  },
+};
+
+module.exports = { PROJECT_REPLIES };
 
 };
 modules["prompt"] = function (module, exports, require, __dirname, __filename) {
@@ -2951,7 +3148,14 @@ const SOURCES = PROJECTS[0].sources;
 const LEGACY_PROJECT = PROJECTS[0].id;
 // The fixed replies are the exemplars: the standard a school would see, and the standard the tests hold.
 const { EXEMPLARS } = require('./exemplars.js');
+const { PROJECT_REPLIES } = require('./project-replies.js');
 const REPLIES = Object.fromEntries(['understand', 'plan', 'question', 'sources'].map((id) => [id, EXEMPLARS[id].reply]));
+/**
+ * The fixed reply for one mode, in one project. Adding three projects without this produced the worst kind
+ * of bug: a student opening the Roman Republic essay and asking what the task wanted was told about
+ * homework and Cooper (2006), confidently and completely wrongly. Everything looked like it worked.
+ */
+const replyFor = (projectId, modeId) => (PROJECT_REPLIES[projectId] && PROJECT_REPLIES[projectId][modeId]) || REPLIES[modeId];
 const ROUTES = ['/api/draft', '/api/policy', '/api/turn', '/api/review', '/api/edit', '/api/source', '/api/checklist', '/api/project'];
 const SESSION = 'demo';
 // The modes that can answer a chat message. "improve" and "rephrase" work on saved text through the
@@ -2982,7 +3186,14 @@ function createPreviewApp({ store = null, memory = null } = {}) {
     // `assignment` keeps the shape it has always had, so everything that reads it still works. It is now
     // simply whichever project is open.
     get assignment() {
-      return { ...describe(project()), subject: `${project().subject} · ${project().kind}`, modes: [...mine().modes] };
+      return {
+        ...describe(project()),
+        subject: `${project().subject} · ${project().kind}`,
+        modes: [...mine().modes],
+        // The student can read every brief they have, so the rule that catches a pasted brief has to know
+        // about all of them. Otherwise opening English and pasting the Geography brief walks straight past it.
+        otherBriefs: PROJECTS.filter((p) => p.id !== currentId).map((p) => p.brief),
+      };
     },
     get projectId() { return currentId; },
     get projects() {
@@ -3176,7 +3387,7 @@ function createPreviewApp({ store = null, memory = null } = {}) {
     // come from every project on purpose: see the note at the top of this file.
     const history = allEvents.filter((e) => e.type === 'request');
     const message = body.message.trim();
-    const run = (modeId) => turn({ message, modeId, assignment: state.assignment, studentText: state.draft, ask: async () => REPLIES[modeId], who: who(), at, history });
+    const run = (modeId) => turn({ message, modeId, assignment: state.assignment, studentText: state.draft, ask: async () => replyFor(currentId, modeId), who: who(), at, history });
 
     // ROUTING. A student should be able to type a question and get an answer, not have to guess first which
     // of six kinds of help their question counts as and be sent back a step when they guess wrong. The
@@ -3207,7 +3418,7 @@ function createPreviewApp({ store = null, memory = null } = {}) {
   return { state, ready, handle, previewModes: PREVIEW_MODES };
 }
 
-module.exports = { createPreviewApp, PREVIEW_MODES, SOURCES, REPLIES, PROJECTS };
+module.exports = { createPreviewApp, PREVIEW_MODES, SOURCES, REPLIES, PROJECTS, replyFor };
 
 };
 
