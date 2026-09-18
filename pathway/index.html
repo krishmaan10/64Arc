@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#4f5bff">
   <title>PathWay AI · Learning chat</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=360de5b1a783">
+  <link rel="stylesheet" href="styles.css?v=94265b4df386">
   <script src="model.js?v=b47e468a46b9"></script>
-  <script src="pilot.js?v=1514327308a9"></script>
-  <script src="app.js?v=0a9523d140d4" defer></script>
+  <script src="pilot.js?v=d34290b45c09"></script>
+  <script src="app.js?v=6b64d8db5b7d" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -33,6 +33,7 @@
     <div class="demo-banner"><span class="demo-dot"></span><strong>PILOT</strong><span>Fixed replies · local request reader · no AI model connected for replies · the record stays on this device</span></div>
     <main id="main" tabindex="-1">
       <p id="status" role="status" aria-live="polite"></p>
+      <p id="storage-warning" class="storage-warning" role="alert" hidden></p>
       <section id="page-chat" class="page chat-page" hidden aria-label="Learning chat">
         <details class="chat-context"><summary><span>▤ &nbsp; <strong id="chat-assignment">Your assignment</strong></span><span class="context-label">Assignment & boundaries ⌄</span></summary><div class="context-content"><p id="chat-brief"></p><p><strong>Your thinking stays yours.</strong> Ask for explanations, a plan, or questions. Finished submissions and permission overrides are outside this assistant’s boundaries.</p><div><a href="#workspace">Open your draft ↗</a><a href="#boundaries">All boundaries ↗</a></div><p class="context-limit">This is a practice space: the teacher controls are open to everyone here, and the record stays on this device. Requests and replies appear in Learning activity.</p></div></details>
         <div class="conversation-area">

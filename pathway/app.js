@@ -409,7 +409,21 @@ function renderSavedReferences() {
   const all = element('a', 'All references ↗'); all.href = '#sources'; all.className = 'text-link';
   panel.append(all);
 }
-function renderAll() { renderAssignment(); renderSavedReferences(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
+/**
+ * The browser pilot keeps the record in this browser, and two things can stop it: another tab of the same
+ * practice space, or a browser refusing storage. Either way the student must be told, because the
+ * alternative is a workspace that says "Saved in this session" and loses everything when the tab closes.
+ */
+function renderStorageState() {
+  const warning = $('storage-warning');
+  const ok = state.kept !== false;
+  warning.hidden = ok;
+  if (!ok) {
+    warning.textContent = 'This practice space is open in another tab, or this browser is refusing to store it. '
+      + 'Your work is safe for now but is not being kept. Close the other tab and reload, or download your draft before you finish.';
+  }
+}
+function renderAll() { renderStorageState(); renderAssignment(); renderSavedReferences(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
 function download(filename, text, type) {
   const url = URL.createObjectURL(new Blob([text], { type }));
   const link = element('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove();

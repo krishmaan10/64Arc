@@ -3236,7 +3236,10 @@ function createPreviewApp({ store = null, memory = null } = {}) {
     projectId: currentId,
     work: Object.fromEntries([...work].map(([id, w]) => [id, { draft: w.draft, savedSources: [...w.savedSources], checklist: [...w.checklist], modes: [...w.modes] }])),
   });
-  const remember = () => { if (memory) memory.save(snapshot()); };
+  // Whether the last attempt to keep this session actually kept it. A store that silently refuses is worse
+  // than no store: the student sees "Saved in this session" and loses the lot when they close the tab.
+  let kept = true;
+  const remember = () => { if (memory) kept = memory.save(snapshot()) !== false; };
   // Every change to the record goes through here: into memory, and onto disk or into the browser's storage.
   const record = async (event) => {
     const tagged = { projectId: currentId, ...event };
@@ -3300,7 +3303,7 @@ function createPreviewApp({ store = null, memory = null } = {}) {
         identity: state.identity, modes: state.modes, previewModes: state.previewModes,
         projects: state.projects, projectId: state.projectId, assignment: state.assignment,
         draft: state.draft, sources: state.sources, savedSources: state.savedSources,
-        checklist: state.checklist, activity: state.activity,
+        checklist: state.checklist, activity: state.activity, kept,
         summary: summarise(allEvents.filter((e) => e.type === 'request'), allEvents.filter((e) => e.type === 'draft')),
       });
     if (method !== 'POST' || !ROUTES.includes(pathname)) return pathname.startsWith('/api/') ? reply(404, { error: 'Page not found.' }) : null;
@@ -3437,7 +3440,28 @@ var createPreviewApp = require('./preview-app.js').createPreviewApp;
 var KEY = "pathway-pilot-v1";
 var memory = {
   load: function () { try { return JSON.parse(window.localStorage.getItem(KEY)); } catch (error) { return null; } },
-  save: function (snapshot) { try { window.localStorage.setItem(KEY, JSON.stringify(snapshot)); } catch (error) { /* private mode or full: the session still works for this visit */ } }
+  // Returns whether the write happened, because two things can stop it and a student should be told about
+  // both rather than being shown a saved draft that is not saved.
+  //
+  // The first is another tab. Every tab of this practice space writes to the same key, so a blind write
+  // destroys whichever tab saved first: open a second tab in the morning, type in the original, and the
+  // record goes. A snapshot that has seen fewer events than the stored one is not written at all. This tab
+  // is behind, and saying so beats quietly winning.
+  //
+  // The second is a browser that refuses storage: private mode, or a full quota.
+  save: function (snapshot) {
+    try {
+      var stored = null;
+      try { stored = JSON.parse(window.localStorage.getItem(KEY)); } catch (error) { stored = null; }
+      var mine = (snapshot.activity || []).length;
+      var theirs = stored && stored.activity && stored.activity.length ? stored.activity.length : -1;
+      if (theirs > mine) return false;
+      window.localStorage.setItem(KEY, JSON.stringify(snapshot));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
 };
 var app = createPreviewApp({ memory: memory });
 window.PathWayPilot = {

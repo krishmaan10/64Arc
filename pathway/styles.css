@@ -574,3 +574,10 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
 .saved-reference-list a { font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--ink); }
 .saved-reference-list a:hover { color: var(--accent); }
 .saved-reference-list .small { font-size: 12.5px; }
+
+/* A record that is not being kept is the one thing a student must not find out about at the end. */
+.storage-warning {
+  margin: 0 0 18px; padding: 12px 16px; border-radius: var(--radius-sm);
+  background: var(--sun-soft); color: var(--sun-ink); border: 1px solid var(--sun);
+  font-size: 14px; line-height: 1.5;
+}
