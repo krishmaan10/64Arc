@@ -1620,29 +1620,54 @@ function observe(entries = [], drafts = []) {
     }
   });
 
-  // Bursts: many requests in a few minutes with nothing saved in between.
-  const timeline = [...requests.map((e) => ({ at: e.at, kind: 'request' })), ...drafts.map((d) => ({ at: d.at, kind: 'draft' }))]
-    .filter((x) => Number.isFinite(x.at))
-    .sort((a, b) => a.at - b.at);
-  let run = [];
-  let bursts = 0;
-  let inBurst = false;
-  for (const item of timeline) {
-    if (item.kind === 'draft') { run = []; inBurst = false; continue; }
-    run.push(item.at);
-    while (run.length && item.at - run[0] > BURST_MINUTES * 60_000) run.shift();
-    if (run.length >= BURST_COUNT && !inBurst) { bursts++; inBurst = true; }
-  }
-  if (bursts) counts.burst = bursts;
+  // THE RULES BELOW READ A SEQUENCE, SO THEY READ ONE PIECE OF WORK AT A TIME.
+  //
+  // Counting rules ("asked for the work in pieces four times") are facts about a student's week and are
+  // counted across everything they are working on. These are not. A burst is five requests in five minutes
+  // with nothing written in between, and a student who asks two questions about their History essay and
+  // then three about their Geography one has not done that, in either. Interleaving projects invented
+  // bursts that never happened and a paste-then-polish across two different subjects, and a teacher reading
+  // an invented sentence about a student is the exact harm this file exists to avoid.
+  //
+  // Records written before projects existed carry no project, and were all one piece of work anyway.
+  const projectOf = (event) => (event && event.projectId) || '*';
+  const groups = new Map();
+  const put = (event, key) => {
+    const id = projectOf(event);
+    if (!groups.has(id)) groups.set(id, { requests: [], drafts: [] });
+    groups.get(id)[key].push(event);
+  };
+  for (const request of requests) put(request, 'requests');
+  for (const draft of drafts) put(draft, 'drafts');
 
-  // A large paste followed by a request to polish it.
-  const requestTimes = requests.map((e, i) => ({ i, at: e.at, mode: e.mode }));
-  for (const draft of drafts) {
-    if (!draft.largeAddition) continue;
-    const after = requestTimes.filter((r) => Number.isFinite(r.at) && r.at >= draft.at).slice(0, WINDOW);
-    if (after.some((r) => r.mode === 'improve' || r.mode === 'rephrase')) count('polishAfterPaste');
+  for (const group of groups.values()) {
+    // Bursts: many requests in a few minutes with nothing saved in between, within one project.
+    const timeline = [...group.requests.map((e) => ({ at: e.at, kind: 'request' })), ...group.drafts.map((d) => ({ at: d.at, kind: 'draft' }))]
+      .filter((x) => Number.isFinite(x.at))
+      .sort((a, b) => a.at - b.at);
+    let run = [];
+    let inBurst = false;
+    for (const item of timeline) {
+      if (item.kind === 'draft') { run = []; inBurst = false; continue; }
+      run.push(item.at);
+      while (run.length && item.at - run[0] > BURST_MINUTES * 60_000) run.shift();
+      if (run.length >= BURST_COUNT && !inBurst) { count('burst'); inBurst = true; }
+    }
+
+    // A large paste followed by a request to polish it, in the project the paste landed in.
+    const requestTimes = group.requests.map((e, i) => ({ i, at: e.at, mode: e.mode }));
+    for (const draft of group.drafts) {
+      if (!draft.largeAddition) continue;
+      const after = requestTimes.filter((r) => Number.isFinite(r.at) && r.at >= draft.at).slice(0, WINDOW);
+      if (after.some((r) => r.mode === 'improve' || r.mode === 'rephrase')) count('polishAfterPaste');
+    }
+
+    // Nothing written in a project they have asked about repeatedly. Counted per project for the same
+    // reason: four questions about History and none about Geography is not "asked and never wrote".
+    if (group.requests.length >= NO_WRITING_AFTER && group.drafts.length === 0) {
+      counts.noWriting = Math.max(counts.noWriting || 0, group.requests.length);
+    }
   }
-  if (requests.length >= NO_WRITING_AFTER && drafts.length === 0) counts.noWriting = requests.length;
 
   const notes = {
     wellbeing: (n) => `${plural(n, 'message')} ${n === 1 ? 'was' : 'were'} about how the student is, not the work, and ${n === 1 ? 'was' : 'were'} answered with a pointer to a person. This one needs a conversation, not a note.`,
