@@ -379,7 +379,37 @@ function renderAssignment() {
   $('skills').replaceChildren(...state.assignment.skills.map(skill => element('span', skill)));
   $('draft-hint').textContent = `Start with what you think. You can make it clearer as you go. This one asks for about ${state.assignment.words} words.`;
 }
-function renderAll() { renderAssignment(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
+/**
+ * The references this student saved for the project they are writing in. They were only visible in the
+ * library, which is a different page from the one with the draft on it: a student writing a paragraph had
+ * to leave their draft to remember which study they meant to cite. Titles and citations only, so this
+ * stays a reminder of their own reading rather than a second place to do it.
+ */
+function renderSavedReferences() {
+  const panel = $('saved-references');
+  panel.replaceChildren();
+  const saved = state.sources.filter(source => state.savedSources.includes(source.id));
+  if (!saved.length) {
+    const empty = element('p', 'None yet. ', 'small muted');
+    const link = element('a', 'Open the source library ↗'); link.href = '#sources';
+    empty.append(link);
+    panel.append(empty);
+    return;
+  }
+  const list = element('ul', undefined, 'saved-reference-list');
+  for (const source of saved) {
+    const item = element('li');
+    const link = element('a', source.title);
+    link.href = source.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    link.setAttribute('aria-label', `${source.title} (opens in a new tab)`);
+    item.append(link, element('span', source.publisher, 'small muted'));
+    list.append(item);
+  }
+  panel.append(list);
+  const all = element('a', 'All references ↗'); all.href = '#sources'; all.className = 'text-link';
+  panel.append(all);
+}
+function renderAll() { renderAssignment(); renderSavedReferences(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
 function download(filename, text, type) {
   const url = URL.createObjectURL(new Blob([text], { type }));
   const link = element('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove();

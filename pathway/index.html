@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#4f5bff">
   <title>PathWay AI · Learning chat</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=a6981a189be0">
+  <link rel="stylesheet" href="styles.css?v=360de5b1a783">
   <script src="model.js?v=44c8389ff4ef"></script>
   <script src="pilot.js?v=3f3a072b5ca3"></script>
-  <script src="app.js?v=57b549f270d1" defer></script>
+  <script src="app.js?v=0a9523d140d4" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -66,7 +66,7 @@
       <section id="page-workspace" class="page" hidden>
         <div class="page-heading"><div><p class="eyebrow" id="subject">ENGLISH · PRACTICE ASSIGNMENT</p><h1 id="assignment-title">Does homework help us learn?</h1><p>Your ideas. Your words. A little help along the way.</p></div><a href="#boundaries" class="outline-pill">◇ &nbsp; View learning boundaries</a></div>
         <div class="workspace">
-          <aside class="task-panel card"><p class="eyebrow">THE ASSIGNMENT</p><h2>Know where you’re going.</h2><p id="brief"></p><div id="skills" class="tags"></div><hr><h3>Your next steps</h3><p class="small muted">Check these yourself as you go.</p><div id="task-checklist"></div><hr><h3>Permitted assistance</h3><ul id="permission-list" class="permissions"></ul><p class="footnote">Your teacher sets the terms for each assignment.</p></aside>
+          <aside class="task-panel card"><p class="eyebrow">THE ASSIGNMENT</p><h2>Know where you’re going.</h2><p id="brief"></p><div id="skills" class="tags"></div><hr><h3>Your next steps</h3><p class="small muted">Check these yourself as you go.</p><div id="task-checklist"></div><hr><h3>References you saved</h3><div id="saved-references"></div><hr><h3>Permitted assistance</h3><ul id="permission-list" class="permissions"></ul><p class="footnote">Your teacher sets the terms for each assignment.</p></aside>
           <section class="draft card"><div class="section-top"><p class="eyebrow">YOUR OWN WORDS</p><span id="save-state" class="small">No draft saved</span></div><label class="editor-label" for="draft-text">A thought is a good beginning.</label><p id="draft-hint" class="muted">Start with what you think. You can make it clearer as you go.</p><textarea id="draft-text" maxlength="20000" aria-describedby="draft-hint" placeholder="I think…" spellcheck="true"></textarea><div class="draft-footer"><span id="word-count" class="small">0 words</span><button id="save-draft" class="primary" disabled>Save draft</button></div><p class="footnote">Explicit saves enter the shared record. Suggestions change your draft only when you accept them.</p><button id="download-draft" class="text-link">Download saved draft ↓</button></section>
           <section class="help card"><div class="section-top"><p class="eyebrow">YOUR LEARNING ASSISTANT</p><span class="mini-mark" aria-hidden="true">✳</span></div><h2>Let’s find a next step.</h2><p class="muted">Choose the kind of support you need.</p><div id="mode-picker" class="mode-picker" role="group" aria-label="Help mode"></div>
             <form id="request-form"><h3 id="mode-title">Understand the task</h3><p id="mode-purpose" class="muted"></p><label for="request-text">What are you stuck on?</label><textarea id="request-text" maxlength="2000" required placeholder="What does this task ask me to do?"></textarea><button id="ask" class="primary">Ask for guidance ↗</button><p class="footnote">Fixed demo guidance. Each request is checked and recorded.</p></form>
