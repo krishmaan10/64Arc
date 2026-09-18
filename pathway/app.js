@@ -263,7 +263,12 @@ function renderActivity() {
       // The fair half of a record a student can read: a teacher's mark on a decision is shown to the
       // student it was made about, in the same words the teacher chose.
       const target = state.activity.find(e => e.type === 'request' && e.seq === event.targetSeq);
-      const words = { fine: 'agreed with it: the help given was fine.', refuse: 'marked it as a mistake: this should have been refused.', wrong: `marked it as a mistake: this should have been treated as ${nameOf(event.label) || 'a different kind of help'}.` };
+      const refusedAs = { produce_whole: 'the work itself', produce_part: 'a piece of the work', answer_direct: 'the answer to a set question', evade_detection: 'hiding where writing came from', override: 'changing the rules' };
+      const words = {
+        fine: 'agreed with it: the help given was fine.',
+        refuse: `marked it as a mistake: this should have been refused${refusedAs[event.label] ? `, as a request for ${refusedAs[event.label]}` : ''}.`,
+        wrong: `marked it as a mistake: this should have been treated as ${nameOf(event.label) || 'a different kind of help'}.`,
+      };
       li.append(element('p', `About your request${target ? ` “${target.asked}”` : ''}: your teacher ${words[event.verdict] || 'reviewed this decision.'}`));
     }
     if (event.type === 'request') {
@@ -443,11 +448,30 @@ function renderStorageState() {
  * being true the moment the local server is started with one behind it. It reads the state instead.
  */
 function renderModelState() {
+  // Every statement about what leaves this device reads the state, because two things can change it: a
+  // model behind the replies, and sharing switched on. A promise that is printed once and never checked
+  // is the kind of claim this product exists not to make.
+  const learning = window.PathWayPilot && window.PathWayPilot.learning;
+  const sharing = Boolean(learning && learning.endpoint && learning.consent() === 'yes');
+  const live = state.model === 'live';
+  const travel = [];
+  if (live) travel.push('your chat message and this project’s brief go to the model on this machine for each permitted reply');
+  if (sharing) travel.push('the words of your chat requests go to the learner');
   const banner = document.querySelector('.demo-banner span:last-child');
-  if (!banner) return;
-  banner.textContent = state.model === 'live'
-    ? 'Live model behind the replies · every reply passes the same boundary and the same check · the record stays on this device'
-    : 'Fixed replies · local request reader · no AI model connected for replies · the record stays on this device';
+  if (banner) {
+    banner.textContent = (live
+      ? 'Live model behind the replies · every reply passes the same boundary and the same check'
+      : 'Fixed replies · local request reader · no AI model connected for replies')
+      + (travel.length ? ` · ${travel.join(' · ')}` : ' · nothing you write leaves this device');
+  }
+  const promise = $('promise-text');
+  if (promise) {
+    promise.textContent = (live
+      ? 'A model is connected behind the replies on this server. Each permitted reply is written by it from your message and this project’s brief, and checked before you see it; a refused request never reaches it. Grammar replacements come from local rules.'
+      : 'There is no connected generative model in this preview. Guidance is fixed, and grammar replacements come from local rules. The preview cannot generate a finished project.')
+      + (sharing ? ' Sharing is on: the words of your chat requests, and how each was decided, go to the learner.' : '')
+      + (!live && !sharing ? ' Nothing you write leaves this device.' : '');
+  }
 }
 /**
  * Whether this browser shares its practice requests with the learner. Only the browser pilot has this: the
@@ -464,9 +488,9 @@ function renderLearningCard() {
   top.append(element('h2', 'Help PathWay learn', undefined), element('span', learning.consent() === 'yes' ? 'Sharing on' : 'Sharing off', 'outline-pill'));
   top.firstChild.id = 'learning-title';
   card.append(top);
-  card.append(element('p', 'The reader that decides what kind of help each request is learns from real requests. What would travel: the words of each request you make here and how it was decided. What never travels: your draft, the replies, any name, or the words of a message that was about you rather than the work.', 'muted'));
+  card.append(element('p', 'The reader that decides what kind of help each request is learns from real requests. What would travel, once you switch this on: the words of each request you type in the chat, exactly as you typed them, and how it was decided. So a name or a piece of your draft you paste into the chat would travel too. What never travels: your saved draft, the replies, and the words of any message the assistant read as being about you rather than the work.', 'muted'));
   const refused = typeof learning.rejected === 'function' ? learning.rejected() : 0;
-  const status = element('p', `${learning.pending()} waiting · ${learning.sent()} shared from this browser${refused ? ` · ${refused} could not be used` : ''}`, 'small muted');
+  const status = element('p', `${learning.pending()} waiting · ${learning.sent()} shared from this browser${refused ? ` · ${refused} could not be used` : ''} · ${typeof learning.logged === 'function' ? learning.logged() : 0} in your practice log`, 'small muted');
   card.append(status);
   const actions = element('div', undefined, 'source-actions');
   if (learning.endpoint) {
@@ -476,8 +500,8 @@ function renderLearningCard() {
     toggle.setAttribute('aria-pressed', String(on));
     toggle.addEventListener('click', () => action(async () => {
       await learning.setConsent(on ? 'no' : 'yes');
-      renderLearningCard();
-      notice(on ? 'Sharing stopped. Nothing more will be sent from this browser.' : 'Sharing on. Requests you make here now help the reader learn.');
+      renderLearningCard(); renderModelState();
+      notice(on ? 'Sharing stopped. Nothing waiting is kept, and nothing more will be sent from this browser.' : 'Sharing on. Requests you make here from now on help the reader learn.');
     }));
     actions.append(toggle);
   } else {

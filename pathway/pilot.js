@@ -971,13 +971,19 @@ function decide({ message, modeId, assignment, studentText = '', classified, his
   const learned = classified.learned;
   const fitsHere = Boolean(learned && learned.decision === 'allow' && BEHAVIOURS[learned.label].mode === modeId && learned.confidence >= 0.45);
   const suggested = fitsHere ? null : classified.suggestedMode;
+  // The request belongs in a mode the teacher paused. Saying so is the honest answer; quietly answering
+  // in whatever mode the student happened to be in hands them the brief for a question about their
+  // spelling, and records a request for help that was never asked for.
+  if (suggested && suggested !== modeId && !allowed.includes(suggested) && mode(suggested))
+    return refuse('modeNotAllowed', REFUSAL.modeNotAllowed(mode(suggested).name, alternatives), { redirect: suggested });
   if (suggested && suggested !== modeId && allowed.includes(suggested)) {
     const target = mode(suggested);
     // The right mode for this request works on saved writing, and there is none. Answering in the mode
     // they happen to be in gives them the assignment brief when they asked about their spelling, which
-    // reads as a tool that did not listen. Tell them what to do first instead.
+    // reads as a tool that did not listen. Tell them what to do first instead. The record carries the mode
+    // it was for, so the desk counts the request under the help it asked for rather than the default.
     if (target.needsStudentText && !hasText)
-      return refuse('needsText', REFUSAL.needsText(target.name, alternatives));
+      return refuse('needsText', REFUSAL.needsText(target.name, alternatives), { redirect: suggested });
     if (!target.needsStudentText || hasText)
       return {
         allow: false,
@@ -1157,8 +1163,8 @@ const PROJECT_REPLIES = {
       'You are being asked to weigh explanations against each other, not to tell the story of the Republic falling. The marks are for deciding which explanation the evidence supports best and defending that choice.',
       '',
       'What a complete answer needs:',
-      '• Two or more named explanations, stated as claims a historian actually makes: military reform created armies loyal to generals; the constitution could not govern an empire; land and debt made the poor a political force; personal ambition outran the rules.',
-      '• A decision. Not "all of these mattered", which is true of everything and argues nothing.',
+      '• Two or more named explanations, each stated as a claim a historian actually makes, in your words. Your reading will give you the candidates (the army, the constitution, land and debt, ambition); you choose which two to weigh.',
+      '• Your decision. Not "all of these mattered", which is true of everything and argues nothing.',
       '• Three sources, one of them ancient, used inside the argument rather than listed at the end.',
       '• 800 words, so about six paragraphs.',
       '',
@@ -1482,20 +1488,24 @@ function proposedText(reply) {
 function looksLikeSubmission(reply) {
   const text = String(reply || '').trim();
   if (!text) return false;
-  // Strip the shapes that are plainly not submission prose.
-  const withoutLists = text
+  // Keep the words, drop the markers. Dropping whole lines let an essay through as a bulleted list or a
+  // blockquote, which is the same essay with dashes in front of it. Every line is then a sentence
+  // boundary, and the test is a run of statements rather than one paragraph.
+  const unmarked = text
     .split('\n')
-    .filter((line) => !/^\s*(?:[-*•]|\d+[.)]|#{1,6}\s|>)/.test(line))
+    .map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)]|#{1,6}\s|>+)\s*/, ''))
     .join('\n');
-  const paragraphs = withoutLists.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  const paragraphs = unmarked.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
   return paragraphs.some((paragraph) => {
-    const sentences = paragraph.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 20);
+    const sentences = paragraph.split(/(?:(?<=[.!?])\s+|\n)/).map((s) => s.trim()).filter((s) => s.length > 20);
     if (sentences.length < 3) return false;
-    // A run of statements with no questions, not addressed to the student, and long enough to be a
-    // paragraph of their submission rather than a note about it.
-    const questions = sentences.filter((s) => s.trim().endsWith('?')).length;
-    const addressesStudent = /\b(?:you|your|you're|you'll|you've|yours)\b/i.test(paragraph);
-    return questions === 0 && !addressesStudent && paragraph.length > 320;
+    // A run of statements: at most one question, at most one address to the student, and long enough to be
+    // a paragraph of their submission rather than a note about it. A single "you" or a single question
+    // used to be a full exemption, which is the cheapest disguise there is.
+    const questions = sentences.filter((s) => s.endsWith('?')).length;
+    const addresses = (paragraph.match(/\b(?:you|your|you're|you'll|you've|yours)\b/gi) || []).length;
+    const statements = sentences.length - questions;
+    return statements >= 3 && questions <= 1 && addresses <= 1 && paragraph.length > 320;
   });
 }
 
@@ -1877,6 +1887,14 @@ async function turn({ message, modeId, assignment, studentText = '', ask, who = 
     };
   }
 
+  // An empty reply is a model that did not answer, not a reply that was withheld. Recording it as
+  // withheld would tell the teacher the assistant went over a line when it said nothing at all.
+  if (!reply.trim()) {
+    return {
+      shown: { kind: 'error', reason: 'The model did not answer just now.', explain: 'Nothing was sent anywhere else. Try again in a moment.' },
+      record: entry({ at, ...who, modeId, message, decision, reply: '', check: { ok: false, novelty: 0, problems: ['model gave no reply'] } }),
+    };
+  }
   const check = checkResponse({ reply, modeId, studentText: decision.material.studentText });
   return {
     shown: check.ok ? { kind: 'reply', text: reply } : { kind: 'withheld', ...WITHHELD },
@@ -3527,23 +3545,28 @@ var KEY = "pathway-pilot-v1";
 // time from PATHWAY_LEARNING_ENDPOINT. Empty means sharing is not on for this build, and the interface
 // offers a download instead of a switch.
 var LEARNING_ENDPOINT = "";
-var CONTRIBUTOR_KEY = 'pathway-pilot-contributor', CONSENT_KEY = 'pathway-pilot-contribute', OUTBOX_KEY = 'pathway-pilot-outbox', SENT_KEY = 'pathway-pilot-sent', REJECTED_KEY = 'pathway-pilot-rejected';
+var CONTRIBUTOR_KEY = 'pathway-pilot-contributor', CONSENT_KEY = 'pathway-pilot-contribute', OUTBOX_KEY = 'pathway-pilot-outbox', SENT_KEY = 'pathway-pilot-sent', REJECTED_KEY = 'pathway-pilot-rejected', LOG_KEY = 'pathway-pilot-log', NEXT_KEY = 'pathway-pilot-next';
+var LEARNING_KEYS = [CONTRIBUTOR_KEY, CONSENT_KEY, OUTBOX_KEY, SENT_KEY, REJECTED_KEY, LOG_KEY, NEXT_KEY];
+function randomId(bytes) { var b = new Uint8Array(bytes); window.crypto.getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
 function readJson(key, fallback) { try { var v = JSON.parse(window.localStorage.getItem(key)); return v === null || v === undefined ? fallback : v; } catch (error) { return fallback; } }
 function writeJson(key, value) { try { window.localStorage.setItem(key, JSON.stringify(value)); return true; } catch (error) { return false; } }
 function contributorId() {
   var id = readJson(CONTRIBUTOR_KEY, null);
   if (typeof id === 'string' && /^[a-f0-9]{32}$/.test(id)) return id;
-  var bytes = new Uint8Array(16); window.crypto.getRandomValues(bytes);
-  id = Array.prototype.map.call(bytes, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+  id = randomId(16);
   writeJson(CONTRIBUTOR_KEY, id);
   return id;
 }
-// What one request looks like on its way to the learner: the words asked and how they were decided, and
-// nothing else. No reply, no draft, no name, and no words at all from a message about the student.
+// What one request looks like on its way to the learner: the words asked, exactly as typed, and how they
+// were decided, and nothing else. No reply, no saved draft, and no words from a message the assistant read
+// as being about the student. Its number comes from a counter kept per browser, not from the record, so
+// it stays monotonic through "Start again" and a second tab; its id lets the sent set be tracked exactly.
 function forLearner(event) {
+  var next = Number(readJson(NEXT_KEY, 0)) || 0;
+  writeJson(NEXT_KEY, next + 1);
   return {
-    type: 'request', seq: event.seq, at: event.at, mode: event.mode || null,
-    asked: event.outcome === 'supported' ? '' : String(event.asked || ''),
+    id: randomId(8), type: 'request', seq: next, at: event.at, mode: event.mode || null,
+    asked: (event.outcome === 'supported' || (event.read && event.read.label === 'wellbeing')) ? '' : String(event.asked || ''),
     outcome: event.outcome, category: event.category || null,
     read: event.read ? { label: event.read.label, confidence: event.read.confidence } : null,
     again: Boolean(event.again), redirectedTo: event.redirectedTo || null, routedTo: event.routedTo || null,
@@ -3554,25 +3577,36 @@ var flushing = false;
 var learning = {
   endpoint: LEARNING_ENDPOINT,
   consent: function () { var v = readJson(CONSENT_KEY, null); return v === 'yes' || v === 'no' ? v : null; },
-  setConsent: function (value) { writeJson(CONSENT_KEY, value === 'yes' ? 'yes' : 'no'); if (value === 'yes') return learning.flush(); return Promise.resolve(false); },
+  // Nothing queued before the visitor says yes, and nothing kept waiting after they say no: a shared
+  // library machine must not carry one visitor's words into the next visitor's consent.
+  setConsent: function (value) {
+    writeJson(CONSENT_KEY, value === 'yes' ? 'yes' : 'no');
+    if (value === 'yes') return learning.flush();
+    writeJson(OUTBOX_KEY, []);
+    return Promise.resolve(false);
+  },
   pending: function () { return readJson(OUTBOX_KEY, []).length; },
+  logged: function () { return readJson(LOG_KEY, []).length; },
   sent: function () { return Number(readJson(SENT_KEY, 0)) || 0; },
   rejected: function () { return Number(readJson(REJECTED_KEY, 0)) || 0; },
-  download: function () { var NL = String.fromCharCode(10); return readJson(OUTBOX_KEY, []).map(function (e) { return JSON.stringify(e); }).join(NL) + NL; },
+  // The student's own practice log, whether or not anything was ever sent, and whether or not there is
+  // anywhere to send it. Flushing the outbox does not empty it.
+  download: function () { var NL = String.fromCharCode(10); return readJson(LOG_KEY, []).map(function (e) { return JSON.stringify(e); }).join(NL) + NL; },
+  forget: function () { LEARNING_KEYS.forEach(function (k) { try { window.localStorage.removeItem(k); } catch (error) {} }); },
   queue: function (event) {
     if (!event || event.type !== 'request') return;
-    var outbox = readJson(OUTBOX_KEY, []);
-    outbox.push(forLearner(event));
-    while (outbox.length > 500) outbox.shift();
-    writeJson(OUTBOX_KEY, outbox);
-    if (learning.consent() === 'yes' && LEARNING_ENDPOINT) learning.flush();
+    var line = forLearner(event);
+    var log = readJson(LOG_KEY, []); log.push(line); while (log.length > 500) log.shift(); writeJson(LOG_KEY, log);
+    if (learning.consent() !== 'yes') return;
+    var outbox = readJson(OUTBOX_KEY, []); outbox.push(line); while (outbox.length > 500) outbox.shift(); writeJson(OUTBOX_KEY, outbox);
+    if (LEARNING_ENDPOINT) learning.flush();
   },
   flush: function () {
     if (flushing || !LEARNING_ENDPOINT || learning.consent() !== 'yes' || typeof window.fetch !== 'function') return Promise.resolve(false);
     var outbox = readJson(OUTBOX_KEY, []);
     if (!outbox.length) return Promise.resolve(false);
     var batch = outbox.slice(0, 50);
-    var top = batch[batch.length - 1].seq;
+    var sentIds = {}; batch.forEach(function (e) { sentIds[e.id] = true; });
     flushing = true;
     return window.fetch(LEARNING_ENDPOINT + '/api/contribute', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true, mode: 'cors',
@@ -3584,7 +3618,7 @@ var learning = {
       return Promise.resolve(response.json ? response.json() : null).catch(function () { return null; }).then(function (counts) {
         var kept = counts && typeof counts.added === 'number' ? counts.added + (counts.duplicate || 0) : batch.length;
         var refused = counts && typeof counts.rejected === 'number' ? counts.rejected : 0;
-        var remaining = readJson(OUTBOX_KEY, []).filter(function (e) { return e.seq > top; });
+        var remaining = readJson(OUTBOX_KEY, []).filter(function (e) { return !sentIds[e.id]; });
         writeJson(OUTBOX_KEY, remaining);
         writeJson(SENT_KEY, learning.sent() + kept);
         if (refused) writeJson(REJECTED_KEY, learning.rejected() + refused);
@@ -3634,6 +3668,7 @@ window.PathWayPilot = {
     });
   },
   learning: learning,
-  reset: function () { try { window.localStorage.removeItem(KEY); } catch (error) {} window.location.reload(); }
+  // "Start again" is a new visitor as far as the learner is concerned: log, queue, consent and id all go.
+  reset: function () { try { window.localStorage.removeItem(KEY); } catch (error) {} learning.forget(); window.location.reload(); }
 };
 })();
