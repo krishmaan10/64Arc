@@ -493,3 +493,45 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
   .principle { display: none; }
   .chat-welcome { padding-block: 26px; }
 }
+
+/* ---------------------------------------------------------------------------
+   Projects.
+   A student with four subjects due needs to put one down and pick another up
+   without losing where they were, so the switcher sits in the rail where it is
+   always reachable and always says which one is open. Each entry carries the
+   two facts worth knowing from across the room: how many words are written and
+   how many steps are done.
+   --------------------------------------------------------------------------- */
+.project-switcher { display: grid; gap: 4px; margin-bottom: 4px; }
+.project-entry {
+  display: grid; gap: 2px; width: 100%; text-align: left; padding: 9px 11px;
+  background: transparent; border: 1px solid transparent; border-radius: 12px;
+  color: var(--rail-text); font: inherit; cursor: pointer;
+}
+.project-entry:hover:not(:disabled) { background: rgba(255, 255, 255, .07); color: #fff; }
+.project-entry:disabled { opacity: .55; cursor: default; }
+.project-entry.is-open { background: rgba(255, 255, 255, .11); border-color: rgba(255, 255, 255, .16); color: #fff; }
+.project-subject { font-size: 10.5px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; color: #8d92bd; }
+.project-entry.is-open .project-subject { color: var(--accent-soft, #c9ceff); }
+.project-name { font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+.project-marks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 3px; }
+.project-mark { font-size: 11px; color: #8d92bd; font-weight: 500; }
+.project-mark.warn { color: var(--sun, #ffb800); }
+.project-entry.is-open .project-mark { color: #b9bee4; }
+
+.project-cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); }
+.assignment-card.is-open { border-color: var(--line-strong); box-shadow: 0 10px 26px rgba(23, 26, 51, .08); }
+.assignment-card .text-link { text-align: right; }
+.amber-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--sun); }
+
+/* The router says what kind of help it read a message as, because a student who
+   did not choose should still be able to see the choice and take it back. */
+.routed-note { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+.routed-note .text-link { font-size: 13px; }
+
+.activity-filters { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: flex-end; }
+
+/* Cards in a row are one object: same edges, and the footer on the same line whatever the title does. */
+#project-cards .assignment-card { display: flex; flex-direction: column; }
+#project-cards .assignment-card > p { flex: 0 0 auto; }
+#project-cards .assignment-card-footer { margin-top: auto; }

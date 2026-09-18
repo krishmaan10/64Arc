@@ -1650,6 +1650,315 @@ async function turn({ message, modeId, assignment, studentText = '', ask, who = 
 module.exports = { turn, WITHHELD };
 
 };
+modules["projects"] = function (module, exports, require, __dirname, __filename) {
+'use strict';
+
+// The projects a student has on their desk.
+//
+// Until now the preview held one hardcoded assignment, one draft, one checklist and one reading list, and
+// every part of the interface said "your assignment" in the singular. A real student has four subjects due
+// in the same week, and the thing they actually need from a workspace is to put one down and pick another
+// up without losing where they were.
+//
+// So a project owns everything that belongs to a piece of work: the brief, the skills it is marked on, the
+// word target, the steps, the reading list, and the modes the teacher left open for it. A teacher pausing
+// "Say it another way" for the English essay must not pause it for the History one, because the reason for
+// pausing it is about that piece of work.
+//
+// What a project deliberately does NOT own is the boundary. The rules are the same in every subject, and a
+// student who is refused in one project has not found a way round by opening another. See the note on
+// history in lib/preview-app.js.
+//
+// About the reading lists. These are real, well-known references chosen because a school library or an
+// open web search will find them, and because each one rewards the question the note asks. Every note is a
+// question to take to the source rather than a summary of what it says, because a summary would do the
+// reading for the student, and because this file cannot check whether a link still resolves. The interface
+// says both of those things plainly rather than implying a verified, live catalogue.
+
+/** Steps every piece of extended writing goes through. A project may replace them with its own. */
+const DEFAULT_STEPS = [
+  'Understand the task and choose a position',
+  'Read and evaluate two sources',
+  'Write an argument in your own words',
+  'Review your evidence, citations and writing',
+];
+
+const ALL_MODES = ['understand', 'plan', 'question', 'improve', 'rephrase', 'sources'];
+
+const PROJECTS = [
+  {
+    id: 'homework-essay',
+    title: 'Does homework help us learn?',
+    subject: 'English',
+    kind: 'Practice assignment',
+    summary: 'Build an argument. Explore the evidence. Make a case in your own words.',
+    brief: 'Write 500 words on whether homework helps learning. Use two sources.',
+    skills: ['argument', 'use of evidence'],
+    words: 500,
+    due: 'Practice · No due date',
+    steps: DEFAULT_STEPS,
+    modes: [...ALL_MODES],
+    sources: [
+      {
+        id: 'eef',
+        title: 'Homework',
+        publisher: 'Education Endowment Foundation',
+        type: 'Evidence overview',
+        url: 'https://educationendowmentfoundation.org.uk/education-evidence/teaching-learning-toolkit/homework',
+        note: 'Compare findings across age groups and examine the evidence limitations.',
+        citation: 'Education Endowment Foundation. (n.d.). Homework. Teaching and Learning Toolkit.',
+      },
+      {
+        id: 'cooper',
+        title: 'Does homework improve academic achievement?',
+        publisher: 'Cooper, Robinson & Patall · 2006',
+        type: 'Research synthesis',
+        url: 'https://eric.ed.gov/?id=EJ751143',
+        note: 'Read the abstract and consider what a research synthesis can tell you. Full text may require library access.',
+        citation: 'Cooper, H., Robinson, J. C., & Patall, E. A. (2006). Does homework improve academic achievement? A synthesis of research, 1987–2003. Review of Educational Research, 76(1), 1–62.',
+      },
+      {
+        id: 'oecd-pisa-homework',
+        title: 'Does homework perpetuate inequities in education?',
+        publisher: 'OECD · PISA in Focus 46',
+        type: 'International comparison',
+        url: 'https://www.oecd.org/en/publications/does-homework-perpetuate-inequities-in-education_5jxrhqhtx2xt-en.html',
+        note: 'This one asks who homework helps, not whether it helps. Does that change the question you are answering?',
+        citation: 'OECD. (2014). Does homework perpetuate inequities in education? PISA in Focus, No. 46. OECD Publishing.',
+      },
+      {
+        id: 'trautwein-effort',
+        title: 'The homework–achievement relation reconsidered',
+        publisher: 'Trautwein · 2007',
+        type: 'Research article',
+        url: 'https://www.sciencedirect.com/science/article/abs/pii/S0959475207000229',
+        note: 'Argues that how much effort a student puts in matters more than how long they spend. What would that mean for your position?',
+        citation: 'Trautwein, U. (2007). The homework–achievement relation reconsidered: Differentiating homework time, homework frequency, and homework effort. Learning and Instruction, 17(3), 372–388.',
+      },
+    ],
+  },
+
+  {
+    id: 'roman-republic',
+    title: 'Why did the Roman Republic fall?',
+    subject: 'History',
+    kind: 'Source enquiry',
+    summary: 'Weigh competing explanations. Decide which one the evidence supports best.',
+    brief: 'Write 800 words explaining why the Roman Republic fell. Weigh at least two competing explanations and say which the evidence supports better. Use three sources, one of them ancient.',
+    skills: ['causation', 'weighing interpretations', 'use of sources'],
+    words: 800,
+    due: 'Practice · No due date',
+    steps: [
+      'List the explanations historians actually give',
+      'Read one ancient source and one modern historian',
+      'Decide which explanation the evidence supports best',
+      'Write the argument, answering the strongest objection',
+    ],
+    modes: [...ALL_MODES],
+    sources: [
+      {
+        id: 'polybius-six',
+        title: 'The Histories, Book VI',
+        publisher: 'Polybius · 2nd century BC',
+        type: 'Ancient source',
+        url: 'https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Polybius/6*.html',
+        note: 'Written while the Republic still stood, by a Greek hostage who admired it. What does he think makes it stable, and did that thing fail?',
+        citation: 'Polybius. The Histories, Book VI (trans. W. R. Paton). Loeb Classical Library.',
+      },
+      {
+        id: 'sallust-catiline',
+        title: 'The Conspiracy of Catiline',
+        publisher: 'Sallust · c. 42 BC',
+        type: 'Ancient source',
+        url: 'https://www.gutenberg.org/ebooks/6685',
+        note: 'Sallust blames moral decline. He was also a politician with enemies. How much does that change how you read him?',
+        citation: 'Sallust. The Conspiracy of Catiline (trans. J. S. Watson). Project Gutenberg.',
+      },
+      {
+        id: 'beard-spqr',
+        title: 'SPQR: A History of Ancient Rome',
+        publisher: 'Mary Beard · 2015',
+        type: 'Modern history',
+        url: 'https://www.google.com/books/edition/SPQR/vvJ0BgAAQBAJ',
+        note: 'Beard is sceptical of tidy single causes. Find where she says why, and decide whether you agree.',
+        citation: 'Beard, M. (2015). SPQR: A History of Ancient Rome. Profile Books.',
+      },
+      {
+        id: 'syme-revolution',
+        title: 'The Roman Revolution',
+        publisher: 'Ronald Syme · 1939',
+        type: 'Modern history',
+        url: 'https://global.oup.com/academic/product/the-roman-revolution-9780192803207',
+        note: 'Written as fascism rose in Europe, and it reads that way. Does knowing when a history was written change what you take from it?',
+        citation: 'Syme, R. (1939). The Roman Revolution. Oxford University Press.',
+      },
+      {
+        id: 'britannica-republic',
+        title: 'Ancient Rome: The Republic',
+        publisher: 'Encyclopaedia Britannica',
+        type: 'Reference overview',
+        url: 'https://www.britannica.com/place/ancient-Rome/The-Republic',
+        note: 'Use this to get the order of events straight, then leave it. An encyclopaedia is a starting point, not a source to argue from.',
+        citation: 'Encyclopaedia Britannica. Ancient Rome: The Republic.',
+      },
+    ],
+  },
+
+  {
+    id: 'car-free-cities',
+    title: 'Should city centres ban private cars?',
+    subject: 'Geography',
+    kind: 'Decision-making enquiry',
+    summary: 'Take a position on a live policy question. Use real places as evidence.',
+    brief: 'Write 700 words arguing whether city centres should ban private cars. Use at least two real cities as evidence, and answer the strongest objection to your view.',
+    skills: ['use of case studies', 'evaluating policy', 'argument'],
+    words: 700,
+    due: 'Practice · No due date',
+    steps: [
+      'Decide what "ban private cars" would actually mean',
+      'Find two cities that tried something like it',
+      'Work out who gains and who loses in each',
+      'Write your position and answer the strongest objection',
+    ],
+    modes: [...ALL_MODES],
+    sources: [
+      {
+        id: 'tfl-congestion',
+        title: 'Congestion Charge: reports and impacts monitoring',
+        publisher: 'Transport for London',
+        type: 'Official evaluation',
+        url: 'https://tfl.gov.uk/corporate/publications-and-reports/congestion-charge',
+        note: 'A charge is not a ban. Does the evidence here still tell you anything about a ban?',
+        citation: 'Transport for London. Congestion Charge: publications and reports.',
+      },
+      {
+        id: 'oslo-car-free',
+        title: 'Car-free city centre',
+        publisher: 'City of Oslo',
+        type: 'City case study',
+        url: 'https://www.oslo.kommune.no/politics-and-administration/green-oslo/best-practices/car-free-city-centre/',
+        note: 'Oslo removed parking rather than banning cars outright. Why might a city choose that route?',
+        citation: 'City of Oslo. Car-free city centre. Green Oslo: best practices.',
+      },
+      {
+        id: 'c40-streets',
+        title: 'Green and healthy streets',
+        publisher: 'C40 Cities',
+        type: 'Network programme',
+        url: 'https://www.c40.org/accelerators/green-and-healthy-streets/',
+        note: 'Published by a network of cities promoting these policies. Who funds it, and what would you expect it to leave out?',
+        citation: 'C40 Cities. Green and Healthy Streets Accelerator.',
+      },
+      {
+        id: 'dft-nts',
+        title: 'National Travel Survey',
+        publisher: 'UK Department for Transport',
+        type: 'Statistics',
+        url: 'https://www.gov.uk/government/collections/national-travel-survey-statistics',
+        note: 'Raw numbers on how people actually travel. Find one figure that makes your argument harder, and deal with it.',
+        citation: 'Department for Transport. National Travel Survey statistics.',
+      },
+      {
+        id: 'who-air',
+        title: 'Ambient (outdoor) air pollution',
+        publisher: 'World Health Organization',
+        type: 'Health evidence',
+        url: 'https://www.who.int/news-room/fact-sheets/detail/ambient-(outdoor)-air-quality-and-health',
+        note: 'Health is the usual case for banning cars. Check whether the evidence here is about cars specifically.',
+        citation: 'World Health Organization. Ambient (outdoor) air quality and health. Fact sheet.',
+      },
+    ],
+  },
+
+  {
+    id: 'nuclear-climate',
+    title: 'Is nuclear power a good answer to climate change?',
+    subject: 'Science',
+    kind: 'Evaluation',
+    summary: 'Read the numbers carefully. Separate what is measured from what is argued.',
+    brief: 'Write 600 words evaluating whether nuclear power is a good answer to climate change. Use quantitative evidence, and be clear about what the numbers do and do not show.',
+    skills: ['using quantitative evidence', 'evaluating risk', 'scientific writing'],
+    words: 600,
+    due: 'Practice · No due date',
+    steps: [
+      'Separate the question into emissions, cost, safety and time',
+      'Find a number for each, and note who measured it',
+      'Decide which of the four matters most, and say why',
+      'Write the evaluation, stating what the evidence cannot settle',
+    ],
+    modes: [...ALL_MODES],
+    sources: [
+      {
+        id: 'ipcc-ar6-energy',
+        title: 'AR6 Working Group III, Chapter 6: Energy Systems',
+        publisher: 'IPCC · 2022',
+        type: 'Assessment report',
+        url: 'https://www.ipcc.ch/report/ar6/wg3/chapter/chapter-6/',
+        note: 'Long and technical. Find the section on nuclear, and note how confident the authors say they are.',
+        citation: 'IPCC. (2022). Climate Change 2022: Mitigation of Climate Change. Working Group III, Chapter 6: Energy Systems.',
+      },
+      {
+        id: 'unece-lifecycle',
+        title: 'Life Cycle Assessment of Electricity Generation Options',
+        publisher: 'UNECE · 2021',
+        type: 'Technical report',
+        url: 'https://unece.org/sed/documents/2021/10/reports/life-cycle-assessment-electricity-generation-options',
+        note: 'Compares emissions across the whole life of a power station, not just while it runs. Why does that change the ranking?',
+        citation: 'United Nations Economic Commission for Europe. (2021). Life Cycle Assessment of Electricity Generation Options.',
+      },
+      {
+        id: 'iea-nuclear',
+        title: 'Nuclear Power in a Clean Energy System',
+        publisher: 'International Energy Agency · 2019',
+        type: 'Policy analysis',
+        url: 'https://www.iea.org/reports/nuclear-power-in-a-clean-energy-system',
+        note: 'Look for what it says about how long a plant takes to build. Does that matter for a 2050 target?',
+        citation: 'International Energy Agency. (2019). Nuclear Power in a Clean Energy System.',
+      },
+      {
+        id: 'owid-safest',
+        title: 'What are the safest and cleanest sources of energy?',
+        publisher: 'Our World in Data',
+        type: 'Data explainer',
+        url: 'https://ourworldindata.org/safest-sources-of-energy',
+        note: 'Deaths per unit of electricity is one way to measure safety. What does that measure miss?',
+        citation: 'Ritchie, H. & Roser, M. What are the safest and cleanest sources of energy? Our World in Data.',
+      },
+      {
+        id: 'world-nuclear-assoc',
+        title: 'Nuclear Power in the World Today',
+        publisher: 'World Nuclear Association',
+        type: 'Industry body',
+        url: 'https://world-nuclear.org/information-library/current-and-future-generation/nuclear-power-in-the-world-today',
+        note: 'Published by the industry itself. Useful for figures, and worth saying so in your essay if you cite it.',
+        citation: 'World Nuclear Association. Nuclear Power in the World Today.',
+      },
+    ],
+  },
+];
+
+/** A project by id, or undefined. */
+const projectById = (id) => PROJECTS.find((project) => project.id === id);
+
+/** The fields a project contributes to the student's view of their workspace, without its stored state. */
+function describe(project) {
+  return {
+    id: project.id,
+    title: project.title,
+    subject: project.subject,
+    kind: project.kind,
+    summary: project.summary,
+    brief: project.brief,
+    skills: [...project.skills],
+    words: project.words,
+    due: project.due,
+    steps: [...project.steps],
+  };
+}
+
+module.exports = { PROJECTS, DEFAULT_STEPS, ALL_MODES, projectById, describe };
+
+};
 modules["writing-review"] = function (module, exports, require, __dirname, __filename) {
 'use strict';
 
@@ -2593,11 +2902,34 @@ module.exports = { findings, quotations, sentences, LIMIT, LONG_QUOTE_WORDS, QUO
 modules["preview-app"] = function (module, exports, require, __dirname, __filename) {
 // The preview, as logic without a transport.
 //
-// One practice assignment, one session, six modes with fixed replies, and the real boundary engine
+// Several practice projects, one session, six modes with fixed replies, and the real boundary engine
 // deciding every request. `scripts/preview-server.js` puts an HTTP server in front of this on a Mac;
 // `scripts/build-pilot.js` puts it in a browser with the record kept in that browser. Both call
 // `handle(method, pathname, body)` and get back `{ status, data }`, so a route behaves identically
 // wherever it runs and the tests that drive the server also cover the pilot.
+//
+// WHAT A PROJECT OWNS. Its brief, skills, word target, steps, reading list, and the modes the teacher left
+// open for it. A teacher pausing "Say it another way" for the English essay must not pause it for the
+// History one, because the reason for pausing it is about that piece of work. Each project also keeps its
+// own draft, its own saved references and its own checked steps.
+//
+// WHAT A PROJECT DOES NOT OWN: the boundary. Two decisions follow from that, and both are deliberate.
+//
+//   1. The requests the boundary reads as history are the student's LAST FEW ACROSS EVERY PROJECT, not just
+//      this one. A refusal is about what the student asked for, not about which subject they asked it in,
+//      and if history were scoped to the project then switching project would launder a refused request:
+//      ask for the essay in English, get refused, ask again in History, and the repeat goes unnoticed.
+//      The assent rule is the sharp end of this, so it is worth being precise about what it can do. Its
+//      pattern is fully anchored and matches only a message that is entirely a bare acknowledgement ("ok",
+//      "yes", "please"). A student who switches project and types a real question is never caught by it,
+//      so this cannot refuse a genuine help request. A bare "ok" straight after a refusal gets the
+//      pressure reply wherever it is typed, which is the correct reading of it.
+//
+//   2. The teacher's summary is computed across every project for the same reason. "Asked three times for
+//      the work itself" is a fact about a student's week, and splitting it by subject would hide it.
+//
+// The brief-overlap rule is the exception that proves the point: it compares the request against THIS
+// project's brief, because pasting the History brief into the English chat is not the same act.
 
 'use strict';
 
@@ -2608,17 +2940,25 @@ const identity = require('./identity.js');
 const { corrections } = require('./writing-review.js');
 const { findings } = require('./tone-review.js');
 const { findings: paraphraseFindings } = require('./paraphrase-review.js');
+const { PROJECTS, projectById, describe } = require('./projects.js');
 
 const PREVIEW_MODES = ['understand', 'plan', 'question', 'improve', 'rephrase', 'sources'];
-const SOURCES = [
-  { id: 'eef', title: 'Homework', publisher: 'Education Endowment Foundation', type: 'Evidence overview', url: 'https://educationendowmentfoundation.org.uk/education-evidence/teaching-learning-toolkit/homework', note: 'Compare findings across age groups and examine the evidence limitations.', citation: 'Education Endowment Foundation. (n.d.). Homework. Teaching and Learning Toolkit.' },
-  { id: 'cooper', title: 'Does homework improve academic achievement?', publisher: 'Cooper, Robinson & Patall · 2006', type: 'Research synthesis', url: 'https://eric.ed.gov/?id=EJ751143', note: 'Read the abstract and consider what a research synthesis can tell you. Full text may require library access.', citation: 'Cooper, H., Robinson, J. C., & Patall, E. A. (2006). Does homework improve academic achievement? A synthesis of research, 1987–2003. Review of Educational Research, 76(1), 1–62.' },
-];
+// The reading list of the first project, still exported under its old name so anything reading it keeps
+// working. New code should take sources from the project.
+const SOURCES = PROJECTS[0].sources;
+// Records written before projects existed carry no project, and there was only ever one thing they could
+// have belonged to: the assignment the singleton held, which is the first project.
+const LEGACY_PROJECT = PROJECTS[0].id;
 // The fixed replies are the exemplars: the standard a school would see, and the standard the tests hold.
 const { EXEMPLARS } = require('./exemplars.js');
 const REPLIES = Object.fromEntries(['understand', 'plan', 'question', 'sources'].map((id) => [id, EXEMPLARS[id].reply]));
-const ROUTES = ['/api/draft', '/api/policy', '/api/turn', '/api/review', '/api/edit', '/api/source', '/api/checklist'];
+const ROUTES = ['/api/draft', '/api/policy', '/api/turn', '/api/review', '/api/edit', '/api/source', '/api/checklist', '/api/project'];
 const SESSION = 'demo';
+// The modes that can answer a chat message. "improve" and "rephrase" work on saved text through the
+// writing tools instead, which is why /api/turn refuses them.
+const CHAT_MODES = ['understand', 'plan', 'question', 'sources'];
+
+const wordsIn = (text) => (String(text || '').match(/[\p{L}\p{N}']+/gu) || []).length;
 
 /**
  * @param {object} [options]
@@ -2626,27 +2966,70 @@ const SESSION = 'demo';
  * @param {object} [options.memory]  { load(): object|null, save(snapshot) }: a browser's own storage, plain JSON
  */
 function createPreviewApp({ store = null, memory = null } = {}) {
+  // What the student has done in each project. The project's definition is fixed; this is the part that
+  // changes as they work.
+  const work = new Map(PROJECTS.map((project) => [project.id, {
+    draft: '', savedSources: [], checklist: [], modes: [...project.modes],
+  }]));
+  let currentId = PROJECTS[0].id;
+
+  const project = (id = currentId) => projectById(id) || PROJECTS[0];
+  const mine = (id = currentId) => work.get(project(id).id);
+  const allEvents = [];
+
   const state = {
     identity, modes: Object.values(MODES), previewModes: PREVIEW_MODES,
-    assignment: { title: 'Does homework help us learn?', subject: 'English · Practice assignment', brief: 'Write 500 words on whether homework helps learning. Use two sources.', skills: ['argument', 'use of evidence'], modes: [...PREVIEW_MODES] },
-    draft: '', activity: [], sources: SOURCES, savedSources: [], checklist: [],
+    // `assignment` keeps the shape it has always had, so everything that reads it still works. It is now
+    // simply whichever project is open.
+    get assignment() {
+      return { ...describe(project()), subject: `${project().subject} · ${project().kind}`, modes: [...mine().modes] };
+    },
+    get projectId() { return currentId; },
+    get projects() {
+      return PROJECTS.map((p) => {
+        const w = work.get(p.id);
+        return {
+          id: p.id, title: p.title, subject: p.subject, kind: p.kind, summary: p.summary,
+          words: p.words, due: p.due, steps: p.steps.length, sources: p.sources.length,
+          draftWords: wordsIn(w.draft), hasDraft: Boolean(w.draft.trim()),
+          checked: w.checklist.length, paused: w.modes.length === 0,
+          requests: allEvents.filter((e) => e.type === 'request' && (e.projectId || LEGACY_PROJECT) === p.id).length,
+        };
+      });
+    },
+    get draft() { return mine().draft; },
+    get sources() { return project().sources; },
+    get savedSources() { return mine().savedSources; },
+    get checklist() { return mine().checklist; },
+    // Every event, each tagged with the project it belongs to. The interface shows the open project's own
+    // history and can widen to all of them; the teacher reads the whole thing.
+    get activity() { return allEvents; },
   };
+
   let pendingReview = null;
   let nextReview = 0;
-  const who = { studentId: 'demo-student', assignmentId: 'demo-assignment' };
-  const snapshot = () => ({ activity: state.activity, draft: state.draft, modes: state.assignment.modes, savedSources: state.savedSources, checklist: state.checklist });
+  const who = () => ({ studentId: 'demo-student', assignmentId: currentId });
+  const snapshot = () => ({
+    version: 2,
+    activity: allEvents,
+    projectId: currentId,
+    work: Object.fromEntries([...work].map(([id, w]) => [id, { draft: w.draft, savedSources: [...w.savedSources], checklist: [...w.checklist], modes: [...w.modes] }])),
+  });
   const remember = () => { if (memory) memory.save(snapshot()); };
   // Every change to the record goes through here: into memory, and onto disk or into the browser's storage.
   const record = async (event) => {
-    const stored = store ? await store.append(SESSION, event) : event;
-    state.activity.push(stored);
+    const tagged = { projectId: currentId, ...event };
+    const stored = store ? await store.append(SESSION, tagged) : tagged;
+    allEvents.push(stored);
     remember();
     return stored;
   };
   const apply = (event) => {
-    state.activity.push(event);
-    if (event.type === 'draft') state.draft = event.text || '';
-    if (event.type === 'policy') state.assignment.modes = PREVIEW_MODES.filter((id) => event.modes.includes(id));
+    allEvents.push(event);
+    const w = work.get(projectById(event.projectId) ? event.projectId : LEGACY_PROJECT);
+    if (!w) return;
+    if (event.type === 'draft') w.draft = event.text || '';
+    if (event.type === 'policy') w.modes = PREVIEW_MODES.filter((mode) => event.modes.includes(mode));
   };
   // Replay the record before the first request. A chain that fails verification is refused, not repaired.
   const ready = (async () => {
@@ -2657,11 +3040,29 @@ function createPreviewApp({ store = null, memory = null } = {}) {
     } else if (memory) {
       const saved = memory.load();
       if (saved && typeof saved === 'object') {
-        for (const event of Array.isArray(saved.activity) ? saved.activity : []) state.activity.push(event);
-        state.draft = typeof saved.draft === 'string' ? saved.draft : '';
-        state.assignment.modes = PREVIEW_MODES.filter((id) => (Array.isArray(saved.modes) ? saved.modes : PREVIEW_MODES).includes(id));
-        state.savedSources = Array.isArray(saved.savedSources) ? saved.savedSources.filter((id) => SOURCES.some((s) => s.id === id)) : [];
-        state.checklist = Array.isArray(saved.checklist) ? saved.checklist.filter((id) => Number.isInteger(id) && id >= 0 && id < 4) : [];
+        for (const event of Array.isArray(saved.activity) ? saved.activity : []) apply(event);
+        if (saved.version === 2) {
+          for (const [id, stored] of Object.entries(saved.work || {})) {
+            const w = work.get(id);
+            const definition = projectById(id);
+            if (!w || !definition || !stored || typeof stored !== 'object') continue;
+            w.draft = typeof stored.draft === 'string' ? stored.draft : '';
+            w.modes = PREVIEW_MODES.filter((mode) => (Array.isArray(stored.modes) ? stored.modes : PREVIEW_MODES).includes(mode));
+            w.savedSources = Array.isArray(stored.savedSources) ? stored.savedSources.filter((sid) => definition.sources.some((s) => s.id === sid)) : [];
+            w.checklist = Array.isArray(stored.checklist) ? stored.checklist.filter((n) => Number.isInteger(n) && n >= 0 && n < definition.steps.length) : [];
+          }
+          if (projectById(saved.projectId)) currentId = saved.projectId;
+        } else {
+          // A session stored before projects existed kept one draft and one set of everything. Those
+          // belong to the first project, and reading them back is how a student's work survives this
+          // change rather than quietly disappearing on the morning they open it.
+          const definition = project(LEGACY_PROJECT);
+          const w = work.get(LEGACY_PROJECT);
+          w.draft = typeof saved.draft === 'string' ? saved.draft : w.draft;
+          w.modes = PREVIEW_MODES.filter((id) => (Array.isArray(saved.modes) ? saved.modes : PREVIEW_MODES).includes(id));
+          w.savedSources = Array.isArray(saved.savedSources) ? saved.savedSources.filter((id) => definition.sources.some((s) => s.id === id)) : [];
+          w.checklist = Array.isArray(saved.checklist) ? saved.checklist.filter((n) => Number.isInteger(n) && n >= 0 && n < definition.steps.length) : [];
+        }
       }
     }
   })();
@@ -2672,56 +3073,79 @@ function createPreviewApp({ store = null, memory = null } = {}) {
   async function handle(method, pathname, body) {
     await ready;
     if (method === 'GET' && pathname === '/api/state')
-      // The teacher's summary is computed from the record on every read, never stored or edited.
-      return reply(200, { ...state, summary: summarise(state.activity.filter((e) => e.type === 'request'), state.activity.filter((e) => e.type === 'draft')) });
+      // The teacher's summary is computed from the record on every read, never stored or edited, and it
+      // reads every project: what a teacher would notice is about the student's week, not one subject.
+      return reply(200, {
+        identity: state.identity, modes: state.modes, previewModes: state.previewModes,
+        projects: state.projects, projectId: state.projectId, assignment: state.assignment,
+        draft: state.draft, sources: state.sources, savedSources: state.savedSources,
+        checklist: state.checklist, activity: state.activity,
+        summary: summarise(allEvents.filter((e) => e.type === 'request'), allEvents.filter((e) => e.type === 'draft')),
+      });
     if (method !== 'POST' || !ROUTES.includes(pathname)) return pathname.startsWith('/api/') ? reply(404, { error: 'Page not found.' }) : null;
-    if (!body || typeof body !== 'object' || Array.isArray(body)) return reply(400, { error: 'Expected an object.' });
-    const at = Date.now();
+    if (!body || typeof body !== 'object') return reply(400, { error: 'Send a JSON object.' });
+    const at = null;
+
+    if (pathname === '/api/project') {
+      if (typeof body.id !== 'string' || !projectById(body.id)) return reply(400, { error: 'Choose one of your projects.' });
+      // Switching is not recorded. Which piece of work a student had open is not a fact about their
+      // learning, and a record full of navigation is a record nobody reads.
+      if (body.id !== currentId) {
+        currentId = body.id;
+        // A pending review's offsets belong to the draft it was run against, which is another project's.
+        pendingReview = null;
+        remember();
+      }
+      return reply(200, { projectId: currentId });
+    }
     if (pathname === '/api/source') {
-      if (!SOURCES.some((source) => source.id === body.id) || typeof body.saved !== 'boolean') return reply(400, { error: 'Choose an available source.' });
-      state.savedSources = state.savedSources.filter((id) => id !== body.id);
-      if (body.saved) state.savedSources.push(body.id);
+      if (!state.sources.some((source) => source.id === body.id) || typeof body.saved !== 'boolean') return reply(400, { error: 'Choose an available source.' });
+      const w = mine();
+      w.savedSources = w.savedSources.filter((id) => id !== body.id);
+      if (body.saved) w.savedSources.push(body.id);
       remember();
       return reply(200, { saved: true });
     }
     if (pathname === '/api/checklist') {
-      if (!Array.isArray(body.checked) || !body.checked.every((id) => Number.isInteger(id) && id >= 0 && id < 4)) return reply(400, { error: 'Choose a valid task step.' });
-      state.checklist = [...new Set(body.checked)];
+      const total = project().steps.length;
+      if (!Array.isArray(body.checked) || !body.checked.every((id) => Number.isInteger(id) && id >= 0 && id < total)) return reply(400, { error: 'Choose a valid task step.' });
+      mine().checklist = [...new Set(body.checked)];
       remember();
       return reply(200, { saved: true });
     }
     if (pathname === '/api/review') {
       const modeId = body.kind === 'rephrase' ? 'rephrase' : 'improve';
       if (!['grammar', 'tone', 'rephrase'].includes(body.kind)) return reply(400, { error: 'Choose a writing tool.' });
-      if (!state.assignment.modes.includes(modeId)) return reply(403, { error: 'Your teacher has paused this writing tool.' });
+      if (!mine().modes.includes(modeId)) return reply(403, { error: 'Your teacher has paused this writing tool.' });
       if (!state.draft.trim()) return reply(400, { error: 'Write and save your own draft first.' });
       if (body.text !== state.draft) return reply(409, { error: 'Save your current draft before reviewing it.' });
       const suggestions = body.kind === 'grammar' ? corrections(state.draft)
         : body.kind === 'tone' ? findings(state.draft)
         : paraphraseFindings(state.draft);
-      pendingReview = { id: ++nextReview, text: state.draft, suggestions, decided: new Set(), modeId };
+      pendingReview = { id: ++nextReview, text: state.draft, suggestions, decided: new Set(), modeId, projectId: currentId };
       const guide = body.kind === 'grammar'
         ? 'This checker reads the words you saved and looks for spelling, apostrophes, verbs that do not match their subject, confusable words like their and there, and punctuation. Every change is yours to accept or reject, and each one says why. It does not read for meaning, so it will miss things.'
         : body.kind === 'tone'
           ? 'This reads the words you saved and points at places where the tone may not match an essay: words that ask the reader to feel something, claims that assume the reader already agrees, and phrases that belong to speech. Most of these are questions rather than corrections, because the judgement is yours. Anything you put inside quotation marks is left alone.'
-          : 'This tool does not write a paraphrase for you, and there is no button here that will: a paraphrase is a new sentence, and whoever writes it is its author. What it does is read your draft for how it handles other people\u2019s words, and point at the places worth another pass. The method that works: cover the source, say the idea aloud in your own words, write down what you said, then check you kept the meaning and the citation.';
+          : 'This tool does not write a paraphrase for you, and there is no button here that will: a paraphrase is a new sentence, and whoever writes it is its author. What it does is read your draft for how it handles other people’s words, and point at the places worth another pass. The method that works: cover the source, say the idea aloud in your own words, write down what you said, then check you kept the meaning and the citation.';
       await record({ type: 'review', at, kind: body.kind, count: suggestions.length, guide });
       return reply(200, { id: pendingReview.id, suggestions, guide });
     }
     if (pathname === '/api/edit') {
       if (!pendingReview || body.reviewId !== pendingReview.id || !Number.isInteger(body.index) || !pendingReview.suggestions[body.index] || !['accept', 'reject'].includes(body.action)) return reply(400, { error: 'Run a new review and choose a suggestion.' });
-      if (!state.assignment.modes.includes(pendingReview.modeId)) return reply(403, { error: 'Your teacher has paused this writing tool.' });
+      if (pendingReview.projectId !== currentId) return reply(409, { error: 'That review belongs to another project. Run a new one here.' });
+      if (!mine().modes.includes(pendingReview.modeId)) return reply(403, { error: 'Your teacher has paused this writing tool.' });
       if (state.draft !== pendingReview.text || body.text !== state.draft) return reply(409, { error: 'Your draft changed. Save it and run a new review.' });
       if (pendingReview.decided.has(body.index)) return reply(409, { error: 'You already reviewed this suggestion.' });
       const suggestion = pendingReview.suggestions[body.index];
-      // A tone flag carries no replacement on purpose: the judgement is the student's to make, so there is
-      // no route that writes one into their draft. Only a mechanical swap can be accepted.
+      // A tone or paraphrase flag carries no replacement on purpose: the judgement is the student's to
+      // make, so there is no route that writes one into their draft. Only a mechanical swap is applied.
       if (body.action === 'accept' && typeof suggestion.after !== 'string') return reply(400, { error: 'That one is a question to think about, not an edit to apply.' });
       pendingReview.decided.add(body.index);
       if (body.action === 'accept') {
         const previous = state.draft;
-        state.draft = previous.slice(0, suggestion.start) + suggestion.after + previous.slice(suggestion.end);
-        await record({ type: 'draft', ...draftEntry({ at, ...who, text: state.draft, previous }), text: state.draft });
+        mine().draft = previous.slice(0, suggestion.start) + suggestion.after + previous.slice(suggestion.end);
+        await record({ type: 'draft', ...draftEntry({ at, ...who(), text: state.draft, previous }), text: state.draft });
         // Offsets belong to the reviewed snapshot. Accepting any edit invalidates the rest.
         pendingReview.text = null;
       }
@@ -2731,33 +3155,59 @@ function createPreviewApp({ store = null, memory = null } = {}) {
     if (pathname === '/api/draft') {
       if (typeof body.text !== 'string' || body.text.length > 20000) return reply(400, { error: 'Draft must be at most 20,000 characters.' });
       if (body.text !== state.draft) {
-        await record({ type: 'draft', ...draftEntry({ at, ...who, text: body.text, previous: state.draft }), text: body.text });
-        state.draft = body.text;
+        await record({ type: 'draft', ...draftEntry({ at, ...who(), text: body.text, previous: state.draft }), text: body.text });
+        mine().draft = body.text;
         remember();
       }
       return reply(200, { saved: true });
     }
     if (pathname === '/api/policy') {
       if (!Array.isArray(body.modes) || !body.modes.every((id) => PREVIEW_MODES.includes(id))) return reply(400, { error: 'Choose modes available in this preview.' });
-      state.assignment.modes = PREVIEW_MODES.filter((id) => body.modes.includes(id));
-      await record({ type: 'policy', at, modes: [...state.assignment.modes] });
+      mine().modes = PREVIEW_MODES.filter((id) => body.modes.includes(id));
+      await record({ type: 'policy', at, modes: [...mine().modes] });
       return reply(200, { saved: true });
     }
     // /api/turn
-    if (typeof body.message !== 'string' || !body.message.trim() || body.message.length > 2000 || !Object.hasOwn(MODES, body.modeId)) return reply(400, { error: 'Choose a help mode and enter a request of 1–2,000 characters.' });
+    const auto = body.modeId === 'auto';
+    if (typeof body.message !== 'string' || !body.message.trim() || body.message.length > 2000 || !(auto || Object.hasOwn(MODES, body.modeId))) return reply(400, { error: 'Choose a help mode and enter a request of 1–2,000 characters.' });
     if (['improve', 'rephrase'].includes(body.modeId)) return reply(400, { error: 'Use the writing review tools on your saved draft.' });
     // Policy and saved text always come from the app, never from a student's request. The boundary reads
-    // the last few requests to recognise one being made again; the model never sees them.
-    const history = state.activity.filter((e) => e.type === 'request');
-    const result = await turn({ message: body.message.trim(), modeId: body.modeId, assignment: state.assignment, studentText: state.draft, ask: async () => REPLIES[body.modeId], who, at, history });
-    await record({ type: 'request', ...result.record, shown: result.shown, policy: [...state.assignment.modes] });
-    return reply(200, result.shown);
+    // the last few requests to recognise one being made again; the model never sees them. Those requests
+    // come from every project on purpose: see the note at the top of this file.
+    const history = allEvents.filter((e) => e.type === 'request');
+    const message = body.message.trim();
+    const run = (modeId) => turn({ message, modeId, assignment: state.assignment, studentText: state.draft, ask: async () => REPLIES[modeId], who: who(), at, history });
+
+    // ROUTING. A student should be able to type a question and get an answer, not have to guess first which
+    // of six kinds of help their question counts as and be sent back a step when they guess wrong. The
+    // boundary already works out where a request belongs, so with modeId "auto" the app follows that
+    // routing instead of showing it to the student as a correction.
+    //
+    // Three things make this safe, and none of them is optional:
+    //   - It follows the boundary's OWN redirect, so auto-routing cannot disagree with the rules.
+    //   - It follows at most one, so no request can bounce between modes.
+    //   - It only lands on a mode the teacher left open for this project. A paused mode is still paused;
+    //     if the request belongs there, the student is told that rather than quietly served elsewhere.
+    let result;
+    let modeId = auto ? (CHAT_MODES.find((id) => mine().modes.includes(id)) || 'understand') : body.modeId;
+    let routedTo = null;
+    result = await run(modeId);
+    if (auto && result.shown.kind === 'redirect') {
+      const target = result.record.redirectedTo;
+      if (target && CHAT_MODES.includes(target) && mine().modes.includes(target)) {
+        routedTo = target;
+        modeId = target;
+        result = await run(modeId);
+      }
+    }
+    await record({ type: 'request', ...result.record, shown: result.shown, policy: [...mine().modes], ...(routedTo ? { routedTo } : {}) });
+    return reply(200, { ...result.shown, mode: modeId, ...(routedTo ? { routedTo } : {}) });
   }
 
   return { state, ready, handle, previewModes: PREVIEW_MODES };
 }
 
-module.exports = { createPreviewApp, PREVIEW_MODES, SOURCES, REPLIES };
+module.exports = { createPreviewApp, PREVIEW_MODES, SOURCES, REPLIES, PROJECTS };
 
 };
 

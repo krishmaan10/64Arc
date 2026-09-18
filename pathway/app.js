@@ -4,15 +4,19 @@ let state;
 let selected = 'understand';
 let busy = false;
 let savedOnly = false;
+let activityScope = 'current';
 let review = null;
-let chatMode = 'understand';
+let chatMode = 'auto';
 let chatSignature = '';
 let pendingChatTurns = [];
 const chatModes = ['understand', 'plan', 'question', 'sources'];
+// "Auto" is not a mode the teacher can pause; it is the absence of having to choose one. It is offered
+// whenever at least one mode that could answer a chat message is open.
+const autoAvailable = () => chatModes.some(allowed);
 const words = text => (text.match(/[\p{L}\p{N}']+/gu) || []).length;
 const nameOf = id => state.modes.find(mode => mode.id === id)?.name || id;
 const writingMode = () => ['improve', 'rephrase'].includes(selected);
-const allowed = id => state?.assignment.modes.includes(id) && state.previewModes.includes(id);
+const allowed = id => id === 'auto' ? autoAvailable() : Boolean(state?.assignment.modes.includes(id) && state.previewModes.includes(id));
 const descriptions = {
   understand: ['?', 'Unpack the task and understand what is expected.'],
   plan: ['▤', 'Find manageable steps. Decide how to spend your time.'],
@@ -22,7 +26,9 @@ const descriptions = {
   sources: ['▧', 'Explore two curated references and evaluate the evidence.'],
 };
 const taken = { produce: 'asked for the work itself', extend: 'asked for a piece of the work', answer: 'asked for the answer to a set question', disguise: 'asked for the work with a reason attached', override: 'tried to change the rules', pressure: 'pushed after a refusal', evade: 'asked to hide where writing came from', offTask: 'not about the assignment', grading: 'asked for a mark', wellbeing: 'about the student, not the work', redirect: 'help, in a different mode', modeNotAllowed: 'a kind of help the teacher paused', needsText: 'needs saved writing first' };
-const steps = ['Understand the task and choose a position', 'Read and evaluate two sources', 'Write an argument in your own words', 'Review your evidence, citations and writing'];
+const stepsOf = () => state?.assignment.steps || [];
+const projectOf = id => state?.projects.find(p => p.id === id);
+const eventProject = event => event.projectId || state?.projects[0]?.id;
 function element(tag, text, className) {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;
@@ -75,9 +81,8 @@ async function refresh() {
   renderAll();
 }
 function draftStatus() {
-  $('word-count').textContent = `${words($('draft-text').value)} words / 500 target`;
+  $('word-count').textContent = `${words($('draft-text').value)} words / ${state.assignment.words} target`;
   $('save-state').textContent = $('draft-text').value !== state.draft ? 'Unsaved changes' : state.draft ? 'Saved in this session' : 'No draft saved';
-  $('home-draft-state').textContent = state.draft ? 'Draft in progress' : 'Ready to start';
   controls();
 }
 function route(focus = true) {
@@ -103,6 +108,73 @@ function chooseMode(id) {
   $('response').hidden = true; $('writing-response').hidden = true;
   renderModes(); location.hash = 'workspace';
 }
+/**
+ * Switch the open project. Everything the student sees is scoped to one project, so this reloads the whole
+ * state rather than patching pieces of it: a half-switched workspace showing one project's draft beside
+ * another's brief would be worse than a slow one.
+ */
+async function switchProject(id) {
+  if (busy || !state || id === state.projectId) return;
+  await action(async () => {
+    await api('/api/project', { id });
+    review = null; chatSignature = ''; savedOnly = false;
+    $('response').hidden = true; $('writing-response').hidden = true;
+    $('chat-feedback').textContent = '';
+    $('source-search').value = '';
+    await refresh();
+    $('draft-text').value = state.draft;
+    draftStatus();
+    notice(`Now working on ${state.assignment.title}. Your other projects are where you left them.`);
+  });
+}
+
+function renderProjects() {
+  const cards = $('project-cards');
+  $('project-switcher').replaceChildren();
+  cards.replaceChildren();
+  $('desk-count').textContent = `${state.projects.length} practice projects`;
+  $('teacher-project').textContent = state.assignment.title;
+  for (const project of state.projects) {
+    const open = project.id === state.projectId;
+
+    const entry = lockable(element('button', undefined, `project-entry${open ? ' is-open' : ''}`));
+    entry.type = 'button';
+    entry.setAttribute('aria-current', open ? 'true' : 'false');
+    entry.append(element('span', project.subject, 'project-subject'), element('span', project.title, 'project-name'));
+    const marks = element('span', undefined, 'project-marks');
+    if (project.hasDraft) marks.append(element('span', `${project.draftWords} words`, 'project-mark'));
+    if (project.checked) marks.append(element('span', `${project.checked}/${project.steps} steps`, 'project-mark'));
+    if (project.paused) marks.append(element('span', 'help paused', 'project-mark warn'));
+    if (marks.childElementCount) entry.append(marks);
+    entry.addEventListener('click', () => switchProject(project.id));
+    $('project-switcher').append(entry);
+
+    const card = element('article', undefined, `assignment-card${open ? ' is-open' : ''}`);
+    const top = element('div', undefined, 'section-top');
+    top.append(element('span', project.subject.toUpperCase(), 'subject-chip'),
+      element('span', project.hasDraft ? 'Draft in progress' : 'Ready to start', 'state-pill'));
+    card.append(top, element('h3', project.title), element('p', project.summary));
+    const meta = element('div', undefined, 'assignment-meta');
+    meta.append(element('span', `▤  ${project.words} words`), element('span', `▧  ${project.sources} sources`), element('span', project.due));
+    card.append(meta);
+    const progress = element('div', undefined, 'assignment-progress');
+    const row = element('div');
+    row.append(element('span', `${project.checked} of ${project.steps} steps checked`),
+      element('strong', `${Math.round((project.checked / project.steps) * 100)}%`));
+    const bar = element('progress'); bar.max = project.steps; bar.value = project.checked; bar.textContent = `${project.checked} of ${project.steps}`;
+    progress.append(row, bar); card.append(progress);
+    const footer = element('div', undefined, 'assignment-card-footer');
+    const dot = element('span');
+    dot.append(element('span', undefined, project.paused ? 'amber-dot' : 'green-dot'), document.createTextNode(` ${project.paused ? 'Assistant help paused' : 'Assignment help enabled'}`));
+    footer.append(dot);
+    const go = lockable(element('button', open ? 'Continue learning →' : 'Open this project →', 'text-link'));
+    go.type = 'button';
+    go.addEventListener('click', async () => { await switchProject(project.id); location.hash = 'workspace'; });
+    footer.append(go); card.append(footer);
+    cards.append(card);
+  }
+}
+
 function renderModes() {
   if (!allowed(selected)) selected = state.assignment.modes.find(allowed) || '';
   $('permission-list').replaceChildren(); $('mode-picker').replaceChildren(); $('policy-options').replaceChildren(); $('home-tools').replaceChildren();
@@ -133,12 +205,11 @@ function renderModes() {
   $('writing-title').textContent = selected === 'rephrase' ? 'Practise your paraphrase' : 'Review your writing';
   $('writing-options').hidden = selected === 'rephrase'; $('rephrase-action').hidden = selected !== 'rephrase';
   document.querySelectorAll('[data-mode]').forEach(node => lockable(node, !allowed(node.dataset.mode)));
-  $('assignment-help-state').textContent = state.assignment.modes.length ? 'Assignment help enabled' : 'Assistant help paused';
   controls();
 }
 function renderChecklist() {
   $('task-checklist').replaceChildren();
-  steps.forEach((text, index) => {
+  stepsOf().forEach((text, index) => {
     const label = element('label', undefined, 'check-row'); const input = lockable(element('input'));
     input.type = 'checkbox'; input.checked = state.checklist.includes(index);
     input.addEventListener('change', () => action(async () => {
@@ -148,17 +219,15 @@ function renderChecklist() {
     }));
     label.append(input, element('span', text)); $('task-checklist').append(label);
   });
-  $('home-progress').value = state.checklist.length;
-  $('home-progress-label').textContent = `${state.checklist.length} of 4 steps checked`;
-  $('home-progress-percent').textContent = `${state.checklist.length * 25}%`;
 }
 function detail(parent, title, text) {
   const node = element('details'); node.append(element('summary', title), element('p', text)); parent.append(node);
 }
 function renderActivity() {
   const filter = $('activity-filter').value;
-  const events = state.activity.filter(event => filter === 'all' || event.type === filter || filter === 'writing' && ['review', 'edit'].includes(event.type));
-  $('activity-count').textContent = `${events.length} of ${state.activity.length} events`;
+  const inScope = state.activity.filter(event => activityScope === 'all' || eventProject(event) === state.projectId);
+  const events = inScope.filter(event => filter === 'all' || event.type === filter || filter === 'writing' && ['review', 'edit'].includes(event.type));
+  $('activity-count').textContent = `${events.length} of ${inScope.length} events`;
   $('activity-list').replaceChildren();
   if (!events.length) $('activity-list').append(element('li', state.activity.length ? 'No activity matches this filter.' : 'Your learning story starts here. Save a draft or ask for guidance to begin.', 'empty-state'));
   for (const event of [...events].reverse()) {
@@ -264,7 +333,19 @@ function renderReview() {
   });
   panel.focus();
 }
-function renderAll() { renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
+/**
+ * The heading of the project that is open. This used to be written once at startup, which was invisible
+ * while there was only ever one assignment and is a blocking bug the moment a student can switch: the
+ * title, subject, brief and skills would all still describe the project they had just left.
+ */
+function renderAssignment() {
+  $('assignment-title').textContent = state.assignment.title;
+  $('subject').textContent = state.assignment.subject;
+  $('brief').textContent = state.assignment.brief;
+  $('skills').replaceChildren(...state.assignment.skills.map(skill => element('span', skill)));
+  $('draft-hint').textContent = `Start with what you think. You can make it clearer as you go. This one asks for about ${state.assignment.words} words.`;
+}
+function renderAll() { renderAssignment(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
 function download(filename, text, type) {
   const url = URL.createObjectURL(new Blob([text], { type }));
   const link = element('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove();
@@ -304,14 +385,27 @@ function appendChatTurn(event) {
     });
     actions.append(button);
   }
+  if (event.routedTo) {
+    // Say when the router chose. A student who did not pick a mode should still see what kind of help they
+    // were given, both so it is not a black box and so they can ask for something else if it was wrong.
+    const note = element('p', `Read as: ${nameOf(event.routedTo)}.`, 'routed-note');
+    const pick = element('button', 'Choose the help yourself', 'text-link');
+    pick.type = 'button';
+    pick.addEventListener('click', () => { $('chat-mode').focus(); $('chat-feedback').textContent = 'Pick the kind of help you want, then send your message again.'; });
+    note.append(document.createTextNode(' '), pick);
+    reply.append(note);
+  }
   if (event.mode === 'sources' && shown.kind === 'reply') {
     const link = element('a', 'Open source library ↗'); link.href = '#sources'; actions.append(link);
   }
   reply.append(actions); turn.append(user, reply); $('chat-transcript').append(turn);
 }
 function renderChat() {
-  if (!allowed(chatMode)) chatMode = chatModes.find(allowed) || '';
+  if (!allowed(chatMode)) chatMode = autoAvailable() ? 'auto' : chatModes.find(allowed) || '';
   $('chat-mode').replaceChildren();
+  if (autoAvailable()) {
+    const auto = element('option', 'Work it out for me'); auto.value = 'auto'; $('chat-mode').append(auto);
+  }
   for (const id of chatModes) {
     const option = element('option', `${nameOf(id)}${allowed(id) ? '' : ' · Paused'}`);
     option.value = id; option.disabled = !allowed(id); $('chat-mode').append(option);
@@ -321,8 +415,10 @@ function renderChat() {
   $('chat-assignment').textContent = state.assignment.title;
   $('chat-brief').textContent = state.assignment.brief;
   $('chat-policy').textContent = chatMode ? '◇  Guidance within assignment boundaries · You write the final work' : 'Chat assistance is paused. You can still write and save your draft.';
-  const turns = [...state.activity.filter(event => event.type === 'request'), ...pendingChatTurns];
-  const signature = JSON.stringify([turns, state.assignment.modes]);
+  // One conversation per project. Seeing the History questions above the English ones would be a different
+  // student's transcript as far as the person reading it is concerned.
+  const turns = [...state.activity.filter(event => event.type === 'request' && eventProject(event) === state.projectId), ...pendingChatTurns];
+  const signature = JSON.stringify([turns, state.assignment.modes, state.projectId]);
   if (signature !== chatSignature) {
     lastOffers = '';
     $('chat-transcript').replaceChildren(); turns.forEach(appendChatTurn); chatSignature = signature;
@@ -358,7 +454,7 @@ $('chat-form').addEventListener('submit', event => {
     try {
       const shown = await api('/api/turn', { message, modeId });
       // A successful POST must not be retried just because the subsequent history fetch fails.
-      pendingChatTurns.push({ asked: message, mode: modeId, shown });
+      pendingChatTurns.push({ asked: message, mode: shown.mode || modeId, shown, projectId: state.projectId, routedTo: shown.routedTo });
       $('chat-input').value = ''; $('chat-count').textContent = '0 / 2,000';
       renderChat();
       try { await refresh(); $('chat-feedback').textContent = 'Response received. Request and reply recorded in shared activity.'; }
@@ -406,6 +502,7 @@ document.querySelectorAll('[data-review]').forEach(button => {
 $('source-search').addEventListener('input', () => { if (state) renderSources(); });
 $('saved-filter').addEventListener('click', () => { if (state) { savedOnly = !savedOnly; renderSources(); } });
 $('activity-filter').addEventListener('change', () => { if (state) renderActivity(); });
+$('activity-scope').addEventListener('change', () => { if (state) { activityScope = $('activity-scope').value; renderActivity(); } });
 $('download-draft').addEventListener('click', () => { if (state?.draft) download('my-saved-draft.txt', state.draft, 'text/plain'); });
 $('export-activity').addEventListener('click', () => { if (state) download('learning-activity.json', JSON.stringify({ assignment: state.assignment.title, activity: state.activity }, null, 2), 'application/json'); });
 $('pilot-reset').addEventListener('click', () => { if (window.PathWayPilot && window.confirm('Start again? This clears the practice record kept in this browser.')) window.PathWayPilot.reset(); });
@@ -417,8 +514,6 @@ async function init() {
     $('product-name').textContent = 'PathWay AI';
     // In the browser pilot the record lives in this browser, so a visitor can start again.
     $('pilot-reset').hidden = !window.PathWayPilot;
-    $('assignment-title').textContent = state.assignment.title; $('subject').textContent = state.assignment.subject; $('brief').textContent = state.assignment.brief;
-    $('skills').replaceChildren(...state.assignment.skills.map(skill => element('span', skill)));
     $('draft-text').value = state.draft; $('draft-text').disabled = false;
     renderAll(); route(false);
   } catch (error) { notice(`${error.message} Reload the page to reconnect.`, true); }
