@@ -431,7 +431,18 @@ function renderStorageState() {
       + 'Your work is safe for now but is not being kept. Close the other tab and reload, or download your draft before you finish.';
   }
 }
-function renderAll() { renderStorageState(); renderAssignment(); renderSavedReferences(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
+/**
+ * What is behind the replies. The banner used to be a fixed string saying there is no model, which stops
+ * being true the moment the local server is started with one behind it. It reads the state instead.
+ */
+function renderModelState() {
+  const banner = document.querySelector('.demo-banner span:last-child');
+  if (!banner) return;
+  banner.textContent = state.model === 'live'
+    ? 'Live model behind the replies · every reply passes the same boundary and the same check · the record stays on this device'
+    : 'Fixed replies · local request reader · no AI model connected for replies · the record stays on this device';
+}
+function renderAll() { renderModelState(); renderStorageState(); renderAssignment(); renderSavedReferences(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
 function download(filename, text, type) {
   const url = URL.createObjectURL(new Blob([text], { type }));
   const link = element('a'); link.href = url; link.download = filename; document.body.append(link); link.click(); link.remove();

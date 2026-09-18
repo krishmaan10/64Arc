@@ -3206,10 +3206,20 @@ const wordsIn = (text) => (String(text || '').match(/[\p{L}\p{N}']+/gu) || []).l
 
 /**
  * @param {object} [options]
- * @param {object} [options.store]   a RecordStore: events are appended to its hash chain and replayed on start
- * @param {object} [options.memory]  { load(): object|null, save(snapshot) }: a browser's own storage, plain JSON
+ * @param {object} [options.store]      a RecordStore: events are appended to its hash chain and replayed on start
+ * @param {object} [options.memory]     { load(): object|null, save(snapshot) }: plain JSON kept outside the chain.
+ *                                      In the browser this is the whole session. Beside a store it holds only
+ *                                      the work that does not belong in the shared record: saved references,
+ *                                      checked steps, and which project is open.
+ * @param {string} [options.sessionId]  who this app belongs to. One app is one student's session: its own
+ *                                      record file, its own drafts, its own pending review. Nothing here is
+ *                                      shared between two sessions, which is the whole point of having one.
+ * @param {function} [options.ask]      async ({system, user}) => string. A model. Without one the replies are
+ *                                      the fixed exemplars, and the interface says so.
  */
-function createPreviewApp({ store = null, memory = null } = {}) {
+function createPreviewApp({ store = null, memory = null, sessionId = SESSION, ask = null } = {}) {
+  // The session id names a file on disk, so it is a filename first and an identifier second.
+  if (!/^[a-z0-9][a-z0-9-]{0,63}$/i.test(String(sessionId))) throw new Error(`invalid session id: ${String(sessionId).slice(0, 40)}`);
   // What the student has done in each project. The project's definition is fixed; this is the part that
   // changes as they work.
   const work = new Map(PROJECTS.map((project) => [project.id, {
@@ -3260,7 +3270,7 @@ function createPreviewApp({ store = null, memory = null } = {}) {
   let dropped = 0;
   let pendingReview = null;
   let nextReview = 0;
-  const who = () => ({ studentId: 'demo-student', assignmentId: currentId });
+  const who = () => ({ studentId: sessionId, assignmentId: currentId });
   const snapshot = () => ({
     version: 2,
     activity: allEvents,
@@ -3274,7 +3284,7 @@ function createPreviewApp({ store = null, memory = null } = {}) {
   // Every change to the record goes through here: into memory, and onto disk or into the browser's storage.
   const record = async (event) => {
     const tagged = { projectId: currentId, ...event };
-    const stored = store ? await store.append(SESSION, tagged) : tagged;
+    const stored = store ? await store.append(sessionId, tagged) : tagged;
     allEvents.push(stored);
     remember();
     return stored;
@@ -3295,9 +3305,23 @@ function createPreviewApp({ store = null, memory = null } = {}) {
   let fatal = null;
   const ready = (async () => {
     if (store) {
-      const check = await store.verify(SESSION);
-      if (!check.ok) throw new Error(`record ${SESSION} failed verification at event ${check.brokenAt}; move the file aside before starting`);
-      for (const event of await store.load(SESSION)) apply(event);
+      const check = await store.verify(sessionId);
+      if (!check.ok) throw new Error(`record ${sessionId} failed verification at event ${check.brokenAt}; move the file aside before starting`);
+      for (const event of await store.load(sessionId)) apply(event);
+      // Beside a chain, memory holds only what the chain does not: references saved, steps checked, and the
+      // open project. Those stay out of the shared record on purpose (the boundaries page promises it), but
+      // they used to vanish on every restart, which is not the same promise.
+      const saved = memory ? memory.load() : null;
+      if (saved && typeof saved === 'object' && saved.version === 2) {
+        for (const [id, stored] of Object.entries(saved.work || {})) {
+          const w = work.get(id);
+          const definition = projectById(id);
+          if (!w || !definition || !stored || typeof stored !== 'object') continue;
+          w.savedSources = Array.isArray(stored.savedSources) ? stored.savedSources.filter((sid) => definition.sources.some((x) => x.id === sid)) : [];
+          w.checklist = Array.isArray(stored.checklist) ? stored.checklist.filter((n) => Number.isInteger(n) && n >= 0 && n < definition.steps.length) : [];
+        }
+        if (projectById(saved.projectId)) currentId = saved.projectId;
+      }
     } else if (memory) {
       const saved = memory.load();
       if (saved && typeof saved === 'object') {
@@ -3346,6 +3370,7 @@ function createPreviewApp({ store = null, memory = null } = {}) {
       // reads every project: what a teacher would notice is about the student's week, not one subject.
       return reply(200, {
         identity: state.identity, modes: state.modes, previewModes: state.previewModes,
+        sessionId, model: ask ? 'live' : 'fixed',
         projects: state.projects, projectId: state.projectId, assignment: state.assignment,
         draft: state.draft, sources: state.sources, savedSources: state.savedSources,
         checklist: state.checklist, activity: state.activity, kept, dropped,
@@ -3445,7 +3470,9 @@ function createPreviewApp({ store = null, memory = null } = {}) {
     // come from every project on purpose: see the note at the top of this file.
     const history = allEvents.filter((e) => e.type === 'request');
     const message = body.message.trim();
-    const run = (modeId) => turn({ message, modeId, assignment: state.assignment, studentText: state.draft, ask: async () => replyFor(currentId, modeId), who: who(), at, history });
+    // With a model the prompt is what carries this project's brief and the student's own words; without
+    // one, the fixed reply for this project stands in, and the interface says which it was.
+    const run = (modeId) => turn({ message, modeId, assignment: state.assignment, studentText: state.draft, ask: ask || (async () => replyFor(currentId, modeId)), who: who(), at, history });
 
     // ROUTING. A student should be able to type a question and get an answer, not have to guess first which
     // of six kinds of help their question counts as and be sent back a step when they guess wrong. The
