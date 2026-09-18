@@ -250,15 +250,22 @@ function renderActivity() {
   if (!events.length) $('activity-list').append(element('li', state.activity.length ? 'No activity matches this filter.' : 'Your learning story starts here. Save a draft or ask for guidance to begin.', 'empty-state'));
   for (const event of [...events].reverse()) {
     const li = element('li'); const heading = element('div', undefined, 'event-heading');
-    const titles = { draft: `Draft saved · ${event.words} words`, policy: 'Assignment permissions updated', review: `${event.kind} review · ${event.count} suggestions`, edit: `Writing suggestion ${event.action === 'accept' ? 'accepted' : 'rejected'}` };
+    const titles = { draft: `Draft saved · ${event.words} words`, policy: 'Assignment permissions updated', review: `${event.kind} review · ${event.count} suggestions`, edit: `Writing suggestion ${event.action === 'accept' ? 'accepted' : 'rejected'}`, correction: 'Your teacher checked a decision' };
     const time = element('time', new Date(event.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    time.dateTime = new Date(event.at).toISOString(); heading.append(element('strong', titles[event.type] || nameOf(event.mode)));
+    time.dateTime = new Date(event.at).toISOString(); heading.append(element('strong', titles[event.type] || nameOf(event.mode) || event.type));
     if (event.type === 'request') { const chip = element('span', event.outcome, 'outcome-chip'); chip.dataset.outcome = event.outcome; heading.append(chip); }
     heading.append(time); li.append(heading);
     if (event.type === 'draft') detail(li, 'Read saved draft', event.text || '(Empty draft)');
     if (event.type === 'policy') li.append(element('p', event.modes.length ? `Allowed: ${event.modes.map(nameOf).join(', ')}` : 'All assistant help is paused.'));
     if (event.type === 'review') li.append(element('p', event.guide));
     if (event.type === 'edit') li.append(element('p', `${event.before} → ${event.after}\n${event.reason}`));
+    if (event.type === 'correction') {
+      // The fair half of a record a student can read: a teacher's mark on a decision is shown to the
+      // student it was made about, in the same words the teacher chose.
+      const target = state.activity.find(e => e.type === 'request' && e.seq === event.targetSeq);
+      const words = { fine: 'agreed with it: the help given was fine.', refuse: 'marked it as a mistake: this should have been refused.', wrong: `marked it as a mistake: this should have been treated as ${nameOf(event.label) || 'a different kind of help'}.` };
+      li.append(element('p', `About your request${target ? ` “${target.asked}”` : ''}: your teacher ${words[event.verdict] || 'reviewed this decision.'}`));
+    }
     if (event.type === 'request') {
       li.append(element('p', event.asked));
       li.append(element('p', `Taken as: ${event.category ? taken[event.category] || event.category : 'help, answered'}${event.again ? ' · asked again' : ''}${event.read ? ` · reader: ${event.read.name || event.read.label} (${Math.round(event.read.confidence * 100)}%)` : ''}`, 'small muted'));
