@@ -273,7 +273,31 @@ function renderSources() {
     const bookmark = lockable(element('button', saved ? '✓ Saved' : 'Save reference'));
     bookmark.setAttribute('aria-pressed', String(saved));
     bookmark.addEventListener('click', () => action(async () => { await api('/api/source', { id: source.id, saved: !saved }); await refresh(); notice(saved ? 'Reference removed from saved list.' : 'Reference saved in this session.'); }));
-    actions.append(link, bookmark); card.append(actions); detail(card, 'View citation', `${source.citation}\n${source.url}`); $('source-list').append(card);
+    actions.append(link, bookmark); card.append(actions);
+    // The citation is the one piece of a reference a student has to reproduce exactly, and typing it out
+    // by hand is where the mistakes come from. Copying it is the source's own words, not theirs, so there
+    // is nothing here the boundary needs to weigh.
+    const citation = element('details');
+    const body = element('p', `${source.citation}\n${source.url}`);
+    const copy = element('button', 'Copy citation', 'text-link');
+    copy.type = 'button';
+    copy.addEventListener('click', async () => {
+      const text = `${source.citation}\n${source.url}`;
+      try {
+        await navigator.clipboard.writeText(text);
+        copy.textContent = 'Copied ✓';
+      } catch {
+        // Clipboard access is refused in some browsers and sandboxes. Select it so the student can copy
+        // it themselves, rather than a button that silently does nothing.
+        const range = document.createRange(); range.selectNodeContents(body);
+        const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+        copy.textContent = 'Selected — press copy';
+      }
+      setTimeout(() => { copy.textContent = 'Copy citation'; }, 2500);
+    });
+    citation.append(element('summary', 'View citation'), body, copy);
+    card.append(citation);
+    $('source-list').append(card);
   }
   if (!sources.length) $('source-list').append(element('p', savedOnly ? 'No saved references match. Turn off “Saved only” or clear your search.' : 'No references match. Try a title or publisher, or clear your search.', 'empty-state card'));
 }
