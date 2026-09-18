@@ -3544,7 +3544,7 @@ var KEY = "pathway-pilot-v1";
 // Where a switched-on pilot sends the requests it made, so the learner can learn from them. Set at build
 // time from PATHWAY_LEARNING_ENDPOINT. Empty means sharing is not on for this build, and the interface
 // offers a download instead of a switch.
-var LEARNING_ENDPOINT = "";
+var LEARNING_ENDPOINT = "cd /Users/krishmaanchadha/Documents/Codex/2026-09-07/what/outputs/64arcs-school-assistant && P=~/Library/LaunchAgents/com.64arcs.pathway.preview.plist && plutil -replace EnvironmentVariables.PATHWAY_LEARNING_ENDPOINT -string \"$(gh variable get PATHWAY_LEARNING_ENDPOINT)\" \"$P\" && plutil -replace EnvironmentVariables.PATHWAY_COLLECTOR_READ_KEY -string \"$(cat data/collector-read-key)\" \"$P\" && launchctl bootout gui/$(id -u) \"$P\"; launchctl bootstrap gui/$(id -u) \"$P\" && sleep 4 && tail -3 ~/Library/Logs/PathWay/preview.log";
 var CONTRIBUTOR_KEY = 'pathway-pilot-contributor', CONSENT_KEY = 'pathway-pilot-contribute', OUTBOX_KEY = 'pathway-pilot-outbox', SENT_KEY = 'pathway-pilot-sent', REJECTED_KEY = 'pathway-pilot-rejected', LOG_KEY = 'pathway-pilot-log', NEXT_KEY = 'pathway-pilot-next';
 var LEARNING_KEYS = [CONTRIBUTOR_KEY, CONSENT_KEY, OUTBOX_KEY, SENT_KEY, REJECTED_KEY, LOG_KEY, NEXT_KEY];
 function randomId(bytes) { var b = new Uint8Array(bytes); window.crypto.getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
