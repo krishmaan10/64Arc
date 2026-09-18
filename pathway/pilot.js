@@ -973,6 +973,11 @@ function decide({ message, modeId, assignment, studentText = '', classified, his
   const suggested = fitsHere ? null : classified.suggestedMode;
   if (suggested && suggested !== modeId && allowed.includes(suggested)) {
     const target = mode(suggested);
+    // The right mode for this request works on saved writing, and there is none. Answering in the mode
+    // they happen to be in gives them the assignment brief when they asked about their spelling, which
+    // reads as a tool that did not listen. Tell them what to do first instead.
+    if (target.needsStudentText && !hasText)
+      return refuse('needsText', REFUSAL.needsText(target.name, alternatives));
     if (!target.needsStudentText || hasText)
       return {
         allow: false,
