@@ -15,7 +15,7 @@ const chatModes = ['understand', 'plan', 'question', 'sources'];
 const autoAvailable = () => chatModes.some(allowed);
 const words = text => (text.match(/[\p{L}\p{N}']+/gu) || []).length;
 const nameOf = id => state.modes.find(mode => mode.id === id)?.name || id;
-const writingMode = () => ['improve', 'rephrase'].includes(selected);
+const writingMode = () => ['improve', 'rephrase'].includes(selected) && allowed(selected);
 const allowed = id => id === 'auto' ? autoAvailable() : Boolean(state?.assignment.modes.includes(id) && state.previewModes.includes(id));
 const descriptions = {
   understand: ['?', 'Unpack the task and understand what is expected.'],
@@ -52,7 +52,7 @@ function controls() {
   $('save-draft').disabled = busy || !state || $('draft-text').value === state.draft;
   $('download-draft').disabled = !state?.draft;
   $('export-activity').disabled = !state?.activity.length;
-  $('ask').disabled = busy || !selected || !state;
+  $('ask').disabled = busy || !selected || !state || !allowed(selected);
   $('ask').textContent = busy ? 'Checking…' : 'Ask for guidance ↗';
   const chatPaused = !allowed(chatMode);
   $('chat-input').disabled = busy || !state || chatPaused;
@@ -115,6 +115,10 @@ function chooseMode(id) {
  */
 async function switchProject(id) {
   if (busy || !state || id === state.projectId) return;
+  // The draft box belongs to the project being closed. Unsaved words in it are gone the moment the next
+  // project's draft is loaded over them, which is the same promise the page already makes on tab close.
+  if ($('draft-text').value !== state.draft
+    && !window.confirm('You have unsaved changes in this draft. Switching projects will discard them. Switch anyway?')) return;
   await action(async () => {
     await api('/api/project', { id });
     review = null; chatSignature = ''; savedOnly = false;
@@ -186,7 +190,11 @@ function renderProjects() {
 }
 
 function renderModes() {
-  if (!allowed(selected)) selected = state.assignment.modes.find(allowed) || '';
+  // `selected` is the record of what the student chose, so nothing here may rewrite it. Substituting a
+  // different mode when the teacher pauses one sends their words, and records them, under a mode they
+  // never picked, and can refuse a request they never made. Show the paused state instead.
+  const paused = Boolean(selected) && !allowed(selected);
+  const active = paused ? '' : selected;
   $('permission-list').replaceChildren(); $('mode-picker').replaceChildren(); $('policy-options').replaceChildren(); $('home-tools').replaceChildren();
   for (const [index, mode] of state.modes.entries()) {
     const available = state.previewModes.includes(mode.id);
@@ -196,7 +204,7 @@ function renderModes() {
     li.append(element('span', permitted ? '✓' : '—', 'permission-icon'), element('span', `${mode.name}${!available ? ' · Coming later' : !permitted ? ' · Paused' : ''}`));
     $('permission-list').append(li);
     const button = lockable(element('button', undefined, 'mode-choice'), !permitted);
-    button.type = 'button'; button.setAttribute('aria-pressed', String(selected === mode.id));
+    button.type = 'button'; button.setAttribute('aria-pressed', String(active === mode.id));
     button.append(element('span', String(index + 1).padStart(2, '0'), 'number'), element('span', mode.name + (permitted ? '' : ' · Paused')));
     button.addEventListener('click', () => { chooseMode(mode.id); if (!writingMode()) $('request-text').focus(); });
     $('mode-picker').append(button);
@@ -209,11 +217,11 @@ function renderModes() {
     const description = element('span', mode.name); description.append(element('small', purpose));
     label.append(checkbox, description); $('policy-options').append(label);
   }
-  $('mode-title').textContent = selected ? nameOf(selected) : 'Help is paused for this assignment';
-  $('mode-purpose').textContent = selected ? descriptions[selected][1] : 'You can keep writing and saving your draft. Your teacher has turned off all help modes.';
+  $('mode-title').textContent = paused ? `Your teacher paused “${nameOf(selected)}”` : active ? nameOf(active) : 'Help is paused for this assignment';
+  $('mode-purpose').textContent = paused ? 'Your message has not been sent. Pick another kind of help above and it will go there.' : active ? descriptions[active][1] : 'You can keep writing and saving your draft. Your teacher has turned off all help modes.';
   $('request-form').hidden = writingMode(); $('writing-tools').hidden = !writingMode();
-  $('writing-title').textContent = selected === 'rephrase' ? 'Practise your paraphrase' : 'Review your writing';
-  $('writing-options').hidden = selected === 'rephrase'; $('rephrase-action').hidden = selected !== 'rephrase';
+  $('writing-title').textContent = active === 'rephrase' ? 'Practise your paraphrase' : 'Review your writing';
+  $('writing-options').hidden = active === 'rephrase'; $('rephrase-action').hidden = active !== 'rephrase';
   document.querySelectorAll('[data-mode]').forEach(node => lockable(node, !allowed(node.dataset.mode)));
   controls();
 }
@@ -567,14 +575,24 @@ $('request-form').addEventListener('submit', event => {
   if (!selected || writingMode()) return;
   const message = $('request-text').value.trim(); const modeId = selected;
   if (!message) { notice('Enter what you would like help with.', true); return; }
-  action(async () => { const shown = await api('/api/turn', { message, modeId }); await refresh(); renderResponse(shown, modeId); notice('Request and outcome added to the shared activity record.'); });
+  action(async () => {
+    const shown = await api('/api/turn', { message, modeId });
+    // Show it before refreshing. The server has already written this to the record, so losing it because
+    // the next read failed would tell a student they were refused help they were in fact given.
+    renderResponse(shown, modeId);
+    $('request-text').value = '';
+    try { await refresh(); notice('Request and outcome added to the shared activity record.'); }
+    catch { notice('Reply received and recorded. Activity could not refresh; reload to sync. Do not ask again.'); }
+  });
 });
 document.querySelectorAll('[data-review]').forEach(button => {
   lockable(button);
   button.addEventListener('click', () => action(async () => {
     const kind = button.dataset.review;
     review = { ...await api('/api/review', { kind, text: $('draft-text').value }), kind };
-    await refresh(); renderReview(); notice('Writing review added to your activity. You choose each change.');
+    renderReview();
+    try { await refresh(); notice('Writing review added to your activity. You choose each change.'); }
+    catch { notice('Review received and recorded. Activity could not refresh; reload to sync.'); }
   }));
 });
 $('source-search').addEventListener('input', () => { if (state) renderSources(); });

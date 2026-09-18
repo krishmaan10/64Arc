@@ -10,9 +10,10 @@
   --surface-2: #eef0fa;
   --ink: #171a33;
   --ink-2: #454a6d;
-  --muted: #6f7496;
+  --muted: #63688a;
   --line: #e1e4f3;
   --line-strong: #c9cdea;
+  --field-border: #8287b0;
   --accent: #4f5bff;
   --accent-strong: #3b46e6;
   --accent-soft: #e9ebff;
@@ -51,7 +52,7 @@ body { margin: 0; background: var(--bg); }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button, .button {
-  min-height: 44px; border: 1px solid var(--line-strong); border-radius: 14px; padding: 10px 18px;
+  min-height: 44px; border: 1px solid var(--field-border); border-radius: 14px; padding: 10px 18px;
   background: var(--surface); color: var(--ink); cursor: pointer; font-size: 14px; font-weight: 600; line-height: 1.3;
 }
 button:hover:not(:disabled), .button:hover { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
@@ -223,10 +224,10 @@ input[type="checkbox"] { width: 18px; height: 18px; margin: 2px 0; accent-color:
 .unavailable { color: var(--muted); }
 .permission-icon { color: var(--mint-ink); font-weight: 700; }
 label { display: block; font-size: 14px; font-weight: 600; margin: 14px 0 8px; }
-textarea, input[type="search"], select { border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); padding: 12px 14px; font-size: 15px; max-width: 100%; }
+textarea, input[type="search"], select { border: 1px solid var(--field-border); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); padding: 12px 14px; font-size: 15px; max-width: 100%; }
 textarea:focus-visible, input[type="search"]:focus-visible, select:focus-visible { outline-offset: 0; outline-width: 2px; border-color: var(--accent); }
 textarea { display: block; width: 100%; line-height: 1.7; resize: vertical; }
-textarea::placeholder, input::placeholder { color: #9599b8; }
+textarea::placeholder, input::placeholder { color: #63688a; }
 textarea[readonly] { background: var(--surface-2); }
 .editor-label { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -.4px; margin-top: 8px; }
 .draft .muted { font-size: 14px; }
@@ -365,14 +366,14 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
 .reply-actions a { font-size: 14px; font-weight: 700; color: var(--accent-ink); }
 .composer-dock { position: sticky; bottom: 0; padding: 14px 0 12px; background: linear-gradient(180deg, rgba(244, 245, 251, 0), var(--bg) 12%); margin-top: auto; }
 .chat-policy { text-align: center; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
-.chat-composer { border: 2px solid var(--line-strong); border-radius: 22px; padding: 14px 16px; background: var(--surface); box-shadow: var(--shadow); }
+.chat-composer { border: 2px solid var(--field-border); border-radius: 22px; padding: 14px 16px; background: var(--surface); box-shadow: var(--shadow); }
 .chat-composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(79, 91, 255, .12); }
 .chat-composer textarea { width: 100%; resize: vertical; max-height: 220px; min-height: 52px; border: 0; border-radius: 0; padding: 4px 4px; background: transparent; font-size: 16px; line-height: 1.6; color: inherit; }
 .chat-composer textarea:focus-visible { outline: 0; }
 .composer-actions { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
 .composer-tools { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
 .composer-tools label { font-size: 12.5px; color: var(--muted); white-space: nowrap; margin: 0; }
-.composer-tools select { width: auto; max-width: 220px; margin: 0; min-height: 36px; border: 1px solid var(--line-strong); border-radius: 999px; padding: 6px 12px; background: var(--surface-2); color: var(--accent-ink); font-size: 13px; font-weight: 600; }
+.composer-tools select { width: auto; max-width: 220px; margin: 0; min-height: 36px; border: 1px solid var(--field-border); border-radius: 999px; padding: 6px 12px; background: var(--surface-2); color: var(--accent-ink); font-size: 13px; font-weight: 600; }
 .composer-tools a { font-size: 13px; font-weight: 600; color: var(--accent-ink); white-space: nowrap; }
 #chat-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
 #chat-send { background: var(--accent); color: #fff; font-size: 22px; line-height: 1; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; flex-shrink: 0; box-shadow: 0 6px 16px rgba(79, 91, 255, .35); }
