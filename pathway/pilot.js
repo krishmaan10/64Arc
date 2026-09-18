@@ -3252,6 +3252,7 @@ function createPreviewApp({ store = null, memory = null } = {}) {
     get activity() { return allEvents; },
   };
 
+  let dropped = 0;
   let pendingReview = null;
   let nextReview = 0;
   const who = () => ({ studentId: 'demo-student', assignmentId: currentId });
@@ -3281,6 +3282,12 @@ function createPreviewApp({ store = null, memory = null } = {}) {
     if (event.type === 'policy') w.modes = PREVIEW_MODES.filter((mode) => event.modes.includes(mode));
   };
   // Replay the record before the first request. A chain that fails verification is refused, not repaired.
+  //
+  // It must not, however, take the process down. The server binds the port and then awaits this, so a
+  // rejection here used to surface as an unhandled rejection with the port already open: a listening
+  // server that answers nothing, and a student staring at a page that never loads. The reason is parked
+  // instead, and every route answers with it.
+  let fatal = null;
   const ready = (async () => {
     if (store) {
       const check = await store.verify(SESSION);
@@ -3289,7 +3296,14 @@ function createPreviewApp({ store = null, memory = null } = {}) {
     } else if (memory) {
       const saved = memory.load();
       if (saved && typeof saved === 'object') {
-        for (const event of Array.isArray(saved.activity) ? saved.activity : []) apply(event);
+        // Anything can end up under a storage key: a half-written value, an older shape, another tool's
+        // data. A student opening the pilot to a blank page they cannot reset is worse than one who lost a
+        // practice session, so unreadable entries are dropped and counted rather than thrown.
+        const events = Array.isArray(saved.activity) ? saved.activity : [];
+        for (const event of events) {
+          if (!event || typeof event !== 'object' || typeof event.type !== 'string') { dropped += 1; continue; }
+          try { apply(event); } catch { dropped += 1; }
+        }
         if (saved.version === 2) {
           for (const [id, stored] of Object.entries(saved.work || {})) {
             const w = work.get(id);
@@ -3314,13 +3328,14 @@ function createPreviewApp({ store = null, memory = null } = {}) {
         }
       }
     }
-  })();
+  })().catch((error) => { fatal = error; });
 
   const reply = (status, data) => ({ status, data });
 
   /** One request. Returns null for anything that is not the API, so a transport can serve its files. */
   async function handle(method, pathname, body) {
     await ready;
+    if (fatal) return reply(503, { error: `This session could not be opened: ${fatal.message}` });
     if (method === 'GET' && pathname === '/api/state')
       // The teacher's summary is computed from the record on every read, never stored or edited, and it
       // reads every project: what a teacher would notice is about the student's week, not one subject.
@@ -3328,7 +3343,7 @@ function createPreviewApp({ store = null, memory = null } = {}) {
         identity: state.identity, modes: state.modes, previewModes: state.previewModes,
         projects: state.projects, projectId: state.projectId, assignment: state.assignment,
         draft: state.draft, sources: state.sources, savedSources: state.savedSources,
-        checklist: state.checklist, activity: state.activity, kept,
+        checklist: state.checklist, activity: state.activity, kept, dropped,
         summary: summarise(allEvents.filter((e) => e.type === 'request'), allEvents.filter((e) => e.type === 'draft')),
       });
     if (method !== 'POST' || !ROUTES.includes(pathname)) return pathname.startsWith('/api/') ? reply(404, { error: 'Page not found.' }) : null;
