@@ -434,6 +434,16 @@ const PATTERNS = [
     why: 'asks for an answer to a set question',
     test: /\b(?:solve|answer|work out|calculate|compute|do)\b[^.?!\n]{0,30}\b(?:question|problem|exercise|task|part|number|q|no\.?)\s*\d/i,
   },
+  // "what would your answer be", "how would your introduction go". Asking what the assistant would put is
+  // asking it to put it: the words arrive either way. This needs its own pattern because the artifact sits
+  // in a possessive rather than after a verb, so the produce rule above walks past it.
+  {
+    signal: 'answer',
+    why: 'asks for the assistant\u2019s own version of the work',
+    // "would your" only. "How long should your introduction be" is a teacher's phrasing addressed to the
+    // student and is ordinary help; the conditional is what makes it a request for the assistant's version.
+    test: /\b(?:what|how)\b[^.?!\n]{0,20}\bwould your (?:own )?(?:answer|response|version|attempt|draft|essay|introduction|intro|conclusion|paragraph)\b/i,
+  },
   // "continue this", "keep going", "finish it off", "expand this into 500 words"
   {
     signal: 'extend',
