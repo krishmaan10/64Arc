@@ -3562,7 +3562,13 @@ function contributorId() {
 // as being about the student. Its number comes from a counter kept per browser, not from the record, so
 // it stays monotonic through "Start again" and a second tab; its id lets the sent set be tracked exactly.
 function forLearner(event) {
-  var next = Number(readJson(NEXT_KEY, 0)) || 0;
+  // The counter never restarts below what this browser has already sent or still holds. The collector
+  // keeps one line per number and takes a repeated number for a retry, so a counter that came back at
+  // zero (storage partly cleared, or a build that introduced the counter) would have every new request
+  // dropped as a duplicate of an old one.
+  var floor = Number(readJson(SENT_KEY, 0)) || 0;
+  readJson(LOG_KEY, []).concat(readJson(OUTBOX_KEY, [])).forEach(function (e) { if (e && Number(e.seq) >= floor) floor = Number(e.seq) + 1; });
+  var next = Math.max(Number(readJson(NEXT_KEY, 0)) || 0, floor);
   writeJson(NEXT_KEY, next + 1);
   return {
     id: randomId(8), type: 'request', seq: next, at: event.at, mode: event.mode || null,
