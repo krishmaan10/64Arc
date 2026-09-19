@@ -15,6 +15,10 @@ const chatModes = ['understand', 'plan', 'question', 'sources'];
 const autoAvailable = () => chatModes.some(allowed);
 const words = text => (text.match(/[\p{L}\p{N}']+/gu) || []).length;
 const nameOf = id => state.modes.find(mode => mode.id === id)?.name || id;
+const guidanceLabel = shown => shown.replySource === 'example' ? 'Sample guidance' : shown.replySource === 'model' ? 'Guidance' : 'Earlier guidance';
+const guidanceNotice = shown => shown.replySource === 'example'
+  ? 'This is a prepared example for the project, not an answer to your specific message. It does not follow the conversation.'
+  : shown.replySource === 'model' ? '' : 'This older record does not identify whether the reply was a prepared example or model-generated guidance.';
 const writingMode = () => ['improve', 'rephrase'].includes(selected) && allowed(selected);
 const allowed = id => id === 'auto' ? autoAvailable() : Boolean(state?.assignment.modes.includes(id) && state.previewModes.includes(id));
 const descriptions = {
@@ -338,8 +342,8 @@ function renderSources() {
 function renderResponse(shown, modeId) {
   const response = $('response'); response.replaceChildren(); response.hidden = false;
   const headings = { acknowledgement: 'Ready for your next step', redirect: 'Try a different kind of help', withheld: 'A reply was withheld', decline: 'Not this, but here is what I can do', support: 'A person can help with this', error: 'Reply unavailable' };
-  response.append(element('h3', shown.kind === 'reply' ? `${nameOf(modeId)} · ${shown.replySource === 'model' ? 'Guidance' : 'Sample guidance'}` : headings[shown.kind] || 'Let’s keep the work yours'));
-  if (shown.kind === 'reply' && shown.replySource !== 'model') response.append(element('p', 'This is a prepared example for the project, not an answer to your specific message. It does not follow the conversation.', 'sample-notice'));
+  response.append(element('h3', shown.kind === 'reply' ? `${nameOf(modeId)} · ${guidanceLabel(shown)}` : headings[shown.kind] || 'Let’s keep the work yours'));
+  if (shown.kind === 'reply' && guidanceNotice(shown)) response.append(element('p', guidanceNotice(shown), 'sample-notice'));
   response.append(element('p', shown.text || [shown.reason, shown.explain].filter(Boolean).join('\n\n')));
   for (const offer of shown.offer || []) {
     if (!allowed(offer.mode)) continue;
@@ -544,10 +548,10 @@ function appendChatTurn(event) {
   user.append(element('span', 'You', 'sr-only'), element('p', event.asked));
   const reply = element('div', undefined, 'chat-reply');
   const shown = event.shown;
-  const labels = { reply: shown.replySource === 'model' ? 'Guidance' : 'Sample guidance', acknowledgement: 'Ready for your next step', redirect: 'Try another kind of help', refusal: 'Let’s keep the work yours', decline: 'Not this, but here is what I can do', support: 'A person can help with this', withheld: 'Reply withheld', error: 'Reply unavailable' };
+  const labels = { reply: guidanceLabel(shown), acknowledgement: 'Ready for your next step', redirect: 'Try another kind of help', refusal: 'Let’s keep the work yours', decline: 'Not this, but here is what I can do', support: 'A person can help with this', withheld: 'Reply withheld', error: 'Reply unavailable' };
   reply.append(element('div', '✳  PathWay AI', 'reply-author'), element('span', labels[shown.kind] || 'Learning boundary', `reply-label kind-${shown.kind} ${shown.kind === 'reply' ? '' : 'boundary-label'}`), element('p', shown.text || [shown.reason, shown.explain].filter(Boolean).join('\n\n')));
-  if (shown.kind === 'reply' && shown.replySource !== 'model') {
-    const note = element('p', 'This is a prepared example for the project, not an answer to your specific message. It does not follow the conversation.', 'sample-notice');
+  if (shown.kind === 'reply' && guidanceNotice(shown)) {
+    const note = element('p', guidanceNotice(shown), 'sample-notice');
     reply.insertBefore(note, reply.children[2]);
   }
   const actions = element('div', undefined, 'reply-actions');
