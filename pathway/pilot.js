@@ -3545,8 +3545,12 @@ var KEY = "pathway-pilot-v1";
 // time from PATHWAY_LEARNING_ENDPOINT. Empty means sharing is not on for this build, and the interface
 // offers a download instead of a switch.
 var LEARNING_ENDPOINT = "https://pathway-collector-hmzssw5bwa-el.a.run.app";
-var CONTRIBUTOR_KEY = 'pathway-pilot-contributor', CONSENT_KEY = 'pathway-pilot-contribute', OUTBOX_KEY = 'pathway-pilot-outbox', SENT_KEY = 'pathway-pilot-sent', REJECTED_KEY = 'pathway-pilot-rejected', LOG_KEY = 'pathway-pilot-log', NEXT_KEY = 'pathway-pilot-next';
-var LEARNING_KEYS = [CONTRIBUTOR_KEY, CONSENT_KEY, OUTBOX_KEY, SENT_KEY, REJECTED_KEY, LOG_KEY, NEXT_KEY];
+var CONTRIBUTOR_KEY = 'pathway-pilot-contributor', CONSENT_KEY = 'pathway-pilot-contribute', OUTBOX_KEY = 'pathway-pilot-outbox', SENT_KEY = 'pathway-pilot-sent', REJECTED_KEY = 'pathway-pilot-rejected', LOG_KEY = 'pathway-pilot-log', NEXT_KEY = 'pathway-pilot-next', HIGHEST_KEY = 'pathway-pilot-highest';
+var LEARNING_KEYS = [CONTRIBUTOR_KEY, CONSENT_KEY, OUTBOX_KEY, SENT_KEY, REJECTED_KEY, LOG_KEY, NEXT_KEY, HIGHEST_KEY];
+// A batch is bounded by bytes, not by count: a browser refuses to send a keepalive body over 64 KiB, and
+// a batch that can never leave would sit at the head of the outbox for ever with everything queued behind it.
+var BATCH_EVENTS = 50, BATCH_BYTES = 48 * 1024;
+function byteLength(text) { try { return new TextEncoder().encode(text).length; } catch (error) { return text.length * 3; } }
 function randomId(bytes) { var b = new Uint8Array(bytes); window.crypto.getRandomValues(b); return Array.prototype.map.call(b, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
 function readJson(key, fallback) { try { var v = JSON.parse(window.localStorage.getItem(key)); return v === null || v === undefined ? fallback : v; } catch (error) { return fallback; } }
 function writeJson(key, value) { try { window.localStorage.setItem(key, JSON.stringify(value)); return true; } catch (error) { return false; } }
@@ -3562,13 +3566,13 @@ function contributorId() {
 // as being about the student. Its number comes from a counter kept per browser, not from the record, so
 // it stays monotonic through "Start again" and a second tab; its id lets the sent set be tracked exactly.
 function forLearner(event) {
-  // The counter never restarts below what this browser has already sent or still holds. The collector
-  // keeps one line per number and takes a repeated number for a retry, so a counter that came back at
-  // zero (storage partly cleared, or a build that introduced the counter) would have every new request
-  // dropped as a duplicate of an old one.
-  var floor = Number(readJson(SENT_KEY, 0)) || 0;
-  readJson(LOG_KEY, []).concat(readJson(OUTBOX_KEY, [])).forEach(function (e) { if (e && Number(e.seq) >= floor) floor = Number(e.seq) + 1; });
-  var next = Math.max(Number(readJson(NEXT_KEY, 0)) || 0, floor);
+  // The counter never restarts below what this browser has already sent or still holds, nor below the
+  // highest number the collector says it holds for this browser. The collector tells one request from a
+  // retry by the id, not the number, so a colliding number costs nothing; the floor keeps the numbers
+  // meaningful as an order all the same.
+  var floor = Math.max(Number(readJson(SENT_KEY, 0)) || 0, (Number(readJson(HIGHEST_KEY, -1)) || -1) + 1);
+  readJson(LOG_KEY, []).concat(readJson(OUTBOX_KEY, [])).forEach(function (e) { if (e && Number.isFinite(Number(e.seq)) && Number(e.seq) >= floor) floor = Math.floor(Number(e.seq)) + 1; });
+  var next = Math.max(Math.floor(Number(readJson(NEXT_KEY, 0))) || 0, floor);
   writeJson(NEXT_KEY, next + 1);
   return {
     id: randomId(8), type: 'request', seq: next, at: event.at, mode: event.mode || null,
@@ -3611,7 +3615,13 @@ var learning = {
     if (flushing || !LEARNING_ENDPOINT || learning.consent() !== 'yes' || typeof window.fetch !== 'function') return Promise.resolve(false);
     var outbox = readJson(OUTBOX_KEY, []);
     if (!outbox.length) return Promise.resolve(false);
-    var batch = outbox.slice(0, 50);
+    // As many events as fit: always at least one, never more than the count or the bytes allow.
+    var batch = [], bytes = 0;
+    for (var i = 0; i < outbox.length && batch.length < BATCH_EVENTS; i += 1) {
+      var size = byteLength(JSON.stringify(outbox[i])) + 1;
+      if (batch.length && bytes + size > BATCH_BYTES) break;
+      batch.push(outbox[i]); bytes += size;
+    }
     var sentIds = {}; batch.forEach(function (e) { sentIds[e.id] = true; });
     flushing = true;
     return window.fetch(LEARNING_ENDPOINT + '/api/contribute', {
@@ -3619,8 +3629,8 @@ var learning = {
       body: JSON.stringify({ contributor: contributorId(), events: batch })
     }).then(function (response) {
       if (!response || !response.ok) return false;
-      // A 200 means the collector has seen the batch, not that it kept all of it. What it kept is what
-      // counts as shared; what it rejected was malformed and is not worth sending twice.
+      // A 200 means the collector has seen the batch, not that it kept all of it. What it kept, or already
+      // had from an earlier try, counts as shared; what it rejected was malformed and is not worth sending twice.
       return Promise.resolve(response.json ? response.json() : null).catch(function () { return null; }).then(function (counts) {
         var kept = counts && typeof counts.added === 'number' ? counts.added + (counts.duplicate || 0) : batch.length;
         var refused = counts && typeof counts.rejected === 'number' ? counts.rejected : 0;
@@ -3628,6 +3638,7 @@ var learning = {
         writeJson(OUTBOX_KEY, remaining);
         writeJson(SENT_KEY, learning.sent() + kept);
         if (refused) writeJson(REJECTED_KEY, learning.rejected() + refused);
+        if (counts && Number.isInteger(counts.highest) && counts.highest > (Number(readJson(HIGHEST_KEY, -1)) || -1)) writeJson(HIGHEST_KEY, counts.highest);
         return true;
       });
     }).catch(function () { return false; }).then(function (ok) { flushing = false; if (ok && learning.pending()) return learning.flush(); return ok; });
