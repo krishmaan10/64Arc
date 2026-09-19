@@ -109,8 +109,8 @@ modules["modes"] = function (module, exports, require, __dirname, __filename) {
 // `needsStudentText` is the structural half of the boundary: a mode that transforms writing has nothing
 // to work with until the student has written something, and the only text it is ever given is theirs.
 // `maxNovelty` is the response half: the share of the reply that may be words the student did not write.
-// A mode that returns marked changes to a sentence cannot smuggle a new paragraph past a 0.35 ceiling,
-// whatever language the request was written in.
+// These are heuristic limits, not a proof of authorship or a guarantee against answer leakage.
+// Short replies and languages without space-delimited words need separate evaluation.
 
 'use strict';
 
@@ -217,7 +217,7 @@ const IDENTITY = {
   ATTRIBUTION: 'Product of 64ARCS',
   // One sentence a student reads on their first turn, and a teacher reads on the settings page.
   PROMISE:
-    'I help you do the work. I will not do it for you, and your teacher can see everything asked here.',
+    'I help you work within assignment boundaries. Your requests and saved work appear in your activity record. This practice space does not notify a teacher.',
   // Appended to the support response when a message is about the student rather than the work. A school
   // sets this to its own counsellor or helpline, in its own words; left empty, the response names the
   // teacher and an adult the student trusts and nothing else. Never a number invented here.
@@ -761,9 +761,8 @@ modules["boundary"] = function (module, exports, require, __dirname, __filename)
 // only that the tool is in the way, and will go and find one that is not. Every refusal therefore names
 // what was asked for, why this assistant will not do it, and what it will do instead, in that order.
 //
-// The decision also reads the last few turns. A student who has just been refused and types "ok" or
-// "please" or "why not" is making the same request, and a student who asks the same thing again in other
-// words is told that the answer has not changed. The wording acknowledges the repeat; the boundary does not
+// The decision also reads the last few turns for explicit insistence and repeated requests. Neutral
+// acknowledgements are recorded separately; they are not evidence that a student is pushing back. The wording acknowledges the repeat; the boundary does not
 // move. That is the whole defence against being worn down.
 
 'use strict';
@@ -801,7 +800,7 @@ const REFUSAL = {
   override: (alternatives) => ({
     reason: 'This asks me to set my instructions aside.',
     explain:
-      'I work the same way whatever I am asked, and your teacher can see what was asked here. There is nothing to unlock.',
+      'I cannot change assignment permissions through a chat request. This request appears in your activity record.',
     offer: alternatives,
   }),
   pressure: (alternatives) => ({
@@ -819,7 +818,7 @@ const REFUSAL = {
   offTask: (alternatives) => ({
     reason: 'This is not about the assignment.',
     explain:
-      'I only work on the assignment in front of you, so I cannot chat, play, or answer other things here. Your teacher can see what is asked, the same as everything else.',
+      'I work on the assignment in front of you. You can ask about the task, plan your work, or review your own writing.',
     offer: alternatives,
   }),
   grading: (alternatives) => ({
@@ -849,7 +848,7 @@ const SUPPORT = () => ({
   reason: 'That sounds heavier than homework.',
   explain: [
     'I am a writing assistant, so I am the wrong help for this, but a person is the right help. Tell your teacher, or an adult you trust, how you are feeling; you do not need the right words for it.',
-    'Your teacher can see this message, and here that is a good thing.',
+    'This practice space does not alert a teacher or monitor messages for urgent help. Please contact someone you trust directly. If you are in immediate danger, contact your local emergency service.',
     identity.SUPPORT_LINE,
   ]
     .filter(Boolean)
@@ -862,7 +861,7 @@ const OFFER = {
   plan: 'break the task into steps you can start on',
   question: 'ask you questions about it to see where you are',
   improve: 'look at the grammar and clarity of what you have written',
-  rephrase: 'suggest other ways to word a passage you wrote',
+  rephrase: 'help you review how your draft uses other people’s words',
   sources: 'find sources you can read and cite',
 };
 
@@ -943,7 +942,13 @@ function decide({ message, modeId, assignment, studentText = '', classified, his
   // An attempt to change the rules is refused wherever it appears.
   if (classified.override) return refuse('override', REFUSAL.override(alternatives));
 
-  // "ok", "please", "why not" straight after a refusal is that request again.
+  // Acknowledging a boundary is not trying to defeat it. This exact, whole-message match cannot carry
+  // a hidden request, never calls a model, and never becomes a pressure observation or training label.
+  if (/^(?:ok(?:ay)?|k|thanks|thank you|got it|understood|fine|sure)[\s.!]*$/i.test(String(message || '').trim()))
+    return { allow: false, kind: 'acknowledgement', category: 'acknowledgement', read,
+      refusal: { reason: 'Okay. What would help you take the next step?', explain: 'Choose a kind of support, or return to your own draft.', offer: alternatives } };
+
+  // Explicit insistence after a refusal keeps the boundary in place.
   if (recentRefusal(history) && ASSENT.test(String(message || '').trim()))
     return refuse('pressure', again(REFUSAL.pressure(alternatives), 'assent'), { repeats: true });
   if (classified.pressure) return refuse('pressure', REFUSAL.pressure(alternatives), { repeats: Boolean(recentRefusal(history)) });
@@ -1204,7 +1209,7 @@ const PROJECT_REPLIES = {
       '',
       '• Polybius. The Histories, Book VI. https://penelope.uchicago.edu/Thayer/E/Roman/Texts/Polybius/6*.html',
       '  What it gives you: a Greek hostage in Rome explaining why the Roman constitution was stable, written while it still was. His argument is that consuls, Senate and people checked each other. If that was the strength, ask what removed the check.',
-      '• Sallust. The Conspiracy of Catiline. https://www.gutenberg.org/ebooks/6685',
+      '• Sallust. The Conspiracy of Catiline. https://www.gutenberg.org/ebooks/7990',
       '  What it gives you: a contemporary blaming moral decline and greed. Also a politician with enemies, writing after his own career ended badly. Useful for what Romans said about themselves, and a good example of a source you must read against its author.',
       '• Beard, M. (2015). SPQR: A History of Ancient Rome. Profile Books.',
       '  What it gives you: the sceptical modern position. Beard resists single causes. If you are arguing for one, she is the objection you have to answer.',
@@ -1430,13 +1435,10 @@ module.exports = { buildPrompt, INSTRUCTION };
 
 };
 modules["response-check"] = function (module, exports, require, __dirname, __filename) {
-// The last defence, and the only one that does not read English.
-//
-// The request classifier can be evaded by writing in another language or inventing a phrasing. The mode
-// controls what material the model is given. This checks what came back, by measuring it against the
-// student's own text. "How much of this reply is words the student did not write" is the same question
-// in every language, which is why a reply that smuggles a new paragraph past the first two defences
-// still fails here.
+// Heuristic checks on a candidate reply. These catch some unwanted transformations and long passages;
+// they do not establish whether a reply contains an assessed answer. The shape rules use English,
+// Unicode letter matching is not language-independent word segmentation, and a citation-shaped string
+// is not a verified source. See docs/PRODUCT-REVIEW.md for reproducible limits and the next evaluation.
 //
 // A reply that fails is not shown. The student sees the boundary's explanation, and the teacher's record
 // shows that a reply was withheld and why, so a model going off the rails is visible rather than silent.
@@ -1445,7 +1447,7 @@ modules["response-check"] = function (module, exports, require, __dirname, __fil
 
 const { mode } = require('./modes.js');
 
-/** Words, lowercased, without punctuation. Unicode-aware so this behaves the same outside English. */
+/** Letter/number runs, lowercased. Not a linguistic word tokenizer for every language. */
 function words(text) {
   return (String(text || '').toLowerCase().match(/[\p{L}\p{N}']+/gu) || []);
 }
@@ -1606,7 +1608,7 @@ function plural(n, one, many = one + 's') {
  * Returns observations, most important first, each { key, count, note }.
  */
 function observe(entries = [], drafts = []) {
-  const requests = entries.filter((e) => e && e.asked !== undefined);
+  const requests = entries.filter((e) => e && e.asked !== undefined && !['acknowledged', 'error'].includes(e.outcome));
   const counts = {};
   const count = (key) => (counts[key] = (counts[key] || 0) + 1);
   const words = requests.map((e) => wordSet(e.asked));
@@ -1726,17 +1728,18 @@ modules["record"] = function (module, exports, require, __dirname, __filename) {
 
 const { observe } = require('./observations.js');
 
-const OUTCOME = { refusal: 'refused', redirect: 'redirected', decline: 'declined', support: 'supported' };
+const OUTCOME = { refusal: 'refused', redirect: 'redirected', decline: 'declined', support: 'supported', acknowledgement: 'acknowledged' };
 
 /** One turn, as it will be read months later by someone who was not there. */
-function entry({ at, studentId, assignmentId, modeId, message, decision, reply, check, accepted }) {
+function entry({ at, studentId, assignmentId, modeId, message, decision, reply, check, accepted, error }) {
   return {
     at: at || null,
     studentId,
     assignmentId,
     mode: modeId,
     asked: message,
-    outcome: decision.allow ? (check && !check.ok ? 'withheld' : 'answered') : OUTCOME[decision.kind] || 'refused',
+    outcome: error ? 'error' : decision.allow ? (check && !check.ok ? 'withheld' : 'answered') : OUTCOME[decision.kind] || 'refused',
+    ...(error ? { error } : {}),
     // Why, in the words the student saw, so the record and the screen never disagree.
     reason: decision.allow ? (check && !check.ok ? check.problems.join('; ') : '') : decision.refusal.reason,
     // What kind of request the boundary took it for; null for an answered turn.
@@ -1801,6 +1804,7 @@ function summarise(entries, drafts) {
       turns === 0 ? 'This student has not used the assistant for this assignment.' : null,
       forTheWork ? `${forTheWork} request${forTheWork === 1 ? '' : 's'} asked for the work itself, or a piece of it, and ${forTheWork === 1 ? 'was' : 'were'} refused.` : null,
       byOutcome.withheld ? `${byOutcome.withheld} repl${byOutcome.withheld === 1 ? 'y was' : 'ies were'} withheld because they went outside the mode.` : null,
+      byOutcome.error ? `${byOutcome.error} request${byOutcome.error === 1 ? '' : 's'} received no usable reply because the model was unavailable or returned no text.` : null,
       largeAdditions.length
         ? `${largeAdditions.length} save${largeAdditions.length === 1 ? '' : 's'} added 200 or more words at once. Worth asking about; it is not evidence of anything on its own.`
         : null,
@@ -1873,7 +1877,7 @@ async function turn({ message, modeId, assignment, studentText = '', ask, who = 
       shown: {
         kind: 'error',
         reason: 'I could not reach the model just now.',
-        explain: 'Nothing was sent anywhere else. Try again in a moment.',
+        explain: 'Your request may already have reached the model provider. No usable reply was received. You can try again in a moment.',
       },
       record: entry({
         at,
@@ -1882,6 +1886,7 @@ async function turn({ message, modeId, assignment, studentText = '', ask, who = 
         message,
         decision,
         reply: '',
+        error: 'model_unavailable',
         check: { ok: false, novelty: 0, problems: ['model unavailable: ' + (error.message || 'unknown')] },
       }),
     };
@@ -1891,8 +1896,8 @@ async function turn({ message, modeId, assignment, studentText = '', ask, who = 
   // withheld would tell the teacher the assistant went over a line when it said nothing at all.
   if (!reply.trim()) {
     return {
-      shown: { kind: 'error', reason: 'The model did not answer just now.', explain: 'Nothing was sent anywhere else. Try again in a moment.' },
-      record: entry({ at, ...who, modeId, message, decision, reply: '', check: { ok: false, novelty: 0, problems: ['model gave no reply'] } }),
+      shown: { kind: 'error', reason: 'The model did not answer just now.', explain: 'The request reached the model, but it returned no text. You can try again in a moment.' },
+      record: entry({ at, ...who, modeId, message, decision, reply: '', error: 'empty_reply', check: { ok: false, novelty: 0, problems: ['model gave no reply'] } }),
     };
   }
   const check = checkResponse({ reply, modeId, studentText: decision.material.studentText });
@@ -1986,7 +1991,7 @@ const PROJECTS = [
         title: 'The homework–achievement relation reconsidered',
         publisher: 'Trautwein · 2007',
         type: 'Research article',
-        url: 'https://www.sciencedirect.com/science/article/abs/pii/S0959475207000229',
+        url: 'https://eric.ed.gov/?id=EJ762780',
         note: 'Argues that how much effort a student puts in matters more than how long they spend. What would that mean for your position?',
         citation: 'Trautwein, U. (2007). The homework–achievement relation reconsidered: Differentiating homework time, homework frequency, and homework effort. Learning and Instruction, 17(3), 372–388.',
       },
@@ -2025,7 +2030,7 @@ const PROJECTS = [
         title: 'The Conspiracy of Catiline',
         publisher: 'Sallust · c. 42 BC',
         type: 'Ancient source',
-        url: 'https://www.gutenberg.org/ebooks/6685',
+        url: 'https://www.gutenberg.org/ebooks/7990',
         note: 'Sallust blames moral decline. He was also a politician with enemies. How much does that change how you read him?',
         citation: 'Sallust. The Conspiracy of Catiline (trans. J. S. Watson). Project Gutenberg.',
       },
@@ -2034,8 +2039,8 @@ const PROJECTS = [
         title: 'SPQR: A History of Ancient Rome',
         publisher: 'Mary Beard · 2015',
         type: 'Modern history',
-        url: 'https://www.google.com/books/edition/SPQR/vvJ0BgAAQBAJ',
-        note: 'Beard is sceptical of tidy single causes. Find where she says why, and decide whether you agree.',
+        url: 'https://profilebooks.com/work/spqr/',
+        note: 'Publisher details and preview; the full book may require library access. Compare how Beard weighs causes with your ancient source.',
         citation: 'Beard, M. (2015). SPQR: A History of Ancient Rome. Profile Books.',
       },
       {
@@ -2177,7 +2182,7 @@ const PROJECTS = [
         type: 'Data explainer',
         url: 'https://ourworldindata.org/safest-sources-of-energy',
         note: 'Deaths per unit of electricity is one way to measure safety. What does that measure miss?',
-        citation: 'Ritchie, H. & Roser, M. What are the safest and cleanest sources of energy? Our World in Data.',
+        citation: 'Ritchie, H. (2020, February 10). What are the safest and cleanest sources of energy? Our World in Data.',
       },
       {
         id: 'world-nuclear-assoc',
@@ -3168,23 +3173,11 @@ modules["preview-app"] = function (module, exports, require, __dirname, __filena
 // History one, because the reason for pausing it is about that piece of work. Each project also keeps its
 // own draft, its own saved references and its own checked steps.
 //
-// WHAT A PROJECT DOES NOT OWN: the boundary. Two decisions follow from that, and both are deliberate.
-//
-//   1. The requests the boundary reads as history are the student's LAST FEW ACROSS EVERY PROJECT, not just
-//      this one. A refusal is about what the student asked for, not about which subject they asked it in,
-//      and if history were scoped to the project then switching project would launder a refused request:
-//      ask for the essay in English, get refused, ask again in History, and the repeat goes unnoticed.
-//      The assent rule is the sharp end of this, so it is worth being precise about what it can do. Its
-//      pattern is fully anchored and matches only a message that is entirely a bare acknowledgement ("ok",
-//      "yes", "please"). A student who switches project and types a real question is never caught by it,
-//      so this cannot refuse a genuine help request. A bare "ok" straight after a refusal gets the
-//      pressure reply wherever it is typed, which is the correct reading of it.
-//
-//   2. The teacher's summary is computed across every project for the same reason. "Asked three times for
-//      the work itself" is a fact about a student's week, and splitting it by subject would hide it.
-//
-// The brief-overlap rule is the exception that proves the point: it compares the request against THIS
-// project's brief, because pasting the History brief into the English chat is not the same act.
+// The boundary reads recent requests across projects so a repeated request cannot be hidden by
+// navigation. Neutral acknowledgements are handled separately and never count as pressure. Each
+// request carries its original project and permissions; operations in one session are serialized.
+// The brief-overlap rule checks all visible assignment briefs, and sequence observations are scoped
+// to the project whose work they describe.
 
 'use strict';
 
@@ -3253,7 +3246,13 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
   const allEvents = [];
 
   const state = {
-    identity, modes: Object.values(MODES), previewModes: PREVIEW_MODES,
+    identity,
+    // The web writing tool checks source use. The separate CLI mode can generate rewordings, so its
+    // name and prompt must not imply that capability exists in this interface.
+    modes: Object.values(MODES).map(mode => mode.id === 'rephrase'
+      ? { ...mode, name: 'Review source use', purpose: 'Review quotations, paraphrases and attribution in your saved draft.' }
+      : mode),
+    previewModes: PREVIEW_MODES,
     // `assignment` keeps the shape it has always had, so everything that reads it still works. It is now
     // simply whichever project is open.
     get assignment() {
@@ -3402,7 +3401,11 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
         summary: summarise(allEvents.filter((e) => e.type === 'request'), allEvents.filter((e) => e.type === 'draft')),
       });
     if (method !== 'POST' || !ROUTES.includes(pathname)) return pathname.startsWith('/api/') ? reply(404, { error: 'Page not found.' }) : null;
-    if (!body || typeof body !== 'object') return reply(400, { error: 'Send a JSON object.' });
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return reply(400, { error: 'Send a JSON object.' });
+    // The visible client stamps every write with the project it was editing. Another tab may have
+    // switched the session since that screen was rendered; never save its words into the new project.
+    if (pathname !== '/api/project' && body.projectId !== undefined && body.projectId !== currentId)
+      return reply(409, { error: 'The open project changed in another tab. Download your current draft before reloading.' });
     // When this happened. Every event carries it: the activity page shows it, the observations read
     // bursts from it, and the desk orders students by it. A rewrite yesterday set this to null, and for a
     // day every event was recorded as having happened at the start of 1970.
@@ -3426,7 +3429,7 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
       w.savedSources = w.savedSources.filter((id) => id !== body.id);
       if (body.saved) w.savedSources.push(body.id);
       remember();
-      return reply(200, { saved: true });
+      return reply(200, { saved: kept, kept });
     }
     if (pathname === '/api/checklist') {
       const total = project().steps.length;
@@ -3481,7 +3484,10 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
         mine().draft = body.text;
         remember();
       }
-      return reply(200, { saved: true });
+      // A failed write may become possible later (for example after freeing storage). Retrying must
+      // attempt persistence even when the in-memory text already matches.
+      if (!kept) remember();
+      return reply(200, { saved: kept, kept });
     }
     if (pathname === '/api/policy') {
       if (!Array.isArray(body.modes) || !body.modes.every((id) => PREVIEW_MODES.includes(id))) return reply(400, { error: 'Choose modes available in this preview.' });
@@ -3524,14 +3530,24 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
         result = await run(modeId);
       }
     }
+    result.shown.replySource = ask ? 'model' : 'example';
     await record({ type: 'request', ...result.record, shown: result.shown, policy: [...mine().modes], ...(routedTo ? { routedTo } : {}) });
     return reply(200, { ...result.shown, mode: modeId, ...(routedTo ? { routedTo } : {}) });
   }
 
   // The desk writes a teacher's correction into the student's own chain. Going through here rather than
   // straight to the store keeps a live session's memory and its file agreeing.
-  const annotate = async (event) => { await ready; return record(event); };
-  return { state, ready, handle, annotate, previewModes: PREVIEW_MODES };
+  // Awaiting a model or disk write yields to other requests. Keep each session's operations ordered,
+  // including reads and teacher annotations, so project, draft, policy and record form one snapshot.
+  // A rejected operation must not poison the next one. Different students have independent queues.
+  let operations = Promise.resolve();
+  const ordered = (operation) => {
+    const result = operations.then(operation);
+    operations = result.catch(() => {});
+    return result;
+  };
+  const annotate = (event) => ordered(async () => { await ready; return record(event); });
+  return { state, ready, handle: (...args) => ordered(() => handle(...args)), annotate, previewModes: PREVIEW_MODES };
 }
 
 module.exports = { createPreviewApp, PREVIEW_MODES, SOURCES, REPLIES, PROJECTS, replyFor };
@@ -3605,6 +3621,7 @@ var learning = {
   forget: function () { LEARNING_KEYS.forEach(function (k) { try { window.localStorage.removeItem(k); } catch (error) {} }); },
   queue: function (event) {
     if (!event || event.type !== 'request') return;
+    if (event.outcome === 'acknowledged' || event.outcome === 'error') return;
     var line = forLearner(event);
     var log = readJson(LOG_KEY, []); log.push(line); while (log.length > 500) log.shift(); writeJson(LOG_KEY, log);
     if (learning.consent() !== 'yes') return;
@@ -3647,25 +3664,30 @@ var learning = {
 if (typeof document !== 'undefined' && document.addEventListener) {
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') learning.flush(); });
 }
+var lastStored = null;
 var memory = {
-  load: function () { try { return JSON.parse(window.localStorage.getItem(KEY)); } catch (error) { return null; } },
+  load: function () {
+    try { lastStored = window.localStorage.getItem(KEY); return JSON.parse(lastStored); }
+    catch (error) { return null; }
+  },
   // Returns whether the write happened, because two things can stop it and a student should be told about
   // both rather than being shown a saved draft that is not saved.
   //
   // The first is another tab. Every tab of this practice space writes to the same key, so a blind write
   // destroys whichever tab saved first: open a second tab in the morning, type in the original, and the
-  // record goes. A snapshot that has seen fewer events than the stored one is not written at all. This tab
-  // is behind, and saying so beats quietly winning.
+  // record goes. Only a tab whose last-read snapshot still matches storage may write. A stale tab
+  // retains its recovery copy in memory and reports the conflict.
   //
   // The second is a browser that refuses storage: private mode, or a full quota.
   save: function (snapshot) {
     try {
-      var stored = null;
-      try { stored = JSON.parse(window.localStorage.getItem(KEY)); } catch (error) { stored = null; }
-      var mine = (snapshot.activity || []).length;
-      var theirs = stored && stored.activity && stored.activity.length ? stored.activity.length : -1;
-      if (theirs > mine) return false;
-      window.localStorage.setItem(KEY, JSON.stringify(snapshot));
+      // Event counts cannot detect two branches with equal counts or a bookmark-only change. Compare
+      // the exact value this tab last read/wrote. A stale tab stays conflicted; adding more events never
+      // grants permission to overwrite the other branch.
+      if (window.localStorage.getItem(KEY) !== lastStored) return false;
+      var nextStored = JSON.stringify(snapshot);
+      window.localStorage.setItem(KEY, nextStored);
+      lastStored = nextStored;
       return true;
     } catch (error) {
       return false;
@@ -3677,7 +3699,12 @@ window.PathWayPilot = {
   app: app,
   fetch: function (url, body) {
     var pathname = String(url).split('?')[0];
-    return app.handle(body === undefined ? 'GET' : 'POST', pathname, body).then(function (result) {
+    var perform = function () { return app.handle(body === undefined ? 'GET' : 'POST', pathname, body); };
+    // Cooperating tabs serialize the compare-and-write above. Older browsers still get conflict
+    // detection, but cannot claim atomic writes across two simultaneously executing tabs.
+    var operation = body !== undefined && window.navigator && window.navigator.locks
+      ? window.navigator.locks.request('pathway-pilot-session', perform) : perform();
+    return operation.then(function (result) {
       if (!result) result = { status: 404, data: { error: 'Page not found.' } };
       // Shaped like a fetch Response, without depending on one: ok, status, a content-type header, json().
       var payload = JSON.stringify(result.data);

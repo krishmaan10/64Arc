@@ -22,10 +22,10 @@ const descriptions = {
   plan: ['▤', 'Find manageable steps. Decide how to spend your time.'],
   question: ['◎', 'Test your thinking with questions you can explore.'],
   improve: ['Aa', 'Review small grammar edits or practise a clearer tone.'],
-  rephrase: ['↔', 'Practise restating your own ideas in your own words.'],
-  sources: ['▧', 'Explore two curated references and evaluate the evidence.'],
+  rephrase: ['↔', 'Review quotations, paraphrases and attribution in your saved draft.'],
+  sources: ['▧', 'Explore this project’s reading list and evaluate the evidence.'],
 };
-const taken = { produce: 'asked for the work itself', extend: 'asked for a piece of the work', answer: 'asked for the answer to a set question', disguise: 'asked for the work with a reason attached', override: 'tried to change the rules', pressure: 'pushed after a refusal', evade: 'asked to hide where writing came from', offTask: 'not about the assignment', grading: 'asked for a mark', wellbeing: 'about the student, not the work', redirect: 'help, in a different mode', modeNotAllowed: 'a kind of help the teacher paused', needsText: 'needs saved writing first' };
+const taken = { produce: 'asked for the work itself', extend: 'asked for a piece of the work', answer: 'asked for the answer to a set question', disguise: 'asked for the work with a reason attached', override: 'tried to change the rules', pressure: 'pushed after a refusal', evade: 'asked to hide where writing came from', offTask: 'not about the assignment', grading: 'asked for a mark', wellbeing: 'about the student, not the work', acknowledgement: 'acknowledgement', redirect: 'help, in a different mode', modeNotAllowed: 'a kind of help the teacher paused', needsText: 'needs saved writing first' };
 const stepsOf = () => state?.assignment.steps || [];
 const projectOf = id => state?.projects.find(p => p.id === id);
 const eventProject = event => event.projectId || state?.projects[0]?.id;
@@ -40,6 +40,7 @@ function notice(message, error = false) {
   $('status').classList.toggle('error', error);
 }
 async function api(url, body) {
+  if (body !== undefined && state && url !== '/api/project') body = { ...body, projectId: state.projectId };
   // The browser pilot answers in the page; otherwise the local preview server answers over HTTP.
   const response = window.PathWayPilot ? await window.PathWayPilot.fetch(url, body) : await fetch(url, body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!response.headers.get('content-type')?.includes('application/json')) throw new Error('Start the local preview server to use this workspace.');
@@ -49,8 +50,8 @@ async function api(url, body) {
 }
 function controls() {
   document.querySelectorAll('[data-lock]').forEach(node => { node.disabled = busy || !state || node.dataset.unavailable === 'true'; });
-  $('save-draft').disabled = busy || !state || $('draft-text').value === state.draft;
-  $('download-draft').disabled = !state?.draft;
+  $('save-draft').disabled = busy || !state || ($('draft-text').value === state.draft && state.kept !== false);
+  $('download-draft').disabled = !state || !$('draft-text').value;
   $('export-activity').disabled = !state?.activity.length;
   $('ask').disabled = busy || !selected || !state || !allowed(selected);
   $('ask').textContent = busy ? 'Checking…' : 'Ask for guidance ↗';
@@ -75,14 +76,17 @@ async function action(work) {
   catch (error) { notice(error.message || 'Connection lost. Try again.', true); }
   finally { busy = false; controls(); }
 }
-async function refresh() {
-  state = await api('/api/state');
+async function refresh({ switching = false } = {}) {
+  const next = await api('/api/state');
+  if (state && next.projectId !== state.projectId && !switching)
+    throw new Error('The project changed in another tab. Download your current draft before reloading.');
+  state = next;
   pendingChatTurns = [];
   renderAll();
 }
 function draftStatus() {
   $('word-count').textContent = `${words($('draft-text').value)} words / ${state.assignment.words} target`;
-  $('save-state').textContent = $('draft-text').value !== state.draft ? 'Unsaved changes' : state.draft ? 'Saved in this session' : 'No draft saved';
+  $('save-state').textContent = state.kept === false ? 'Not saved to storage — download your draft' : $('draft-text').value !== state.draft ? 'Unsaved changes' : state.draft ? 'Saved in this session' : 'No draft saved';
   controls();
 }
 function route(focus = true) {
@@ -125,7 +129,7 @@ async function switchProject(id) {
     $('response').hidden = true; $('writing-response').hidden = true;
     $('chat-feedback').textContent = '';
     $('source-search').value = '';
-    await refresh();
+    await refresh({ switching: true });
     $('draft-text').value = state.draft;
     draftStatus();
     notice(`Now working on ${state.assignment.title}. Your other projects are where you left them.`);
@@ -220,7 +224,7 @@ function renderModes() {
   $('mode-title').textContent = paused ? `Your teacher paused “${nameOf(selected)}”` : active ? nameOf(active) : 'Help is paused for this assignment';
   $('mode-purpose').textContent = paused ? 'Your message has not been sent. Pick another kind of help above and it will go there.' : active ? descriptions[active][1] : 'You can keep writing and saving your draft. Your teacher has turned off all help modes.';
   $('request-form').hidden = writingMode(); $('writing-tools').hidden = !writingMode();
-  $('writing-title').textContent = active === 'rephrase' ? 'Practise your paraphrase' : 'Review your writing';
+  $('writing-title').textContent = active === 'rephrase' ? 'Review source use' : 'Review your writing';
   $('writing-options').hidden = active === 'rephrase'; $('rephrase-action').hidden = active !== 'rephrase';
   document.querySelectorAll('[data-mode]').forEach(node => lockable(node, !allowed(node.dataset.mode)));
   controls();
@@ -273,7 +277,7 @@ function renderActivity() {
     }
     if (event.type === 'request') {
       li.append(element('p', event.asked));
-      li.append(element('p', `Taken as: ${event.category ? taken[event.category] || event.category : 'help, answered'}${event.again ? ' · asked again' : ''}${event.read ? ` · reader: ${event.read.name || event.read.label} (${Math.round(event.read.confidence * 100)}%)` : ''}`, 'small muted'));
+      li.append(element('p', `Taken as: ${event.category ? taken[event.category] || event.category : event.outcome === 'error' ? 'reply unavailable' : event.outcome === 'withheld' ? 'reply withheld by the output check' : 'help, answered'}${event.again ? ' · asked again' : ''}${event.read ? ` · reader: ${event.read.name || event.read.label} (${Math.round(event.read.confidence * 100)}%)` : ''}`, 'small muted'));
       detail(li, 'Read what the student saw', event.shown.text || [event.shown.reason, event.shown.explain, ...(event.shown.offer || []).map(offer => offer.name)].filter(Boolean).join('\n\n'));
       detail(li, 'Permissions at the time', event.policy.length ? event.policy.map(nameOf).join(', ') : 'All help paused');
     }
@@ -333,8 +337,9 @@ function renderSources() {
 }
 function renderResponse(shown, modeId) {
   const response = $('response'); response.replaceChildren(); response.hidden = false;
-  const headings = { redirect: 'Try a different kind of help', withheld: 'A reply was withheld', decline: 'Not this, but here is what I can do', support: 'A person can help with this' };
-  response.append(element('h3', shown.kind === 'reply' ? `${nameOf(modeId)} · Sample guidance` : headings[shown.kind] || 'Let’s keep the work yours'));
+  const headings = { acknowledgement: 'Ready for your next step', redirect: 'Try a different kind of help', withheld: 'A reply was withheld', decline: 'Not this, but here is what I can do', support: 'A person can help with this', error: 'Reply unavailable' };
+  response.append(element('h3', shown.kind === 'reply' ? `${nameOf(modeId)} · ${shown.replySource === 'model' ? 'Guidance' : 'Sample guidance'}` : headings[shown.kind] || 'Let’s keep the work yours'));
+  if (shown.kind === 'reply' && shown.replySource !== 'model') response.append(element('p', 'This is a prepared example for the project, not an answer to your specific message. It does not follow the conversation.', 'sample-notice'));
   response.append(element('p', shown.text || [shown.reason, shown.explain].filter(Boolean).join('\n\n')));
   for (const offer of shown.offer || []) {
     if (!allowed(offer.mode)) continue;
@@ -440,7 +445,7 @@ function renderStorageState() {
   warning.hidden = ok;
   if (!ok) {
     warning.textContent = 'This practice space is open in another tab, or this browser is refusing to store it. '
-      + 'Your work is safe for now but is not being kept. Close the other tab and reload, or download your draft before you finish.';
+      + 'Your latest changes are only in this tab. Download the current draft and export activity before reloading. Reloading first can lose your work.';
   }
 }
 /**
@@ -454,23 +459,31 @@ function renderModelState() {
   const learning = window.PathWayPilot && window.PathWayPilot.learning;
   const sharing = Boolean(learning && learning.endpoint && learning.consent() === 'yes');
   const live = state.model === 'live';
+  const chatNote = $('chat-note');
+  if (chatNote) chatNote.firstChild.textContent = live
+    ? 'Automated guidance can make mistakes. Requests are recorded in '
+    : 'Fixed demo guidance, not a personal tutor yet. Requests are recorded in ';
+  if ($('guidance-note')) $('guidance-note').textContent = live
+    ? 'Automated guidance can make mistakes. Each request is checked and recorded.'
+    : 'Fixed demo guidance. Each request is checked and recorded.';
   const travel = [];
-  if (live) travel.push('your chat message and this project’s brief go to the model on this machine for each permitted reply');
+  if (live) travel.push('permitted chat messages and this project’s brief are sent through the local adapter to the external model provider');
   if (sharing) travel.push('the words of your chat requests go to the learner');
   const banner = document.querySelector('.demo-banner span:last-child');
   if (banner) {
     banner.textContent = (live
-      ? 'Live model behind the replies · every reply passes the same boundary and the same check'
+      ? 'Live model replies · automated boundary checks can make mistakes'
       : 'Fixed replies · local request reader · no AI model connected for replies')
       + (travel.length ? ` · ${travel.join(' · ')}` : ' · nothing you write leaves this device');
   }
   const promise = $('promise-text');
   if (promise) {
     promise.textContent = (live
-      ? 'A model is connected behind the replies on this server. Each permitted reply is written by it from your message and this project’s brief, and checked before you see it; a refused request never reaches it. Grammar replacements come from local rules.'
+      ? 'The local server sends permitted chat requests and the project brief to an external model provider. Automated checks screen the reply but cannot guarantee that it stays within every assessment boundary. Refused requests do not reach the model. Grammar replacements come from local rules.'
       : 'There is no connected generative model in this preview. Guidance is fixed, and grammar replacements come from local rules. The preview cannot generate a finished project.')
       + (sharing ? ' Sharing is on: the words of your chat requests, and how each was decided, go to the learner.' : '')
-      + (!live && !sharing ? ' Nothing you write leaves this device.' : '');
+      + (!live && !sharing ? ' Nothing you write leaves this device.' : '')
+      + ' This practice space does not alert a teacher or provide monitored support.';
   }
 }
 /**
@@ -489,6 +502,11 @@ function renderLearningCard() {
   top.firstChild.id = 'learning-title';
   card.append(top);
   card.append(element('p', 'The reader that decides what kind of help each request is learns from real requests. What would travel, once you switch this on: the words of each request you type in the chat, exactly as you typed them, and how it was decided. So a name or a piece of your draft you paste into the chat would travel too. What never travels: your saved draft, the replies, and the words of any message the assistant read as being about you rather than the work.', 'muted'));
+  const privacy = element('p', 'Use practice text only. Stopping sharing does not delete records already sent. ', 'small muted');
+  const privacyLink = element('a', 'Read how PathWay handles practice data.');
+  privacyLink.href = 'https://64arcs.com/privacy.html#pathway-pilot';
+  privacyLink.target = '_blank'; privacyLink.rel = 'noopener noreferrer';
+  privacy.append(privacyLink); card.append(privacy);
   const refused = typeof learning.rejected === 'function' ? learning.rejected() : 0;
   const status = element('p', `${learning.pending()} waiting · ${learning.sent()} shared from this browser${refused ? ` · ${refused} could not be used` : ''} · ${typeof learning.logged === 'function' ? learning.logged() : 0} in your practice log`, 'small muted');
   card.append(status);
@@ -526,8 +544,12 @@ function appendChatTurn(event) {
   user.append(element('span', 'You', 'sr-only'), element('p', event.asked));
   const reply = element('div', undefined, 'chat-reply');
   const shown = event.shown;
-  const labels = { reply: 'Sample guidance', redirect: 'Try another kind of help', refusal: 'Let’s keep the work yours', decline: 'Not this, but here is what I can do', support: 'A person can help with this', withheld: 'Reply withheld', error: 'Reply unavailable' };
+  const labels = { reply: shown.replySource === 'model' ? 'Guidance' : 'Sample guidance', acknowledgement: 'Ready for your next step', redirect: 'Try another kind of help', refusal: 'Let’s keep the work yours', decline: 'Not this, but here is what I can do', support: 'A person can help with this', withheld: 'Reply withheld', error: 'Reply unavailable' };
   reply.append(element('div', '✳  PathWay AI', 'reply-author'), element('span', labels[shown.kind] || 'Learning boundary', `reply-label kind-${shown.kind} ${shown.kind === 'reply' ? '' : 'boundary-label'}`), element('p', shown.text || [shown.reason, shown.explain].filter(Boolean).join('\n\n')));
+  if (shown.kind === 'reply' && shown.replySource !== 'model') {
+    const note = element('p', 'This is a prepared example for the project, not an answer to your specific message. It does not follow the conversation.', 'sample-notice');
+    reply.insertBefore(note, reply.children[2]);
+  }
   const actions = element('div', undefined, 'reply-actions');
   const offers = (shown.offer || []).filter(offer => allowed(offer.mode));
   const offerKey = offers.map(offer => offer.mode).join();
@@ -572,7 +594,7 @@ function renderChat() {
   if (!allowed(chatMode)) chatMode = autoAvailable() ? 'auto' : chatModes.find(allowed) || '';
   $('chat-mode').replaceChildren();
   if (autoAvailable()) {
-    const auto = element('option', 'Work it out for me'); auto.value = 'auto'; $('chat-mode').append(auto);
+    const auto = element('option', 'Choose support automatically'); auto.value = 'auto'; $('chat-mode').append(auto);
   }
   for (const id of chatModes) {
     const option = element('option', `${nameOf(id)}${allowed(id) ? '' : ' · Paused'}`);
@@ -582,6 +604,8 @@ function renderChat() {
   $('chat-mode').value = chatMode;
   $('chat-assignment').textContent = state.assignment.title;
   $('chat-brief').textContent = state.assignment.brief;
+  const thinkingStarter = document.querySelector('[data-chat-mode="question"]');
+  thinkingStarter.dataset.prompt = `Ask me questions to help me think about this project: ${state.assignment.title}`;
   $('chat-policy').textContent = chatMode ? '◇  Guidance within assignment boundaries · You write the final work' : 'Chat assistance is paused. You can still write and save your draft.';
   // One conversation per project. Seeing the History questions above the English ones would be a different
   // student's transcript as far as the person reading it is concerned.
@@ -640,8 +664,11 @@ $('draft-text').addEventListener('input', () => { if (state) draftStatus(); });
 window.addEventListener('beforeunload', event => { if (state && $('draft-text').value !== state.draft) { event.preventDefault(); event.returnValue = ''; } });
 $('save-draft').addEventListener('click', () => action(async () => {
   const text = $('draft-text').value;
-  await api('/api/draft', { text }); state.draft = text; review = null; $('writing-response').hidden = true;
-  await refresh(); notice('Draft saved in this demo session and added to the shared record.');
+  const result = await api('/api/draft', { text }); state.draft = text; state.kept = result.kept !== false; review = null; $('writing-response').hidden = true;
+  draftStatus();
+  try { await refresh(); }
+  catch { notice('The draft request completed, but its status could not refresh. Download your current draft before reloading.', true); return; }
+  notice(state.kept === false ? 'Storage did not keep your changes. Download the current draft before reloading.' : 'Draft saved in this demo session and added to the shared record.', state.kept === false);
 }));
 $('policy-form').addEventListener('submit', event => {
   event.preventDefault();
@@ -689,7 +716,7 @@ $('policy-project').addEventListener('change', async () => {
   await switchProject(id);
   location.hash = 'teacher';
 });
-$('download-draft').addEventListener('click', () => { if (state?.draft) download('my-saved-draft.txt', state.draft, 'text/plain'); });
+$('download-draft').addEventListener('click', () => { if ($('draft-text').value) download('my-current-draft.txt', $('draft-text').value, 'text/plain'); });
 $('export-activity').addEventListener('click', () => { if (state) download('learning-activity.json', JSON.stringify({ assignment: state.assignment.title, activity: state.activity }, null, 2), 'application/json'); });
 $('pilot-reset').addEventListener('click', () => { if (window.PathWayPilot && window.confirm('Start again? This clears the practice record kept in this browser.')) window.PathWayPilot.reset(); });
 lockable($('policy-form').querySelector('button'));

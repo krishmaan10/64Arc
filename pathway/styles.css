@@ -348,8 +348,8 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
 .chat-starters small { display: block; font-size: 13px; color: var(--muted); font-weight: 400; margin-top: 6px; line-height: 1.5; }
 .chat-transcript { padding: 30px 8px 24px; overflow-wrap: anywhere; }
 .chat-turn + .chat-turn { margin-top: 30px; }
-/* The composer is sticky at the bottom; scrolling a turn into view has to stop above it. */
-.chat-turn { scroll-margin-bottom: 300px; }
+/* Keep the reply above the composer in normal flow, including narrow screens and large text. */
+.chat-turn { scroll-margin-top: 70px; scroll-margin-bottom: 24px; }
 .chat-user { display: flex; justify-content: flex-end; margin-bottom: 22px; }
 .chat-user p { white-space: pre-wrap; background: var(--accent); color: #fff; padding: 13px 18px; border-radius: 22px 22px 6px 22px; max-width: 80%; margin: 0; font-size: 15.5px; box-shadow: 0 6px 16px rgba(79, 91, 255, .25); }
 .chat-reply { background: var(--surface); border: 1px solid var(--line); border-radius: 22px 22px 22px 6px; padding: 20px 22px; box-shadow: var(--shadow); max-width: 92%; }
@@ -364,7 +364,7 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
 .reply-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .reply-actions button { min-height: 38px; padding: 7px 14px; font-size: 13.5px; border-radius: 999px; }
 .reply-actions a { font-size: 14px; font-weight: 700; color: var(--accent-ink); }
-.composer-dock { position: sticky; bottom: 0; padding: 14px 0 12px; background: linear-gradient(180deg, rgba(244, 245, 251, 0), var(--bg) 12%); margin-top: auto; }
+.composer-dock { position: static; padding: 14px 0 12px; background: linear-gradient(180deg, rgba(244, 245, 251, 0), var(--bg) 12%); margin-top: auto; }
 .chat-policy { text-align: center; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
 .chat-composer { border: 2px solid var(--field-border); border-radius: 22px; padding: 14px 16px; background: var(--surface); box-shadow: var(--shadow); }
 .chat-composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(79, 91, 255, .12); }
@@ -631,3 +631,6 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
 .desk-correction { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 8px; }
 .desk-correction select { min-height: 34px; padding: 5px 10px; font-size: 13px; }
 @media (max-width: 900px) { .desk-columns { grid-template-columns: 1fr; } .desk { padding-inline: 16px; } .desk-top { padding-inline: 16px; } .desk-figures { grid-template-columns: 1fr; } }
+
+/* Explain fixture replies where the student reads them, including narrow screens. */
+.sample-notice { padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); color: var(--ink); font-size: 14px; line-height: 1.5; }
