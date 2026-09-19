@@ -110,7 +110,8 @@ modules["modes"] = function (module, exports, require, __dirname, __filename) {
 // to work with until the student has written something, and the only text it is ever given is theirs.
 // `maxNovelty` is the response half: the share of the reply that may be words the student did not write.
 // These are heuristic limits, not a proof of authorship or a guarantee against answer leakage.
-// Short replies and languages without space-delimited words need separate evaluation.
+// Brief edit notes still have a small allowance; implausibly sparse word boundaries cause abstention.
+// Short-answer leakage and language coverage still need separate evaluation.
 
 'use strict';
 
@@ -1088,14 +1089,7 @@ const EXEMPLARS = {
       'I think homework is helpful because it helps you remember what you did in class. But some people say it is too much, and they get stressed about it.',
       '```',
       '',
-      '1. "helpfull" → "helpful": one l at the end.',
-      '2. "it help" → "it helps": the verb needs an s after "it".',
-      '3. "what you done" → "what you did": "done" needs a helper verb ("have done"), so use the simple past here.',
-      '4. "people says" → "people say": "people" is plural.',
-      '5. "to much" → "too much": "too" is the one that means "excessively".',
-      '6. Added a comma before "and they get stressed": two full clauses joined by "and" usually take one.',
-      '',
-      'Your ideas and your order are untouched. The second sentence is a good place for your first source, when you are ready.',
+      'Spelling, verb forms and punctuation corrected. Check each change.',
     ].join('\n'),
   },
   rephrase: {
@@ -1105,19 +1099,16 @@ const EXEMPLARS = {
       '```',
       'Homework matters because it helps students remember what they learned in class.',
       '```',
-      'Swaps "is important" for "matters" and "things they learned" for "what they learned". Tighter, same meaning.',
       '',
       '```',
       'Because it helps students remember what they learned in class, homework is important.',
       '```',
-      'Same words, reason first. Useful if the sentence before it ended on the idea of remembering.',
       '',
       '```',
       'Homework helps students remember what they learned in class, and that is why it is important.',
       '```',
-      'Two short clauses instead of one long one. Reads well aloud.',
       '',
-      'All three keep your claim exactly; none adds a reason you did not write. Pick the one that fits the sentence before it.',
+      'Compare these wordings with your claim. Choose one or keep your own.',
     ].join('\n'),
   },
   sources: {
@@ -1383,15 +1374,15 @@ const INSTRUCTION = {
     'and adjust tone only if asked. Work sentence by sentence on what is there.',
     'Do not add ideas, arguments, facts, examples or new sentences.',
     'Reply in exactly this shape: a fenced code block containing only the corrected version of their',
-    'text, then a numbered list of the changes and why each one was made, in words a school student can',
-    'use next time. Keep their voice; do not make it sound like yours.',
+    'text, then one brief edit note of at most 80 characters outside the fence. Do not supply finished',
+    'sentences or lengthy explanations outside it. Keep their voice; do not make it sound like yours.',
   ],
   rephrase: [
     'The passage below is a student\'s own writing. Offer two or three other ways to say the same thing,',
     'keeping their meaning and their level of vocabulary.',
     'Do not add anything the passage does not already say.',
-    'Put each alternative in its own fenced code block, and say underneath what is different about it and',
-    'when that version would be the better choice.',
+    'Put each alternative in its own fenced code block. Use at most 80 characters in total outside all',
+    'fences for a brief comparison note; do not add finished sentences or lengthy explanations there.',
   ],
   sources: [
     'A student is working on the assignment below. Suggest reliable sources they could read and cite.',
@@ -1476,12 +1467,23 @@ function proposedBlocks(reply) {
   return [...String(reply || '').matchAll(/```[^\n]*\n([\s\S]*?)```/g)].map((m) => m[1].trim()).filter(Boolean);
 }
 
-/** The text a writing mode is offering as the student's own, which is what the ceiling applies to. The
- * explanation around it is teaching, and teaching is new words by definition. Fenced blocks are asked
- * for in the prompt; when none came back, the whole reply is measured, which is the safe direction. */
+/** Proposed replacements, used for the growth limit. The unfenced remainder is checked separately:
+ * calling new prose an explanation does not establish that it is safe to supply. */
 function proposedText(reply) {
   const blocks = proposedBlocks(reply);
   return blocks.length ? blocks.join('\n\n') : String(reply || '');
+}
+
+function unfencedText(reply) {
+  return String(reply || '').replace(/```[^\n]*\n[\s\S]*?```/g, '').trim();
+}
+
+/** Abstain when letter runs are too sparse to measure prose. URLs are citation identifiers, not prose.
+ * This is a conservative coverage check, not segmentation or understanding of an unsupported script. */
+function unmeasurable(text) {
+  const prose = String(text || '').replace(/https?:\/\/\S+/gi, '');
+  const letters = (prose.match(/[\p{L}\p{N}]/gu) || []).length;
+  return letters >= 24 && words(prose).length * 12 <= letters;
 }
 
 /** Prose that reads like a piece of submitted work: several sentences in a row, no questions, no marks
@@ -1511,7 +1513,8 @@ function looksLikeSubmission(reply) {
   });
 }
 
-const COMMON_WORDS = 60;
+// Leave room for a brief edit label, not an entire paragraph. maxGrowth still bounds replacements.
+const NOTE_CHARACTERS = 80;
 
 /**
  * Check a model reply against the mode it was produced in.
@@ -1529,10 +1532,17 @@ function checkResponse({ reply, modeId, studentText = '' }) {
   // corrected text is measured on the whole of what it offers.
   const pieces = current.needsStudentText ? (current.perAlternative ? proposedBlocks(text) : []) : [];
   if (current.needsStudentText && !pieces.length) pieces.push(proposedText(text));
-  const share = current.needsStudentText ? Math.max(...pieces.map((piece) => novelty(piece, studentText))) : 1;
+  const blocks = proposedBlocks(text);
+  const remainder = unfencedText(text);
+  const measured = current.needsStudentText && blocks.length && remainder ? [...pieces, remainder] : pieces;
+  const share = current.needsStudentText ? Math.max(...measured.map((piece) => novelty(piece, studentText))) : 1;
+
+  if ([text, ...blocks, remainder].some(unmeasurable))
+    problems.push('the reply cannot be measured reliably by this checker; its text has too few word boundaries');
 
   // A transformation that is mostly new words is not a transformation.
-  if (current.needsStudentText && share > current.maxNovelty && Math.max(...pieces.map((piece) => words(piece).length)) > COMMON_WORDS)
+  if (current.needsStudentText && measured.some((piece) =>
+    piece.trim().length > NOTE_CHARACTERS && novelty(piece, studentText) > current.maxNovelty))
     problems.push(
       `the reply is ${Math.round(share * 100)}% words the student did not write, above the ${Math.round(
         current.maxNovelty * 100,
@@ -1551,7 +1561,7 @@ function checkResponse({ reply, modeId, studentText = '' }) {
   }
 
   // No mode may hand back something shaped like the submission.
-  if (current.forbidsArtifactShape && looksLikeSubmission(text))
+  if (current.forbidsArtifactShape && [text, ...blocks, remainder].some(looksLikeSubmission))
     problems.push('the reply reads like a passage of the work itself');
 
   // A mode whose job is to ask has to ask.
@@ -1565,7 +1575,7 @@ function checkResponse({ reply, modeId, studentText = '' }) {
   return { ok: problems.length === 0, novelty: share, problems };
 }
 
-module.exports = { checkResponse, novelty, looksLikeSubmission, proposedText, proposedBlocks, words };
+module.exports = { checkResponse, novelty, looksLikeSubmission, proposedText, proposedBlocks, words, unfencedText, unmeasurable };
 
 };
 modules["observations"] = function (module, exports, require, __dirname, __filename) {
