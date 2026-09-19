@@ -347,7 +347,7 @@ function renderResponse(shown, modeId) {
   response.append(element('p', shown.text || [shown.reason, shown.explain].filter(Boolean).join('\n\n')));
   for (const offer of shown.offer || []) {
     if (!allowed(offer.mode)) continue;
-    const button = lockable(element('button', offer.name));
+    const button = lockable(element('button', nameOf(offer.mode)));
     button.addEventListener('click', () => chooseMode(offer.mode)); response.append(button);
   }
   if (modeId === 'sources' && shown.kind === 'reply') { const link = element('a', 'Open source library →', 'button'); link.href = '#sources'; response.append(link); }
@@ -562,7 +562,7 @@ function appendChatTurn(event) {
   lastOffers = offers.length ? offerKey : '';
   if (repeated) actions.append(element('span', 'The same options as above still apply.', 'small muted'));
   for (const offer of repeated ? [] : offers) {
-    const button = lockable(element('button', offer.name));
+    const button = lockable(element('button', nameOf(offer.mode)));
     button.type = 'button';
     button.addEventListener('click', () => {
       if (busy || !allowed(offer.mode)) return;
