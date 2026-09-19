@@ -6,10 +6,10 @@
   <meta name="theme-color" content="#4f5bff">
   <title>PathWay AI · Learning chat</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=e518ba664b37">
+  <link rel="stylesheet" href="styles.css?v=416d9b24c4e5">
   <script src="model.js?v=b47e468a46b9"></script>
   <script src="pilot.js?v=4018dcc9e739"></script>
-  <script src="app.js?v=25fc8b2d634e" defer></script>
+  <script src="app.js?v=1a88375e3e02" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
@@ -65,7 +65,7 @@
         <div class="trust-strip"><span aria-hidden="true">◇</span><p><strong>Clear boundaries. Shared understanding.</strong> Your saved drafts and assistance activity are visible in the teacher preview.</p><a href="#activity">See your activity →</a></div>
       </section>
       <section id="page-workspace" class="page" hidden>
-        <div class="page-heading"><div><p class="eyebrow" id="subject">ENGLISH · PRACTICE ASSIGNMENT</p><h1 id="assignment-title">Does homework help us learn?</h1><p>Your ideas. Your words. A little help along the way.</p></div><a href="#boundaries" class="outline-pill">◇ &nbsp; View learning boundaries</a></div>
+        <div class="page-heading"><div><p class="eyebrow" id="subject">ENGLISH · PRACTICE ASSIGNMENT</p><h1 id="assignment-title">Does homework help us learn?</h1><p>Your ideas. Your words. A little help along the way.</p></div><div class="workspace-actions"><button id="jump-to-draft" class="primary" type="button" disabled>Jump to my draft <span aria-hidden="true">↓</span></button><a href="#boundaries" class="outline-pill">◇ &nbsp; View learning boundaries</a></div></div>
         <div class="workspace">
           <aside class="task-panel card"><p class="eyebrow">THE ASSIGNMENT</p><h2>Know where you’re going.</h2><p id="brief"></p><div id="skills" class="tags"></div><hr><h3>Your next steps</h3><p class="small muted">Check these yourself as you go.</p><div id="task-checklist"></div><hr><h3>References you saved</h3><div id="saved-references"></div><hr><h3>Permitted assistance</h3><ul id="permission-list" class="permissions"></ul><p class="footnote">Your teacher sets the terms for each assignment.</p></aside>
           <section class="draft card"><div class="section-top"><p class="eyebrow">YOUR OWN WORDS</p><span id="save-state" class="small">No draft saved</span></div><label class="editor-label" for="draft-text">A thought is a good beginning.</label><p id="draft-hint" class="muted">Start with what you think. You can make it clearer as you go.</p><textarea id="draft-text" maxlength="20000" aria-describedby="draft-hint" placeholder="I think…" spellcheck="true"></textarea><div class="draft-footer"><span id="word-count" class="small">0 words</span><button id="save-draft" class="primary" disabled>Save draft</button></div><p class="footnote">Explicit saves enter the shared record. Suggestions change your draft only when you accept them.</p><button id="download-draft" class="text-link">Download current draft ↓</button></section>

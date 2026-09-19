@@ -211,6 +211,8 @@ progress::-webkit-progress-value { background: linear-gradient(90deg, var(--acce
 .trust-strip a { font-size: 13.5px; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
 
 /* Workspace */
+.workspace-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; }
+.draft textarea { scroll-margin-top: 82px; }
 .workspace { display: grid; grid-template-columns: minmax(200px, .8fr) minmax(280px, 1.5fr) minmax(260px, 1.1fr); gap: 18px; align-items: start; }
 .task-panel { background: var(--accent-soft); border-color: #d6d9ff; box-shadow: none; padding: 22px; }
 .task-panel h2 { font-size: 22px; }
@@ -428,7 +430,7 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
   .tools-grid { grid-template-columns: repeat(2, 1fr); }
   .workspace { grid-template-columns: 1fr; }
   .page-heading { align-items: start; }
-  .page-heading > .outline-pill { display: none; }
+  .page-heading > .outline-pill, .workspace-actions > .outline-pill { display: none; }
   .source-grid, .boundary-grid, .teacher-grid { grid-template-columns: 1fr; }
   .trust-strip { flex-wrap: wrap; }
   .trust-strip a { margin-left: 38px; }

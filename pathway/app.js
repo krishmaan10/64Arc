@@ -56,6 +56,7 @@ function controls() {
   document.querySelectorAll('[data-lock]').forEach(node => { node.disabled = busy || !state || node.dataset.unavailable === 'true'; });
   $('save-draft').disabled = busy || !state || ($('draft-text').value === state.draft && state.kept !== false);
   $('download-draft').disabled = !state || !$('draft-text').value;
+  $('jump-to-draft').disabled = !state;
   $('export-activity').disabled = !state?.activity.length;
   $('ask').disabled = busy || !selected || !state || !allowed(selected);
   $('ask').textContent = busy ? 'Checking…' : 'Ask for guidance ↗';
@@ -663,6 +664,10 @@ $('chat-form').addEventListener('submit', event => {
 });
 window.addEventListener('hashchange', () => { notice(''); route(); });
 $('teacher-view').addEventListener('click', () => { location.hash = location.hash === '#teacher' ? 'workspace' : 'teacher'; });
+$('jump-to-draft').addEventListener('click', () => {
+  $('draft-text').focus({ preventScroll: true });
+  $('draft-text').scrollIntoView?.({ block: 'start' });
+});
 document.querySelectorAll('[data-mode]').forEach(node => node.addEventListener('click', () => chooseMode(node.dataset.mode)));
 $('draft-text').addEventListener('input', () => { if (state) draftStatus(); });
 window.addEventListener('beforeunload', event => { if (state && $('draft-text').value !== state.draft) { event.preventDefault(); event.returnValue = ''; } });
