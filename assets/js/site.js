@@ -425,7 +425,7 @@
 
     function apply(level, remember) {
       level = String(level);
-      if (!NAMES[level]) level = '2';
+      if (!NAMES[level]) level = '1';
       document.documentElement.setAttribute('data-level', level);
       input.value = level;
       input.setAttribute('aria-valuetext', NAMES[level]);
@@ -437,7 +437,7 @@
 
     var saved = null;
     try { saved = localStorage.getItem(LEVEL_KEY); } catch (err) { /* private mode */ }
-    apply(saved || document.documentElement.getAttribute('data-level') || '2', false);
+    apply(saved || document.documentElement.getAttribute('data-level') || '1', false);
 
     input.addEventListener('input', function () { apply(input.value, true); });
   }

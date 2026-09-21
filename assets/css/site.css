@@ -2197,6 +2197,23 @@ html[data-level="1"] .dial-stops span:nth-child(1),
 html[data-level="2"] .dial-stops span:nth-child(2),
 html[data-level="3"] .dial-stops span:nth-child(3) { color: var(--ivory); }
 
+.hero-credential {
+  margin-top: clamp(1.5rem, 1rem + 1.4vw, 2.25rem);
+  max-width: 62ch;
+  font-family: var(--font-mono);
+  font-size: .8125rem;
+  line-height: 1.7;
+  color: var(--ink-inv-faint);
+  border-left: 2px solid var(--signal);
+  padding-left: 1.125rem;
+}
+.dial-hint {
+  margin-top: .5rem;
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .06em;
+  color: var(--ink-inv-faint);
+}
 .dial-status {
   margin-top: 1rem;
   font-size: .9375rem;
@@ -2346,8 +2363,7 @@ html.js .dial { display: block; }
   padding-top: 8rem;
   padding-bottom: 3rem;
 }
-.products-page main > .section { padding-block: 3rem; }
-.products-page .product-card .chip { font-size: .875rem; }
+.products-page .chip { font-size: .8125rem; }
 
 .product-card {
   padding: clamp(1.5rem, 1rem + 3vw, 3.5rem);
@@ -2383,3 +2399,111 @@ html.js .dial { display: block; }
   .nav { gap: 1rem; }
   .header-cta { margin-left: 0; }
 }
+
+
+/* ---- Our own pilots (products.html) ----
+   Each pilot is a two-column block: what it does on the left, where it stops on
+   the right. The bounds panel is deliberately given the same weight as the
+   pitch — these products are early, and the limits are part of the description
+   rather than a disclaimer appended to it. */
+.pilot-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(.75rem, .4rem + 1.4vw, 2rem);
+  margin-top: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);
+  font-family: var(--font-mono);
+  font-size: .75rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-inv-faint);
+}
+.pilot-strip span { position: relative; padding-left: 1rem; }
+.pilot-strip span::before {
+  content: "";
+  position: absolute; left: 0; top: .45em;
+  width: 5px; height: 5px;
+  border: 1px solid var(--signal);
+  transform: rotate(45deg);
+}
+
+.pilot {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: clamp(2rem, 1.2rem + 3vw, 4.5rem);
+  align-items: start;
+}
+@media (max-width: 900px) { .pilot { grid-template-columns: minmax(0, 1fr); } }
+
+.pilot-head { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.pilot-one-line {
+  font-size: clamp(1.125rem, 1rem + .55vw, 1.4375rem);
+  line-height: 1.4;
+  letter-spacing: -.015em;
+  color: var(--ink);
+  margin-bottom: 1.25rem;
+}
+.pilot-lede > p { color: var(--ink-muted); max-width: 58ch; }
+
+.pilot-figure { margin: clamp(2rem, 1.4rem + 2vw, 3rem) 0 0; }
+.pilot-figure svg {
+  width: 100%; height: auto;
+  background: var(--ivory-raised);
+  border: 1px solid var(--soft-grey);
+  border-radius: var(--radius);
+  padding: clamp(.75rem, .5rem + 1vw, 1.25rem);
+}
+.pilot-figure figcaption {
+  margin-top: .875rem;
+  font-family: var(--font-mono);
+  font-size: var(--t-label);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.pilot-bounds {
+  background: var(--carbon);
+  border: 1px solid var(--carbon-line-2);
+  border-radius: var(--radius);
+  padding: clamp(1.5rem, 1rem + 1.6vw, 2.25rem);
+}
+.pilot-bounds .label { margin-bottom: 1.25rem; }
+.pilot-bounds ul { list-style: none; margin: 0; padding: 0; }
+.pilot-bounds li {
+  position: relative;
+  padding: 0 0 0 1.5rem;
+  margin-bottom: .875rem;
+  font-size: .9375rem;
+  line-height: 1.55;
+  color: var(--ink-inv-muted);
+}
+.pilot-bounds li::before {
+  content: "";
+  position: absolute; left: 0; top: .6em;
+  width: 8px; height: 1px;
+  background: var(--signal);
+}
+.pilot-data {
+  margin: 1.5rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--carbon-line);
+  font-size: .875rem;
+  line-height: 1.6;
+  color: var(--ink-inv-faint);
+}
+.pilot-data .link { color: var(--signal-on-dark); }
+
+.pilot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: clamp(2rem, 1.4rem + 2vw, 3rem);
+}
+
+/* The .d-* diagram classes are authored for dark panels (.d-title fills ivory),
+   so on the pilots' light frames they render invisible. Restate them here
+   rather than overriding fill inline on every <text>. */
+.pilot-figure .d-title { fill: var(--carbon); }
+.pilot-figure .d-label { fill: var(--ink-muted); }
+.pilot-figure .d-label.is-signal { fill: var(--signal-ink); }
+.pilot-figure .d-node-light { fill: #FFFFFF; stroke: var(--soft-grey); }
