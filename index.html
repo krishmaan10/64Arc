@@ -141,7 +141,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
             <span>Plain English</span><span>Choosing software</span><span>Engineering detail</span>
           </div>
         </div>
-        <p class="dial-status" data-dial-status aria-live="polite">For someone choosing software.</p>
+        <p class="dial-status" data-dial-status>For someone choosing software.</p>
       </div>
 
       <div class="hero-strip">
@@ -219,7 +219,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
             stock and dues &mdash; web and phones, in thirteen languages. Orders taken without signal
             queue on the device and post when it returns; the same order cannot be booked twice.</p>
           <p data-lvl="3">Reps, dealers, suppliers and head office each get their own app &mdash; Android,
-            iOS, web, thirteen locales. The device holds an outbox for orders taken offline; it holds
+            installable web, thirteen locales. The device holds an outbox for orders taken offline; it holds
             no rules. Each order carries a client-generated key, so a timed-out post that the phone
             retries is deduped rather than booked twice &mdash; and the file the branch ERP receives is
             keyed the same way, so it cannot be applied twice there either.</p>
@@ -278,26 +278,28 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
         <p class="lead reveal measure" data-lvl="1" style="--delay:.14s">
           This is our own family business. PSS sells commercial-vehicle parts from 93 branches in
           India. Two of the three below are live and in daily use. The third, a rebuild of the old
-          system, runs on one computer against a copy of the books. It has never run a real
-          branch&rsquo;s accounts.
+          system, runs on one computer at one branch. It can read that branch&rsquo;s books but not
+          change them, and it has never written a real branch&rsquo;s accounts.
         </p>
         <p class="lead reveal measure" data-lvl="2" style="--delay:.14s">
           Partap Singh &amp; Sons distributes commercial-vehicle parts from 93 branches in India. It
           is the founder&rsquo;s family business, and the business these platforms were built for.
-          PSSAO and PSS GO are live. PSS ONE, the ERP rebuild, is a single-terminal pilot against a
-          sandbox copy. It has not written a real branch&rsquo;s books.
+          PSSAO and PSS GO are live. PSS ONE, the ERP rebuild, is a single-terminal pilot: it reads
+          one branch&rsquo;s real books read-only, with every write path unarmed. It has not written
+          a real branch&rsquo;s books.
         </p>
         <p class="lead reveal measure" data-lvl="3" style="--delay:.14s">
           Partap Singh &amp; Sons distributes commercial-vehicle parts from 93 branches in India. It
           is the founder&rsquo;s family business. PSSAO and PSS GO are live. PSS ONE, the ERP rebuild,
           sits at roughly a third parity across some 230 branch-relevant legacy screens and runs on
-          one terminal against a sandbox copy. It has not written a real branch&rsquo;s books.
+          one terminal, read-only against one branch&rsquo;s real books. Every money-write path is
+          unarmed; no real branch&rsquo;s books have ever been written.
         </p>
       </div>
 
       <figure class="note-figure note-figure--wide note-figure--on-dark observe">
         <div class="frame only-wide">
-          <svg viewBox="0 0 1000 470" role="img" aria-label="The PSS ecosystem. Three platforms — PSSAO for company profile and B2B ecommerce, PSS Go for branch reps, admin staff, dealers and suppliers, and PSS One for the ERP — all reading from one shared business core, which sits over the legacy ERP holding twenty years of books across 93 branches. PSSAO and PSS Go are live; PSS One is a pilot running against a copy of the books, not yet in their place.">
+          <svg viewBox="0 0 1000 470" role="img" aria-label="The PSS ecosystem. Three platforms — PSSAO for company profile and B2B ecommerce, PSS Go for branch reps, admin staff, dealers and suppliers, and PSS One for the ERP — all reading from one shared business core, which sits over the legacy ERP holding twenty years of books across 93 branches. PSSAO and PSS Go are live; PSS One is a pilot that reads these books read-only from one terminal and has never written to them.">
 
                       <!-- ---------------------- who each one serves ---------------------- -->
                       <g class="d-label pop" style="--delay:.05s">
@@ -332,7 +334,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
                         <path d="M374 102 H626" stroke="#262A34" stroke-width="1"/>
                         <text class="d-label" x="374" y="126">Field app for reps and admin staff</text>
                         <text class="d-label" x="374" y="146">Customer &middot; dealer &middot; supplier portals</text>
-                        <text class="d-label" x="374" y="166">Android &middot; iOS &middot; web &middot; 13 languages</text>
+                        <text class="d-label" x="374" y="166">Android &middot; installable web &middot; 13 languages</text>
                       </g>
 
                       <!-- --------------------------- PSS ONE ----------------------------- -->
@@ -371,7 +373,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
                         <text class="d-label" x="44" y="412">Built in VB.NET two decades ago &middot; 93 branches &middot; twenty years of records &middot; still the system of record</text>
                       </g>
 
-                      <text class="d-label" x="980" y="460" text-anchor="end" style="fill:#808795">PSS One runs against a copy of these books &mdash; not yet in their place.</text>
+                      <text class="d-label" x="980" y="460" text-anchor="end" style="fill:#808795">PSS One reads these books read-only &mdash; it has never written to them.</text>
                     </svg>
         </div>
         <div class="only-narrow eco-stack">
@@ -384,7 +386,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
           <article class="eco-node">
             <p class="who">Reps &middot; admin &middot; customers &middot; suppliers</p>
             <div class="eco-head"><h3>PSS GO</h3><span class="eco-tag">Live</span></div>
-            <p class="what">Field app for reps and admin staff, with customer, dealer and supplier portals. Android, iOS and web, in 13 languages.</p>
+            <p class="what">Field app for reps and admin staff, with customer, dealer and supplier portals. Android and installable web, in 13 languages.</p>
           </article>
           <div class="eco-join" aria-hidden="true"></div>
           <article class="eco-node">
@@ -402,7 +404,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
             <span class="t">The books &mdash; the ERP that stays</span>
             <p>Built in VB.NET two decades ago. 93 branches, twenty years of records, still the system of record.</p>
           </div>
-          <p class="eco-note">PSS One runs against a copy of these books &mdash; not yet in their place.</p>
+          <p class="eco-note">PSS One reads these books read-only &mdash; it has never written to them.</p>
         </div>
         <figcaption>Three platforms, three audiences, one business underneath. Two platforms live; the ERP rebuild still in pilot, beside the twenty-year-old system that holds the books.</figcaption>
       </figure>
