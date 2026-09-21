@@ -1462,10 +1462,16 @@ a { color: inherit; }
   .figure-cap { font-size: .6875rem; }
 }
 
-/* Desktop-only / mobile-only diagram switching */
+/* Desktop-only / mobile-only diagram switching.
+   The switch is at 1200px, not at a phone breakpoint, because the wide variant
+   is an SVG whose labels are in user units: it renders at scale = container/1000,
+   so below ~1200px the 10px labels fall under 10px on screen (7.3px at 861px,
+   measured). Above 1200px the container is 1041-1118px and they land at
+   10.4-11.2px, in line with the rest of the small type. Everything narrower gets
+   the .eco-stack / .ledger-stack HTML variants, which are real text at real sizes. */
 .only-wide { display: block; }
 .only-narrow { display: none; }
-@media (max-width: 860px) {
+@media (max-width: 1200px) {
   .only-wide { display: none; }
   .only-narrow { display: block; }
 }
@@ -2332,8 +2338,8 @@ html.js .dial { display: block; }
    .ledger-stack both set `display: grid` — used to beat them and render the
    mobile stack on desktop as well. Restating the switch at the end of the
    sheet makes source order settle it the right way round. */
-@media (min-width: 861px) { .only-narrow { display: none; } }
-@media (max-width: 860px) { .only-wide  { display: none; } }
+@media (min-width: 1201px) { .only-narrow { display: none; } }
+@media (max-width: 1200px) { .only-wide  { display: none; } }
 
 /* Products catalog */
 .products-page .page-hero {
