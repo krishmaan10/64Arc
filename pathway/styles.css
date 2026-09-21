@@ -617,6 +617,12 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
 .desk-figures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
 .desk-figure { display: grid; gap: 2px; padding: 12px 14px; background: var(--surface-2); border-radius: var(--radius-sm); }
 .desk-figure strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+/* A record the desk could not read. Stated plainly, never coloured like an accusation: the fault is in
+   the file, not in the student. */
+.desk-warning { margin: 0 0 20px; padding: 14px 18px; border: 1px solid var(--line-strong); border-left: 3px solid var(--ink-2); border-radius: var(--radius); background: var(--surface-2); display: grid; gap: 3px; font-size: 13.5px; }
+/* Everything in a student's record that is not a request: saves, checker runs, changes to the terms. */
+.desk-context { border: 0; border-left: 2px solid var(--line-strong); padding: 6px 0 6px 18px; margin: 0 0 0 4px; background: none; list-style: none; }
+
 .desk-signal { padding: 12px 14px; border-radius: var(--radius-sm); background: var(--accent-soft); color: var(--accent-ink); font-size: 14px; }
 .desk-groups { padding-left: 20px; }
 .desk-groups li { margin-bottom: 12px; }
