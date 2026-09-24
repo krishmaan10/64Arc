@@ -92,10 +92,12 @@
   <section class="page-hero blueprint">
     <div class="wrap">
       <span class="eyebrow">Work</span>
-      <h1 class="t-h1 measure-l">The ecosystem is the work.</h1>
+      <h1 class="t-h1 measure-l">What we have built, and where each piece stops.</h1>
       <p class="lead">
-        A screenshot of one application says very little. What matters is the architecture it
-        belongs to — what it connects, what it replaced, and what the business can do afterwards.
+        One business system in daily use: orders, stock, dues and collections across 93 branches,
+        typed once, with the twenty-year-old ERP still holding the books. Two early products of
+        our own. And four business shapes we would approach the same way &mdash; described as
+        shapes, not as work we have done.
       </p>
       <div class="page-meta">
         <span>Before</span><span>Architecture</span><span>Platforms</span><span>Intelligence</span><span>Outcome</span>
@@ -132,7 +134,7 @@
       <div class="section-head">
         <p class="label label--signal reveal">Built and running</p>
         <h2 class="t-h2 reveal" style="--delay:.08s">
-          The first ecosystem we built was our own.<br>
+          The first system we built was our own.<br>
           <span class="muted">93 branches, on a twenty-year-old ERP nobody wanted to replace.</span>
         </h2>
         <p class="lead reveal measure" style="--delay:.14s">
@@ -155,36 +157,37 @@
         <div class="case-body">
           <div class="case-cell">
             <h3>Before</h3>
-            <p>The business ran — and still runs — on an ERP built in VB.NET two decades ago,
-               living on desktop PCs inside each of 93 branches. Nothing left the building. A rep
-               in a dealer's shop carried the dues in his head, phoned the branch to ask about
-               stock, and wrote orders on paper. Attendance was a register. Credit approvals
-               travelled by telephone.</p>
+            <p>The business ran &mdash; and still runs &mdash; on an ERP built in VB.NET two decades
+               ago, living on desktop PCs inside each of 93 branches. Nothing left the building. A rep
+               in a dealer&rsquo;s shop carried the dues in his head, phoned the branch to ask about
+               stock, and wrote orders on paper. Attendance was a paper register. Whether head office
+               had approved his branch&rsquo;s credit request, he had no way to see.</p>
           </div>
           <div class="case-cell">
             <h3>Architecture</h3>
-            <p>The ERP stays. It holds twenty years of books and every branch works in it daily —
+            <p>The ERP stays. It holds twenty years of books and every branch works in it daily &mdash;
                replacing it first would have been the most expensive possible way to start. Instead
-               we put one shared read layer across all 93 branches, and a separate write
-               path for the things the ERP was never able to capture: field activity, orders,
-               attendance, credit decisions.</p>
+               we put one shared read layer across all 93 branches, and a separate write path for
+               the things the ERP was never able to capture: field activity, orders, attendance,
+               credit decisions.</p>
           </div>
           <div class="case-cell">
             <h3>Platforms</h3>
             <ul>
-              <li>Field app for reps — Android and installable web, in 13 languages</li>
-              <li>Dealer portal — each dealer sees their own account and places their own orders</li>
-              <li>Supplier portal — 13 brands see their own stock across the network</li>
-              <li>Head-office desk — credit sanctions, tour and expense approvals</li>
-              <li>ERP rebuild — running beside the original, not yet in its place</li>
+              <li>Field app for reps &mdash; Android and installable web, in 13 languages</li>
+              <li>Dealer portal &mdash; each dealer sees their own account and places their own orders</li>
+              <li>Supplier portal &mdash; 13 brands see their own stock across the network</li>
+              <li>Head-office desk &mdash; credit sanctions, tour and expense approvals</li>
+              <li>ERP rebuild &mdash; running beside the original, not yet in its place</li>
             </ul>
           </div>
           <div class="case-cell">
             <h3>Intelligence</h3>
-            <p>Collection lists ordered by what is actually at stake rather than by who called
-               last. One dealer's position across every branch, in one place. Orders dictated by
-               voice or photographed off a handwritten slip. Checks that raise an exception against
-               the credit position before an order ships, rather than after.</p>
+            <p>Collection lists ordered by what is actually at stake &mdash; size, lateness, over
+               limit &mdash; rather than by who called last. A dealer overdue at another branch shows
+               up at order time, which a rep could never see before. Orders dictated by voice or
+               photographed off a handwritten slip. A credit check that raises an exception before
+               an order ships, rather than after.</p>
           </div>
           <div class="case-cell case-cell--outcome">
             <h3>Outcome</h3>
@@ -201,7 +204,7 @@
 
       <figure class="note-figure note-figure--wide observe" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
         <div class="frame only-wide">
-          <svg viewBox="0 0 1000 470" role="img" aria-label="The PSS ecosystem. Three platforms — PSSAO for company profile and B2B ecommerce, PSS Go for branch reps, admin staff, dealers and suppliers, and PSS One for the ERP — all reading from one shared business core, which sits over the legacy ERP holding twenty years of books across 93 branches. PSSAO and PSS Go are live; PSS One is a pilot that reads these books read-only from one terminal and has never written to them.">
+          <svg viewBox="0 0 1000 470" role="img" aria-label="The PSS ecosystem. Three platforms — PSSAO for company profile and catalogue, PSS Go for branch reps, admin staff, dealers and suppliers, and PSS One for the ERP — all reading from one shared business core, which sits over the legacy ERP holding twenty years of books across 93 branches. PSSAO and PSS Go are live; PSS One is a pilot that reads these books read-only from one terminal and has never written to them.">
 
             <!-- ---------------------- who each one serves ---------------------- -->
             <g class="d-label pop" style="--delay:.05s">
@@ -223,8 +226,8 @@
               <text class="d-label" x="267" y="85" text-anchor="middle" style="fill:#7A89FF">Live</text>
               <path d="M44 102 H296" stroke="#262A34" stroke-width="1"/>
               <text class="d-label" x="44" y="126">Company profile</text>
-              <text class="d-label" x="44" y="146">B2B ecommerce front</text>
-              <text class="d-label" x="44" y="166">Catalogue &middot; ordering &middot; account</text>
+              <text class="d-label" x="44" y="146">Catalogue and pricelists by brand</text>
+              <text class="d-label" x="44" y="166">Branches &middot; brands &middot; how to buy</text>
             </g>
 
             <!-- --------------------------- PSS GO ------------------------------ -->
@@ -247,8 +250,8 @@
               <text class="d-label" x="923" y="85" text-anchor="middle">Pilot</text>
               <path d="M704 102 H956" stroke="#262A34" stroke-width="1"/>
               <text class="d-label" x="704" y="126">The ERP, rebuilt</text>
-              <text class="d-label" x="704" y="146">Sales &middot; finance &middot; CRM &middot; legal</text>
-              <text class="d-label" x="704" y="166">Procurement &middot; stock &middot; service</text>
+              <text class="d-label" x="704" y="146">Sales &middot; ledgers &middot; purchase bills</text>
+              <text class="d-label" x="704" y="166">Stock &middot; reports &middot; receivables</text>
             </g>
 
             <!-- --------------- everything drops into one core ------------------- -->
@@ -282,7 +285,7 @@
           <article class="eco-node">
             <p class="who">Customers &middot; dealers &middot; public</p>
             <div class="eco-head"><h3>PSSAO</h3><span class="eco-tag">Live</span></div>
-            <p class="what">Company profile and B2B ecommerce front &mdash; catalogue, ordering, account.</p>
+            <p class="what">Company profile and catalogue site &mdash; brands, branches, pricelists by brand. No cart or checkout; ordering happens elsewhere.</p>
           </article>
           <div class="eco-join" aria-hidden="true"></div>
           <article class="eco-node">
@@ -294,7 +297,7 @@
           <article class="eco-node">
             <p class="who">Head office &middot; finance &middot; management</p>
             <div class="eco-head"><h3>PSS ONE</h3><span class="eco-tag eco-tag--pilot">Pilot</span></div>
-            <p class="what">The ERP, rebuilt &mdash; sales, finance, CRM, legal, procurement, stock and service.</p>
+            <p class="what">The ERP, rebuilt &mdash; sales, ledgers, purchase bills, stock, reports and receivables.</p>
           </article>
           <div class="eco-join" aria-hidden="true"></div>
           <div class="eco-core">
@@ -314,7 +317,7 @@
       <div class="principle reveal" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
         <p class="label label--signal">What it proves</p>
         <p>We did not rip out the system the business depends on.<br>
-           We built the ecosystem around it, and left the books where they were.</p>
+           We built around it, and left the books where they were.</p>
       </div>
 
       <p class="reveal" style="margin-top:2.5rem">
@@ -325,21 +328,22 @@
     </div>
   </section>
 
-  <!-- ========================== ECOSYSTEM MODELS ========================== -->
+  <!-- ========================== BUSINESS SHAPES =========================== -->
   <section class="section section--lg s-sunken">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">Ecosystem models</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">Four more architectures, described end to end.</h2>
+        <p class="label reveal">Shapes we would approach</p>
+        <h2 class="t-h2 reveal" style="--delay:.08s">Four business shapes, and how we would go about each.</h2>
         <p class="lead reveal measure" style="--delay:.14s">
-          Unlike PSS above, these four are models rather than built work — common business shapes
-          and how 64ARCS would approach each. The one above is the built one.
+          These four are not work we have done. They are common business shapes, written out end
+          to end the way we would approach them, so you can see whether yours is one of them. The
+          only built one on this page is the one above.
         </p>
       </div>
 
       <div class="picker reveal" data-picker="model" data-picker-all="Showing all four">
         <p class="picker-q">Which looks most like your business?</p>
-        <div class="picker-set" role="group" aria-label="Show ecosystem models by business shape">
+        <div class="picker-set" role="group" aria-label="Show business shapes">
           <button class="picker-btn" type="button" data-pick="all" aria-pressed="true">All four</button>
           <button class="picker-btn" type="button" data-pick="distribution" aria-pressed="false">Distribution</button>
           <button class="picker-btn" type="button" data-pick="manufacturing" aria-pressed="false">Manufacturing</button>
@@ -352,8 +356,8 @@
       <!-- ------------------------------ 01 ------------------------------- -->
       <article class="case reveal" data-model="distribution">
         <div class="case-head">
-          <span class="sector">Model 01 — Industrial distribution</span>
-          <h2>A dealer network running on phone calls, spreadsheets and an ERP nobody outside the office could reach.</h2>
+          <span class="sector">If you are an industrial distributor</span>
+          <h2>A dealer network running on phone calls, spreadsheets and an ERP nobody outside the office can reach.</h2>
           <ul class="chips">
             <li class="chip chip--dark">ERP</li><li class="chip chip--dark">Dealer app</li>
             <li class="chip chip--dark">Warehouse</li><li class="chip chip--dark">Credit</li>
@@ -363,15 +367,15 @@
         <div class="case-body">
           <div class="case-cell">
             <h3>Before</h3>
-            <p>Dealers ordered by phone and message. The sales desk re-keyed each order, called the
-               warehouse for stock and accounts for credit. Stock lived in a spreadsheet updated
-               each evening. Nobody could answer "where is my order" without three calls.</p>
+            <p>Dealers order by phone and message. The sales desk re-keys each order, calls the
+               warehouse for stock and accounts for credit. Stock lives in a spreadsheet updated
+               each evening. Nobody can answer "where is my order" without three calls.</p>
           </div>
           <div class="case-cell">
             <h3>Architecture</h3>
             <p>One definition of product, price, stock and credit at the centre. The ERP keeps
-               operations; everything else reads from a shared business layer over it rather than
-               keeping its own copy.</p>
+               operations; everything else reads from a shared layer over it rather than keeping
+               its own copy.</p>
           </div>
           <div class="case-cell">
             <h3>Platforms</h3>
@@ -385,13 +389,13 @@
           <div class="case-cell">
             <h3>Intelligence</h3>
             <p>Replenishment suggestions per dealer from their own buying rhythm. Credit-risk
-               flags before an order is accepted rather than after it ships.</p>
+               flags before an order is accepted, not after it ships.</p>
           </div>
           <div class="case-cell case-cell--outcome">
-            <h3>Outcome</h3>
-            <p><strong>The status phone call disappears.</strong> Orders arrive structured and
-               priced. Stock is one number everyone shares. The sales desk moves from re-keying
-               to handling the exceptions that actually need judgement.</p>
+            <h3>What we would expect</h3>
+            <p><strong>The status phone call is the first thing to go.</strong> Orders would arrive
+               structured and priced. Stock would be one number everyone shares. The sales desk
+               would move from re-keying to handling the exceptions that actually need judgement.</p>
           </div>
         </div>
       </article>
@@ -399,8 +403,8 @@
       <!-- ------------------------------ 02 ------------------------------- -->
       <article class="case reveal" data-model="manufacturing">
         <div class="case-head">
-          <span class="sector">Model 02 — Manufacturing</span>
-          <h2>Production planned from experience, because no system could see demand and capacity at the same time.</h2>
+          <span class="sector">If you are a manufacturer</span>
+          <h2>Production planned from experience, because no system can see demand and capacity at the same time.</h2>
           <ul class="chips">
             <li class="chip chip--dark">Planning</li><li class="chip chip--dark">Shop floor</li>
             <li class="chip chip--dark">Procurement</li><li class="chip chip--dark">Quality</li>
@@ -411,8 +415,8 @@
           <div class="case-cell">
             <h3>Before</h3>
             <p>Orders in one system, production tracked on paper and whiteboards, purchasing driven
-               by memory. Shortages were discovered on the line. Planning depended on two people
-               who had done it for fifteen years.</p>
+               by memory. Shortages are discovered on the line. Planning depends on the two people
+               who have done it for years.</p>
           </div>
           <div class="case-cell">
             <h3>Architecture</h3>
@@ -434,10 +438,10 @@
                run short, with the lead time needed to act on it.</p>
           </div>
           <div class="case-cell case-cell--outcome">
-            <h3>Outcome</h3>
-            <p><strong>Planning stops depending on two memories.</strong> Shortages surface
-               weeks earlier instead of at the machine, and what those two people know is
-               written down where the whole team can use it.</p>
+            <h3>What we would expect</h3>
+            <p><strong>Planning would stop depending on two memories.</strong> Shortages would
+               surface weeks earlier instead of at the machine, and what those two people know
+               would be written down where the whole team can use it.</p>
           </div>
         </div>
       </article>
@@ -445,8 +449,8 @@
       <!-- ------------------------------ 03 ------------------------------- -->
       <article class="case reveal" data-model="retail">
         <div class="case-head">
-          <span class="sector">Model 03 — Multi-channel retail</span>
-          <h2>An online store that could not be trusted to know whether an item was actually in stock.</h2>
+          <span class="sector">If you sell through more than one channel</span>
+          <h2>An online store that cannot be trusted to know whether an item is actually in stock.</h2>
           <ul class="chips">
             <li class="chip chip--dark">Ecommerce</li><li class="chip chip--dark">Stores</li>
             <li class="chip chip--dark">Inventory</li><li class="chip chip--dark">Fulfilment</li>
@@ -456,14 +460,14 @@
         <div class="case-body">
           <div class="case-cell">
             <h3>Before</h3>
-            <p>The website held its own catalogue and its own stock figure, synced overnight.
-               Stores had a third view. Orders were cancelled after being accepted, and the same
-               product was described three different ways.</p>
+            <p>The website holds its own catalogue and its own stock figure, synced overnight.
+               Stores have a third view. Orders are cancelled after being accepted, and the same
+               product is described three different ways.</p>
           </div>
           <div class="case-cell">
             <h3>Architecture</h3>
             <p>One product record and one live stock position across every channel. Fulfilment
-               decided by rules rather than by whoever noticed the order first.</p>
+               decided by rules rather than by whoever notices the order first.</p>
           </div>
           <div class="case-cell">
             <h3>Platforms</h3>
@@ -480,9 +484,9 @@
                proposals between locations before something sells out.</p>
           </div>
           <div class="case-cell case-cell--outcome">
-            <h3>Outcome</h3>
-            <p><strong>Every channel tells the customer the same thing.</strong> Cancellations
-               caused by phantom stock stop. One catalogue change updates everywhere.</p>
+            <h3>What we would expect</h3>
+            <p><strong>Every channel would tell the customer the same thing.</strong> Cancellations
+               caused by phantom stock would stop. One catalogue change would update everywhere.</p>
           </div>
         </div>
       </article>
@@ -490,7 +494,7 @@
       <!-- ------------------------------ 04 ------------------------------- -->
       <article class="case reveal" data-model="service">
         <div class="case-head">
-          <span class="sector">Model 04 — Field service</span>
+          <span class="sector">If you run a field service operation</span>
           <h2>Engineers dispatched by phone, with the customer's history sitting in a filing cabinet.</h2>
           <ul class="chips">
             <li class="chip chip--dark">Service</li><li class="chip chip--dark">Field app</li>
@@ -501,14 +505,14 @@
         <div class="case-body">
           <div class="case-cell">
             <h3>Before</h3>
-            <p>Complaints arrived by phone and were written down. Engineers were assigned by
-               whoever was free. Spares availability was unknown until the engineer arrived.
-               Contract entitlements were checked manually, sometimes after the work was done.</p>
+            <p>Complaints arrive by phone and are written down. Engineers are assigned by
+               whoever is free. Spares availability is unknown until the engineer arrives.
+               Contract entitlements are checked by hand, sometimes after the work is done.</p>
           </div>
           <div class="case-cell">
             <h3>Architecture</h3>
             <p>The installed base, contract terms, service history and spares stock modelled as
-               one thing — so a ticket knows what it is entitled to before anyone travels.</p>
+               one thing &mdash; so a ticket knows what it is entitled to before anyone travels.</p>
           </div>
           <div class="case-cell">
             <h3>Platforms</h3>
@@ -525,54 +529,54 @@
                and service history so the van is loaded correctly the first time.</p>
           </div>
           <div class="case-cell case-cell--outcome">
-            <h3>Outcome</h3>
-            <p><strong>Fewer second visits.</strong> Entitlement is known before dispatch, history
-               travels with the engineer, and the customer can see where their request stands.</p>
+            <h3>What we would expect</h3>
+            <p><strong>Fewer second visits.</strong> Entitlement would be known before dispatch,
+               history would travel with the engineer, and the customer could see where their
+               request stands.</p>
           </div>
         </div>
       </article>
     </div>
   </section>
 
-  <!-- =========================== WHAT THEY SHARE ========================== -->
-  <section class="section section--lg s-carbon blueprint">
+  <!-- ============================ OUR OWN PRODUCTS ========================= -->
+  <section class="section section--lg s-carbon-deep blueprint">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">The common thread</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">Four different shapes. The same structural move.</h2>
+        <p class="label label--signal reveal">Our own products</p>
+        <h2 class="t-h2 reveal" style="--delay:.08s">The two things we built for ourselves.</h2>
+        <p class="lead reveal measure" style="--delay:.14s">
+          Both are early pilots you can open in a browser now. Each has its own page, including
+          where it stops.
+        </p>
       </div>
 
-      <div class="outcomes reveal">
-        <div class="outcome">
-          <span class="n">01</span>
-          <h3>The manual layer is the system</h3>
-          <p>In each shape, people are the integration layer — carrying information between
-             systems that should have been talking to each other.</p>
-        </div>
-        <div class="outcome">
-          <span class="n">02</span>
-          <h3>One definition, not one product</h3>
-          <p>The fix is never a single piece of software. It is agreeing what a customer,
-             a product and a stock position mean.</p>
-        </div>
-        <div class="outcome">
-          <span class="n">03</span>
-          <h3>Different interfaces, one reality</h3>
-          <p>Dealers, engineers, planners and customers each get their own experience of the same
-             underlying business.</p>
-        </div>
-        <div class="outcome">
-          <span class="n">04</span>
-          <h3>AI comes last</h3>
-          <p>Intelligence is worth adding once there is something coherent for it to reason
-             over. That order is what makes it give answers instead of paragraphs.</p>
-        </div>
-      </div>
+      <div class="cards cards--2" data-stagger=".08">
+        <article class="card card--dark card--hover reveal">
+          <div class="built-head">
+            <span class="label label--bare">Product</span>
+            <span class="eco-tag eco-tag--pilot">Pilot</span>
+          </div>
+          <h3 class="t-h3">PathWay AI</h3>
+          <p>A place for a student to work, inside the boundary their teacher set &mdash; with a
+             record of how the work happened, not a verdict on who wrote it.</p>
+          <a class="link link--dark" href="products.html#pathway">What it does, and where it stops
+            <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
+          </a>
+        </article>
 
-      <div class="principle reveal" style="margin-top:clamp(2.5rem,1.5rem + 3vw,4rem)">
-        <p class="label label--signal">The pattern</p>
-        <p>The business does not become more digital.<br>
-           It becomes connected — and then the digital part starts paying.</p>
+        <article class="card card--dark card--hover reveal">
+          <div class="built-head">
+            <span class="label label--bare">Product</span>
+            <span class="eco-tag eco-tag--pilot">Pilot</span>
+          </div>
+          <h3 class="t-h3">64Griddle</h3>
+          <p>Reads an AI prompt before you send it, marks where an assistant would have to
+             guess, and offers wording you accept or reject. You stay the author.</p>
+          <a class="link link--dark" href="products.html#griddle">What it does, and where it stops
+            <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
+          </a>
+        </article>
       </div>
     </div>
   </section>
@@ -587,7 +591,7 @@
       </h2>
       <div class="btn-row reveal" style="--delay:.14s">
         <a class="btn btn--primary" href="contact.html">
-          Architect your ecosystem
+          Start a conversation
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
         <a class="btn btn--ghost-dark" href="how-it-works.html">See how 64ARCS works</a>
