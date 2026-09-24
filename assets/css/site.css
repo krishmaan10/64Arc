@@ -2507,3 +2507,9 @@ html.js .dial { display: block; }
 .pilot-figure .d-label { fill: var(--ink-muted); }
 .pilot-figure .d-label.is-signal { fill: var(--signal-ink); }
 .pilot-figure .d-node-light { fill: #FFFFFF; stroke: var(--soft-grey); }
+
+/* ---- "Built and running" cards on the homepage ---- */
+.built-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
+.built-head .label { margin: 0; color: var(--ink-inv-faint); }
+.card--dark h3 { color: var(--ink-inv); }
+.card--dark .link { display: inline-flex; margin-top: 1.25rem; }
