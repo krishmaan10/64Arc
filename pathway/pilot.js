@@ -3303,6 +3303,7 @@ modules["preview-app"] = function (module, exports, require, __dirname, __filena
 'use strict';
 
 const { turn } = require('./session.js');
+const { classify } = require('./classify.js');
 const { draftEntry, summarise } = require('./record.js');
 const { MODES } = require('./modes.js');
 const identity = require('./identity.js');
@@ -3507,6 +3508,31 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
 
   const reply = (status, data) => ({ status, data });
 
+  /**
+   * Read typed words for a disclosure before anything is allowed to reject them.
+   *
+   * Every other check on a request can refuse it for a reason that has nothing to do with the student: a
+   * tab left open on another project, a message one character too long, a mode the teacher paused. Each
+   * of those used to run first, so "i want to die" sent from a stale tab, or at the end of a long message,
+   * was rejected with an error about tabs or length, and never answered or recorded. A disclosure is read
+   * first now, on any route that carries typed words, and answered with exactly what chat would say,
+   * because it is chat's own turn() that answers it: decide() returns support before anything else, so
+   * the model is never reached and the reply is identical by construction.
+   */
+  const supportFirst = async (text, { projectIdHint = null, modeHint = null, extra = {} } = {}) => {
+    if (typeof text !== 'string' || !text.trim()) return null;
+    if (!classify(text, { assignment: state.assignment }).support) return null;
+    const modeId = CHAT_MODES.includes(modeHint) ? modeHint : 'understand';
+    const result = await turn({ message: text, modeId, assignment: state.assignment, studentText: '', ask: async () => { throw new Error('a disclosure never reaches a model'); }, who: who(), at: Date.now(), history: [] });
+    if (result.shown.kind !== 'support') return null;
+    // Filed under the project the student was looking at when they wrote it, if it is a real one; the
+    // desk raises a disclosure on every project anyway, so this only decides where it sits in their chat.
+    const projectId = projectIdHint && projectById(projectIdHint) ? projectIdHint : currentId;
+    const modes = (work.get(projectId) || mine()).modes;
+    const stored = await record({ type: 'request', projectId, ...result.record, shown: result.shown, policy: [...modes], ...extra });
+    return { shown: result.shown, stored };
+  };
+
   /** One request. Returns null for anything that is not the API, so a transport can serve its files. */
   async function handle(method, pathname, body) {
     await ready;
@@ -3524,6 +3550,11 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
       });
     if (method !== 'POST' || !ROUTES.includes(pathname)) return pathname.startsWith('/api/') ? reply(404, { error: 'Page not found.' }) : null;
     if (!body || typeof body !== 'object' || Array.isArray(body)) return reply(400, { error: 'Send a JSON object.' });
+    // Before any check that could refuse the request for a reason unrelated to the student.
+    if (pathname === '/api/turn') {
+      const support = await supportFirst(body.message, { projectIdHint: body.projectId, modeHint: body.modeId });
+      if (support) return reply(200, { ...support.shown, mode: CHAT_MODES.includes(body.modeId) ? body.modeId : 'understand' });
+    }
     // The visible client stamps every write with the project it was editing. Another tab may have
     // switched the session since that screen was rendered; never save its words into the new project.
     if (pathname !== '/api/project' && body.projectId !== undefined && body.projectId !== currentId)
