@@ -557,6 +557,12 @@ const SUPPORT = [
   /\b(?:beat|hit|hurt|thrash) me\b/i,
   /\b(?:maar (?:denge|dega|degi|dalenge)|marenge mujhe)\b/i,
   /\b(?:marna chahta|marna chahti|mar jaana chahta|mar jaana chahti|jeena nahi (?:hai|chahta|chahti)|zindagi khatam|khud ko (?:hurt|nuksaan))\b/i,
+  // "mujhe marna hai" is "I want to die". Only with "mujhe" beside it: "ratta marna hai" is cramming and
+  // "tukka marna" is guessing, and both are ordinary things for a student to say about a test.
+  /\b(?:mujhe mar(?:na| jaana| jana) (?:hai|h)|(?<!\b(?:ratta|rata|tukka|tukke)\s+)marna hai mujhe)\b/i,
+  // "kms" is "kill myself", as above. It is also kilometres in a Geography answer, so it counts only where
+  // it cannot be a distance: as the whole message, or where a verb is wanted ("wanna kms", "going to kms").
+  /^\s*kms(?:\s+(?:lol|lmao|fr|rn|tbh|ngl|bro|yaar))*[\s.!?]*$|\b(?:wanna|gonna|finna|imma|(?:want|going|about|tryna) to)\s+kms\b(?!\s*(?:\/|per\b|an? hour\b|away\b|long\b|from\b|to\b))/i,
   /\b(?:better off without me|happier if i was gone|nobody would (?:notice|care) if i)\b/i,
   /\b(?:panic attack|cant breathe|can'?t breathe)\b/i,
 ];
