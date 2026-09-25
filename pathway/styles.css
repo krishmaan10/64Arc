@@ -642,3 +642,72 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
 
 /* Explain fixture replies where the student reads them, including narrow screens. */
 .sample-notice { padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); color: var(--ink); font-size: 14px; line-height: 1.5; }
+
+/* Practice questions. Written in advance, answered first, explained last. The intended answer is marked in
+   words and by a rule down its side, never by a green "right" or a red "wrong": nothing here is a mark. */
+.practice-card { background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); max-width: 92%; scroll-margin-top: 70px; scroll-margin-bottom: 24px; overflow-wrap: anywhere; }
+.chat-turn + .practice-card, .practice-card + .chat-turn, .practice-card + .practice-card { margin-top: 30px; }
+.practice-head { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.practice-label, .practice-draft { font-size: 11.5px; font-weight: 700; letter-spacing: .4px; line-height: 1.45; border-radius: 8px; padding: 4px 10px; }
+.practice-label { background: var(--accent-soft); color: var(--accent-ink); }
+.practice-draft { background: var(--sun-soft); color: var(--sun-ink); }
+.practice-card h3 { font-family: var(--font-display); font-size: 19px; line-height: 1.3; margin: 4px 0 6px; text-wrap: balance; }
+.practice-card h3:focus, .practice-step:focus { outline: none; }
+.practice-card h3, .practice-step { scroll-margin-top: 84px; }
+.practice-card p { margin: 8px 0; line-height: 1.65; }
+.practice-why, .practice-scope, .practice-footnote { font-size: 13px; color: var(--muted); }
+.practice-scenario { font-size: 15.5px; background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 14px; }
+.practice-question { font-weight: 700; }
+.practice-form fieldset { border: 0; padding: 0; margin: 14px 0 10px; display: grid; gap: 8px; min-width: 0; }
+.practice-form legend { font-weight: 700; font-size: 15.5px; line-height: 1.5; margin-bottom: 8px; padding: 0; }
+.practice-form > label { display: block; font-size: 13.5px; font-weight: 700; color: var(--ink-2); margin: 10px 0 6px; }
+.practice-card label.practice-option { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; margin: 0; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); padding: 12px 14px; min-height: 44px; cursor: pointer; font-size: 15px; font-weight: 400; line-height: 1.5; color: var(--ink); }
+.practice-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.practice-option input[type="radio"], .practice-option input[type="checkbox"] { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
+.practice-option .practice-tag, .practice-option small { grid-column: 2; }
+.practice-option.is-first { border-style: dashed; }
+.practice-first-words { color: var(--muted); font-size: 13px; }
+.practice-tag { display: inline-block; width: fit-content; font-size: 11.5px; font-weight: 700; letter-spacing: .2px; color: var(--ink-2); background: var(--surface-2); border-radius: 999px; padding: 3px 9px; }
+.practice-confidence { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 8px; }
+.practice-subhead { display: block; width: 100%; font-size: 13.5px; font-weight: 700; color: var(--ink-2); margin: 12px 0 4px; }
+.practice-toggle { padding: 8px 14px; }
+.practice-toggle[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.practice-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.practice-about { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 12px; }
+.practice-step { font-size: 15px; margin: 14px 0 6px; }
+.practice-lead { font-weight: 600; color: var(--ink); }
+.practice-hint { border-left: 3px solid var(--violet); background: var(--surface-2); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.practice-rows { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 8px; }
+.practice-row { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 14px; display: grid; gap: 4px; }
+.practice-row.is-written { border-left: 4px solid var(--accent); }
+.practice-row.is-mine { background: var(--surface-2); }
+.practice-row strong { font-size: 15px; line-height: 1.5; }
+.practice-row .practice-note { font-size: 14px; color: var(--ink-2); margin: 0; }
+.practice-why-block h4 { font-size: 12.5px; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); margin: 16px 0 4px; }
+.practice-said, .practice-transfer, .practice-carried { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 14px; margin: 12px 0; }
+.practice-said p, .practice-transfer p { margin: 6px 0 0; }
+.practice-refusal { border-left: 3px solid var(--coral); background: var(--coral-soft); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 12px 0; }
+.practice-refusal strong { color: var(--coral-ink); }
+.practice-card.is-support { border-color: var(--rose); }
+.practice-support { font-weight: 700; color: var(--rose-ink); }
+.practice-paused { background: var(--sun-soft); color: var(--sun-ink); padding: 10px 14px; border-radius: var(--radius-sm); font-weight: 600; }
+.practice-finished summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--ink-2); padding: 4px 0; }
+.practice-how summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: var(--accent-ink); padding: 6px 0; }
+.practice-how li { font-size: 13.5px; }
+.practice-panel { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 16px; }
+.practice-panel .practice-card { max-width: 100%; margin-top: 18px; box-shadow: none; }
+.practice-concepts { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 8px; }
+.practice-concepts li { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 14px; }
+.practice-concepts li div { display: grid; gap: 2px; font-size: 14.5px; }
+.practice-concepts .text-link { white-space: nowrap; flex-shrink: 0; }
+@media (max-width: 640px) { .practice-card { max-width: 100%; padding: 16px; } .practice-concepts li { flex-wrap: wrap; } }
+
+/* The desk's practice card: one block per idea. */
+.desk-ideas { display: grid; gap: 14px; margin-top: 12px; }
+.desk-idea { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; }
+.desk-idea-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px; }
+.desk-idea-head h3 { margin: 0; font-size: 16px; }
+.desk-idea-legend { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 4px; font-size: 14px; }
+.desk-idea-legend li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.desk-mixup { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; }
+.desk-mixup p { margin: 4px 0; }

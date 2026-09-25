@@ -667,14 +667,16 @@ const PRODUCE_IN_ANOTHER_LANGUAGE =
  * @param {object} [context]
  * @param {object} [context.assignment]  the teacher's terms; only `brief` is read here
  */
-function classify(message, { assignment } = {}) {
+function classify(message, { assignment, answerBox = false } = {}) {
   const text = typeof message === 'string' ? message : '';
   const signals = [];
   const add = (signal, why, source) => {
     if (!signals.some((s) => s.signal === signal && s.why === why)) signals.push({ signal, why, source });
   };
   const closedUp = closeUpSpacedLetters(text);
-  const requirementQuestion = asksWhatIsRequired(text);
+  // An answer typed into a practice question is not a question about what the task requires, so that one
+  // exemption cannot apply there. Everything else, support included, reads identically either way.
+  const requirementQuestion = answerBox ? false : asksWhatIsRequired(text);
   for (const pattern of PATTERNS) {
     const found = pattern.test.exec(text) || (closedUp !== text ? pattern.test.exec(closedUp) : null);
     if (!found) continue;
@@ -753,7 +755,7 @@ function classify(message, { assignment } = {}) {
   };
 }
 
-module.exports = { classify, closeUpSpacedLetters, PATTERNS, INTENT, SUPPORT, CONFIDENCE, LEARNED_SIGNAL, briefOverlap, longestSharedRun, asksWhatIsRequired, PASTED_RUN };
+module.exports = { classify, closeUpSpacedLetters, PATTERNS, INTENT, SUPPORT, CONFIDENCE, LEARNED_SIGNAL, briefOverlap, longestSharedRun, asksWhatIsRequired, PASTED_RUN, IMPERATIVE_ASK };
 
 };
 modules["boundary"] = function (module, exports, require, __dirname, __filename) {
@@ -1023,7 +1025,85 @@ function decide({ message, modeId, assignment, studentText = '', classified, his
   };
 }
 
-module.exports = { decide, REFUSAL, SUPPORT, OFFER, offers, ASSENT, isRepeat, recentRefusal };
+// ---------------------------------------------------------------------------------------------------------
+// The answer box: what happens to words a student types into a practice question.
+//
+// An answer is not a request, and reading it as one refuses honest answers. Measured on 85 honest reasons
+// written for the practice items, chat's boundary refused, declined or redirected 18: "its biased so you
+// cant use it at all" as pressure, "you compare them and decide" as an override, "you have to think about
+// who loses" as off-task. None of those is asking PathWay for anything. So an answer box acts on much less
+// than chat does, and on exactly these things, in this order:
+//
+//   1. A message about the student. The same field decide() uses, so an answer box can never be looser
+//      than chat here; it is checked before anything else, and nothing is allowed to run first.
+//   2. An attempt to change PathWay's instructions, when the patterns caught it.
+//   3. "I don't know" and its near relatives, as a whole message, when no option was chosen.
+//   4. The brief carried back, a request to hide where writing came from, or a numbered set question,
+//      whatever the phrasing.
+//   5. A request for the work aimed at PathWay: only when the words are shaped like an ask, so "the owner
+//      would lie to make the workers look bad" is an answer, and "can you write this for me" is not.
+//   6. Everything else is the student's own words: recorded, never judged, never used to choose anything.
+//
+// Nothing an answer box returns is generated. It can refuse, support, or pass; it cannot obtain text.
+// ---------------------------------------------------------------------------------------------------------
+
+const ADDRESSED_ASK = /\b(?:can|could|will|would)\s+(?:you|u)\b|\bfor me\b|\b(?:please|pls|plz)\b/i;
+// A message that opens with a verb aimed at PathWay. This only widens the gate: a refusal still needs a
+// request for the work to be read in the same words, so an honest answer that happens to open with
+// "change" is not refused for it. "change", "reword" and their relatives are here because without them
+// "change my wording so it does not look ai written" was refused in chat and passed in an answer box.
+const LEADING_ASK = /^\s*(?:(?:please|pls|plz|just|now|ok|okay|so)[\s,]+)*(?:write|draft|compose|create|generate|produce|finish|complete|continue|expand|extend|rewrite|reword|rephrase|paraphrase|change|fix|edit|tweak|humani[sz]e|make|turn|give me|tell me|show me|send me|do)\b/i;
+
+// Whole-message, anchored, closed: nothing can ride along on one of these. "idk and write my conclusion"
+// is not a not-yet; it is read in full and refused.
+const NOT_YET = [
+  /^(?:i\s+)?(?:do\s+not|dont|don't|don’t)\s+know(?:\s+yet)?$/,
+  /^(?:idk|dunno|no idea|no clue|not sure|unsure|i'?m not sure|i’m not sure|im not sure|pass|skip|give up|i give up|no)(?:\s+yet)?$/,
+  /^(?:(?:can|could)\s+(?:you|u)\s+)?(?:please\s+|pls\s+|just\s+)*(?:give|tell|show)\s+me\s+(?:the\s+answer|what\s+the\s+answer\s+is)(?:\s+(?:please|pls))?(?:\s+to\s+this(?:\s+question)?)?$/,
+  /^what(?:'s|’s|s| is)\s+the\s+answer(?:\s+to\s+this(?:\s+question)?)?$/,
+];
+const normaliseAnswer = (t) => String(t || '').trim().toLowerCase().replace(/[\s.!?,]+$/g, '').replace(/\s+/g, ' ');
+const isNotYet = (t) => NOT_YET.some((p) => p.test(normaliseAnswer(t)));
+
+function asksPathWay(text) {
+  const { IMPERATIVE_ASK } = require('./classify.js');
+  return IMPERATIVE_ASK.test(text) || ADDRESSED_ASK.test(text) || LEADING_ASK.test(text);
+}
+
+/**
+ * @param {string} text          what the student typed
+ * @param {object} options
+ * @param {object} options.assignment  as for decide(), including otherBriefs
+ * @param {boolean} options.choiceMade whether an option was chosen with this text
+ * @returns {{ kind: 'support'|'refusal'|'not-yet'|'pass', category?, refusal?, read, chat }}
+ *          `read` and `chat` are telemetry: the reader's reading, and what chat's decide() would have done.
+ */
+function decideAttempt(text, { assignment, choiceMade = false } = {}) {
+  const { classify, CONFIDENCE, LEARNED_SIGNAL } = require('./classify.js');
+  const classified = classify(text, { assignment, answerBox: true });
+  const chat = decide({ message: text, modeId: 'question', assignment, studentText: '', classified: classify(text, { assignment }), history: [] });
+  const telemetry = { read: chat.read || null, chat: { kind: chat.kind, category: chat.category || null } };
+
+  if (classified.support) return { kind: 'support', category: 'wellbeing', refusal: SUPPORT(), ...telemetry };
+  if (classified.override && classified.override.source === 'pattern') return { kind: 'refusal', category: 'override', refusal: REFUSAL.override([]), ...telemetry };
+  if (!choiceMade && isNotYet(text)) return { kind: 'not-yet', ...telemetry };
+
+  const always = classified.signals.find((s) => s.source === 'brief' || (s.source === 'pattern' && (s.signal === 'evade' || s.signal === 'answer')));
+  if (always) return { kind: 'refusal', category: always.signal, refusal: REFUSAL[always.signal]([]), ...telemetry };
+
+  if (asksPathWay(text)) {
+    const WORK = ['produce', 'extend', 'disguise', 'evade'];
+    const pattern = classified.signals.find((s) => s.source === 'pattern' && WORK.includes(s.signal));
+    const l = classified.learned;
+    const reader = l && l.decision === 'refuse' && l.confidence >= CONFIDENCE.refuse && WORK.includes(LEARNED_SIGNAL[l.label])
+      ? { signal: LEARNED_SIGNAL[l.label] } : null;
+    const hit = pattern || reader;
+    if (hit) return { kind: 'refusal', category: hit.signal, refusal: REFUSAL[hit.signal]([]), ...telemetry };
+  }
+  return { kind: 'pass', ...telemetry };
+}
+
+module.exports = { decide, REFUSAL, SUPPORT, OFFER, offers, ASSENT, isRepeat, recentRefusal, decideAttempt, isNotYet, asksPathWay };
 
 };
 modules["exemplars"] = function (module, exports, require, __dirname, __filename) {
@@ -1155,6 +1235,11 @@ modules["project-replies"] = function (module, exports, require, __dirname, __fi
 //
 // The English project is not here. Its replies are the exemplars themselves, and having one copy of them
 // is worth more than the symmetry of moving them.
+//
+// There is no "question" reply for any project any more. "Check my understanding" asks a written practice
+// question instead (lib/practice.js), because a fixed paragraph in that mode had to be about the topic, and
+// the History one ended up handing over a ready-made argument about Marius's reforms: a paragraph of the
+// essay, offered to every student who asked to be tested.
 
 const PROJECT_REPLIES = {
   'roman-republic': {
@@ -1184,19 +1269,6 @@ const PROJECT_REPLIES = {
       '6. Day three, 20 minutes: read it aloud, check every source is used and not just named, check the word count.',
       '',
       'That is about two and a half hours. The reading is the part students skip and the part the marks are in. Which evening can you give to step three?',
-    ].join('\n'),
-    question: [
-      'Let us test the explanation you are leaning on, because the strongest ones have the best objections.',
-      '',
-      'Say your answer is military reform: that Marius let landless men join, so soldiers looked to their general for land rather than to the Senate. Reasonable. Now answer this.',
-      '',
-      'The reforms are usually dated to around 107 BC. The Republic does not end until Actium in 31 BC. That is three generations. What was holding it together for seventy-six years, and what finally stopped holding?',
-      '',
-      'If your answer is "it was collapsing the whole time", you need to explain Sulla, who marched on Rome, won, held absolute power, and then resigned it. Why would a man do that in a system that had already died?',
-      '',
-      'And if your answer is personal ambition instead, ask yourself why ambition found an opening then and not a century earlier. Rome had ambitious men throughout.',
-      '',
-      'Pick one of those two and write me your answer in a couple of sentences. I will push on whichever you choose.',
     ].join('\n'),
     sources: [
       'You need three, and one has to be ancient. Ancient sources tell you what people at the time thought was happening; modern historians tell you what the evidence looks like with the ending known. Use both, and say which is which.',
@@ -1242,17 +1314,6 @@ const PROJECT_REPLIES = {
       '',
       'That is about an hour and fifty minutes. Step three is the one that turns a description into an argument. Which two cities are you taking?',
     ].join('\n'),
-    question: [
-      'Let us test your position against the case that is hardest to answer.',
-      '',
-      'Say you are for the ban, on air quality. A reasonable case. Now: the centre of a city is where the fewest people live and the most people arrive. If you remove cars from it, where do those journeys go? Around it, usually, through the streets where people do live. Does your evidence say the pollution fell overall, or moved?',
-      '',
-      'If you are against the ban, take this one. Oslo did not ban cars; it removed the parking, and the traffic fell anyway because there was nowhere to stop. Shops feared losing customers and footfall rose. If the fear did not come true there, what makes your city different?',
-      '',
-      'And whichever side you are on, answer this: a wheelchair user who cannot use a bus. What does your policy do for them? "Exemptions" is a start, not an answer. Who decides, and how hard is it to get one?',
-      '',
-      'Pick whichever of those three you find hardest and write me two sentences. That paragraph is usually the one that gets the marks.',
-    ].join('\n'),
     sources: [
       'Four to start with. Two are official evaluations, one is a campaign, one is raw statistics. Say which is which when you cite them, because a marker notices.',
       '',
@@ -1296,17 +1357,6 @@ const PROJECT_REPLIES = {
       '5. Tomorrow, 15 minutes: check every number has a source and a unit. A number without a unit is not evidence.',
       '',
       'That is about an hour and fifty minutes. Step two is where the marks are. Which box are you starting with?',
-    ].join('\n'),
-    question: [
-      'Let us test how you are using the numbers, because that is where evaluations usually come apart.',
-      '',
-      'Deaths per terawatt hour is the usual safety statistic, and nuclear comes out very low, lower than almost anything. Fair. Now: does that measure capture what people are actually afraid of? An accident that makes a region uninhabitable for decades kills few people directly. Is "deaths per unit of electricity" the right measure of that harm, and if not, what would be?',
-      '',
-      'Second. Life-cycle emissions for nuclear are very low, comparable to wind. That is a strong argument. But a plant takes something like ten to fifteen years to build. If the target is 2050, how much does a low number matter if it arrives late? Does that change which box decides your answer?',
-      '',
-      'Third, and this is the one people dodge: if you are against nuclear, what replaces it, and what are the emissions and the build time of that? An argument against something is only finished when it says what instead.',
-      '',
-      'Take whichever of those three you find hardest and answer it in two or three sentences.',
     ].join('\n'),
     sources: [
       'Four, and one of them is published by the industry. Using it is fine; using it without saying so is not.',
@@ -3280,6 +3330,900 @@ function findings(draft) {
 module.exports = { findings, quotations, sentences, LIMIT, LONG_QUOTE_WORDS, QUOTE_HEAVY };
 
 };
+modules["practice-content"] = function (module, exports, require, __dirname, __filename) {
+// Generated by scripts/build-pilot.js from lib/practice-content.js: reviewed practice questions only.
+module.exports = {
+ "CONCEPTS": {},
+ "ITEMS": {},
+ "PRACTICE": {
+  "homework-essay": {
+   "concepts": [],
+   "avoid": [
+    "homework",
+    "home work"
+   ]
+  },
+  "roman-republic": {
+   "concepts": [],
+   "avoid": [
+    "rome",
+    "roman",
+    "romans",
+    "republic",
+    "caesar",
+    "sulla",
+    "marius",
+    "augustus",
+    "octavian",
+    "senate",
+    "senator",
+    "senators",
+    "consul",
+    "consuls",
+    "polybius",
+    "sallust",
+    "cicero",
+    "catiline",
+    "actium",
+    "gracchus",
+    "gracchi",
+    "legion",
+    "legions",
+    "empire",
+    "emperor"
+   ]
+  },
+  "car-free-cities": {
+   "concepts": [],
+   "avoid": [
+    "car",
+    "cars",
+    "car-free",
+    "traffic",
+    "congestion",
+    "parking",
+    "oslo",
+    "london",
+    "ban",
+    "banned",
+    "banning",
+    "pedestrian",
+    "pedestrianised",
+    "driving",
+    "drivers",
+    "vehicle",
+    "vehicles",
+    "bus",
+    "buses",
+    "cycling",
+    "pollution",
+    "city centre",
+    "city centres"
+   ]
+  },
+  "nuclear-climate": {
+   "concepts": [],
+   "avoid": [
+    "nuclear",
+    "reactor",
+    "reactors",
+    "uranium",
+    "plutonium",
+    "chernobyl",
+    "fukushima",
+    "radiation",
+    "radioactive",
+    "power station",
+    "power plant",
+    "electricity",
+    "kwh",
+    "kilowatt",
+    "terawatt",
+    "carbon",
+    "emissions",
+    "climate",
+    "fossil",
+    "renewable"
+   ]
+  }
+ }
+};
+};
+modules["practice"] = function (module, exports, require, __dirname, __filename) {
+'use strict';
+
+// The practice exchange: "Check my understanding" as retrieval practice with feedback.
+//
+// The student answers first. A wrong option was written to stand for one named mix-up, so choosing it gets
+// an exact diagnosis and one hint, then a second try. Every route ends in an explanation of the principle,
+// applied to a second fresh case, then an optional say-it-back and a question to take to their own work.
+// The idea comes back about a day later as a new question, because a right answer in the same session is a
+// poor sign of learning and a later one is a better one (Roediger & Karpicke 2006; Yang et al. 2021).
+//
+// What PathWay judges is the option chosen, by exact lookup, and nothing else. It never reads a student's
+// words for meaning, because a program that matches words cannot tell "shows a cause" from "doesn't show a
+// cause", and a false "that's right" is the more harmful error (Ding et al. 2020; Li et al. 2023). Typed
+// words are screened by lib/boundary.js decideAttempt() for requests for the work and for a message about
+// the student, recorded, and never marked.
+//
+// Everything here is a pure function over the record. Nothing touches storage or the clock: the caller
+// passes `now`. So a reload, a restart, the browser pilot and a replayed chain all land on the same step.
+// docs/PRACTICE.md has the evidence behind each choice, and which numbers are choices rather than findings.
+
+const { CONCEPTS, ITEMS, PRACTICE } = require('./practice-content.js');
+
+// Design parameters. Each is a choice made for this pilot, not a number taken from research; see
+// docs/PRACTICE.md. No study sets an optimal number of attempts (Koedinger & Aleven 2007).
+const HOUR = 60 * 60 * 1000;
+const PARAMS = {
+  MAX_ATTEMPTS: 2,
+  EXPIRE_AFTER: 20 * HOUR,      // an open question left this long is closed at the next start
+  REASK_AFTER: 20 * HOUR,       // an idea comes back, as a new case, after about a day
+  REVIEW_AFTER: 72 * HOUR,      // and again a few days after it last went well
+  MAX_REASKS: 3,
+  TEXT_MAX: 2000,               // what the server accepts; the interface asks for less
+  QUICK_REVEAL: 10 * 1000,      // reaching the explanation this fast, without the intended option, is noted
+  QUICK_REVEAL_NOTE_AT: 3,      // once it has happened this many times, and never judged
+  DESK_MIN_MET: 3,
+  DESK_MIN_CHOSE: 2,
+  DESK_MIN_SHARE: 1 / 3,
+};
+
+// An option quoted in a sentence. Most options are sentences with their own full stop, so a sentence that
+// ends on the quote takes no second one, and a clause that runs on after it drops the option's.
+const quoted = (text) => `“${text}”${/[.?!]$/.test(text) ? '' : '.'}`;
+const inline = (text) => `“${text.replace(/[.]$/, '')}”`;
+
+// Every fixed word a student sees. A test scans all of it for praise, verdicts and marks.
+const TEXT = {
+  label: 'PRACTICE QUESTION · Written in advance by PathWay’s authors',
+  draftLabel: 'DRAFT · Not yet reviewed by a teacher',
+  opening: (idea) => `Here’s a practice question on an idea this project depends on: ${idea}. You answer first; if you need it, you get a hint and a second try, and the full explanation comes at the end whatever you choose. Ready to have a go?`,
+  stillOpen: (idea) => `You have a practice question open on “${idea}”. Carry on with it in the card, or finish or leave it there to start another. Which would you like to do?`,
+  noneServable: 'Practice questions for this project are waiting for a teacher to review them. Until then, which part of the task would you like to understand or plan?',
+  allPractised: 'You have practised every idea written for this project for now. Each one comes back after about a day, as a new question. Would you like to practise one anyway?',
+  whyAsked: (word) => `Chosen because your message mentioned “${word}”.`,
+  whyNext: 'Chosen as the next idea for this project.',
+  whyNoCue: 'PathWay can’t write a question from what you typed, so it chose from the ones written in advance.',
+  whyChosen: 'You chose this idea.',
+  whyDue: 'Back after a day: a new question on an idea you practised before.',
+  whyReview: 'Back for a check: a new question on an idea you last practised a few days ago.',
+  whyAnyway: 'You asked to practise one anyway: this is the idea you practised longest ago.',
+  scope: 'These questions are about ideas your project depends on, set in other situations. PathWay doesn’t discuss your own argument here; that’s yours to build.',
+  checkedLine: 'PathWay checks only which option you choose. Your words are never marked.',
+  needChoice: 'Choose the option closest to your answer, or press “I don’t know yet”. Your words are still in the box.',
+  afterIntendedFirst: (opt) => `You chose ${inline(opt)}: the answer this question was written to have. That tells PathWay which option you picked. It doesn’t show what anyone understands, and a lucky guess looks the same. Read why below.`,
+  afterIntendedSecond: (opt) => `On your second try you chose ${inline(opt)}: the answer this question was written to have. Here’s why.`,
+  afterGuessMarked: 'You marked this as a guess, so the reasoning below matters more than the pick.',
+  reasonTierIntro: 'One more step before the explanation.',
+  youChose: (opt) => `You chose ${quoted(opt)}`,
+  writtenFor: (name) => `This option was written to stand for one mix-up: ${name}.`,
+  hintLead: 'Hint:',
+  againLine: 'Have another go: choose again. Your first choice is still there if you want it.',
+  sureMixup: 'You marked this as sure. Worth a close look: mix-ups people feel sure about are often the easiest to fix once they see why.',
+  afterNotYet: 'Not knowing yet is a fine place to start. Having a go before you’re told tends to help the explanation stick.',
+  afterMixupSecond: (opt, written) => `You chose ${quoted(opt)} The answer this question was written to have is ${quoted(written)} Here’s why:`,
+  afterStuck: (written) => `The answer this question was written to have is ${quoted(written)} Here’s why:`,
+  leftAfterAttempt: 'Before you go, here’s the explanation, so a mix-up isn’t the last thing on screen.',
+  leftBeforeAttempt: 'Left without an answer. This question will come back another time.',
+  carried: (opt) => `Last time you left a question after choosing ${quoted(opt)} Here’s what that option misses, and the explanation, before your new question.`,
+  sayBackOffer: 'Can you say the idea in your own words? (optional)',
+  sayBackPrompt: 'Now put the idea in your own words, without looking. One or two sentences. (Optional)',
+  ownCheckPrompt: 'Which of these ideas does your sentence contain? Tick the ones you see.',
+  ownCheckNote: 'PathWay doesn’t read your sentence for meaning, so it can’t judge it. Your ticks are kept as your own check, not PathWay’s.',
+  ownCheckSaved: (k, n) => `Saved as your own check: ${k} of ${n} ideas.`,
+  transferLead: 'Take it to your work:',
+  comesBack: 'This idea comes back after about a day, as a new question. How you do then is a better sign of what stuck than how you did today.',
+  refusalTail: 'Your question is still open.',
+  claimOffer: 'If that was your answer to the question, say so and it will be treated as one. Your teacher will see your words, how PathWay first read them, and that you said it was an answer.',
+  claimed: 'Treated as your answer. Your teacher will see your words, how PathWay first read them, and that you said it was an answer.',
+  paused: 'Your teacher has paused practice questions for this project.',
+  stale: 'This question moved on in another tab. Reload to see where it is.',
+  finishFirst: 'Finish this question first: “Show me the explanation” is always one tap away.',
+  pilotNote: 'In this browser version the questions and their answers are part of the page’s own code, because there is no server to keep them. Looking them up there skips the practice. Nothing is marked, so that is all it costs.',
+  howChecked: [
+    'Your choice is compared with the answer the question’s authors marked. That tells PathWay which option you picked. It doesn’t show what anyone understands, and a lucky guess looks the same as knowing.',
+    'Each other option was written to stand for one particular mix-up. Picking one isn’t a verdict on you; it decides which hint you see.',
+    'What you type is read the way a chat message is read (for requests for your work, and for messages about how you are), saved with this question, and never marked. A program that matches words can’t tell “shows a cause” from “doesn’t show a cause”, so PathWay doesn’t try.',
+    'You get two tries with one hint between them, then the explanation, whatever you choose. Two is a choice made for this pilot, not a number from research.',
+    'Nothing here is a mark or a grade. Your choices and words go in your activity record, which a teacher can read.',
+    'Choosing the intended answer today is a start. If you choose it again when the idea comes back as a new question, that is a better sign it stuck. These questions don’t mark your project, and PathWay doesn’t claim they improve it.',
+  ],
+};
+
+// Words that must never appear in practice text: verdicts, praise, marks and comparisons. Evidence that
+// feedback about the self rather than the task can make learning worse: Kluger & DeNisi (1996).
+const BANNED = /\b(?:correct|incorrect|wrong|well done|great|excellent|perfect|brilliant|awesome|nailed|you understand|you'?ve got it|you’ve got it|mastered|mastery|score|scores|points|streak|badge|rank|ranking|level)\b|!|%/i;
+const CONTENT_VERDICT = /\b(?:correct|incorrect|wrong|right|well done|great|excellent|perfect|brilliant|awesome|you understand|mastered|score)\b|!/i;
+
+// ---------------------------------------------------------------------------------------------------------
+// Deterministic ordering and hashing, with no node: requires, so both run in the browser bundle.
+// ---------------------------------------------------------------------------------------------------------
+
+function fnv1a(text) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i += 1) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** A shuffle fixed by its seed, so the stored order and a recomputed one always agree. */
+function order(ids, seed) {
+  const out = [...ids];
+  const random = mulberry32(fnv1a(String(seed)));
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+function canonical(value) {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
+  return JSON.stringify(value);
+}
+
+/**
+ * A fingerprint of an item's wording. An edit that keeps the id changes this, and the lock test fails, so
+ * a record's `matched` keeps its meaning. A teacher's sign-off is not wording, so it is left out.
+ */
+function itemHash(item) {
+  const { reviewed, ...wording } = item;
+  return fnv1a(canonical(wording)).toString(16).padStart(8, '0');
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// What can be served.
+// ---------------------------------------------------------------------------------------------------------
+
+const DEFAULT_CONTENT = { CONCEPTS, ITEMS, PRACTICE };
+
+/** The ideas this project can ask about now, each with the items that may be shown. */
+function servable(projectId, { content = DEFAULT_CONTENT, serveDrafts = false } = {}) {
+  const plan = content.PRACTICE[projectId];
+  if (!plan) return [];
+  const out = [];
+  for (const conceptId of plan.concepts) {
+    const concept = content.CONCEPTS[conceptId];
+    if (!concept) continue;
+    const items = Object.values(content.ITEMS).filter((it) => it.concept === conceptId && (it.reviewed || serveDrafts));
+    // Two or more, so that when an idea comes back it is a new case rather than the same question again.
+    if (items.length >= 2) out.push({ concept, items });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// The record, folded into exchanges.
+// ---------------------------------------------------------------------------------------------------------
+
+function newExchange(e, projectId) {
+  return {
+    id: e.exchange, projectId, concept: e.concept, item: e.item, itemHash: e.itemHash,
+    order: e.order || [], reasonOrder: e.reasonOrder || null, chosenBy: e.chosenBy || 'new', cue: e.cue || null,
+    requestSeq: Number.isInteger(e.requestSeq) ? e.requestSeq : null, carried: e.carried || null,
+    openedAt: e.at || 0, openSeq: e.seq, events: [e], attempts: [], reason: null, sayback: null, check: null, closed: null,
+    shownAt: e.at || 0,
+  };
+}
+
+/**
+ * Every exchange in one project, oldest first, rebuilt from the record. Pure.
+ *
+ * Besides the practice events it reads the requests typed inside a question (via 'practice'): a refusal
+ * still waiting for "It was my answer", the words a claim points at, and the support reply that closed one.
+ * @returns {{ exchanges: object[], open: object|null }}
+ */
+function fold(events, projectId, { now = Date.now(), content = DEFAULT_CONTENT } = {}) {
+  const map = new Map();
+  const typed = new Map();
+  for (const e of events || []) {
+    if (!e || e.projectId !== projectId) continue;
+    if (e.type === 'request' && e.via === 'practice') { typed.set(e.seq, e); continue; }
+    if (e.type !== 'practice') continue;
+    if (e.act === 'open') { map.set(e.exchange, newExchange(e, projectId)); continue; }
+    const x = map.get(e.exchange);
+    if (!x) continue;
+    x.events.push(e);
+    if (e.act === 'attempt') { x.attempts.push(e); x.shownAt = e.at || x.shownAt; }
+    else if (e.act === 'reason') x.reason = e;
+    else if (e.act === 'sayback') x.sayback = e;
+    else if (e.act === 'check') x.check = e;
+    else if (e.act === 'close') x.closed = e;
+  }
+  const exchanges = [...map.values()];
+  for (const x of exchanges) {
+    x.step = x.events.length;
+    // A claimed answer keeps its words in the request it was typed as; they are read from there.
+    const words = (event) => (event && event.how === 'claimed' && typed.has(event.claimedSeq) ? typed.get(event.claimedSeq).asked || '' : (event && event.text) || '');
+    for (const a of x.attempts) a.words = words(a);
+    if (x.sayback) x.sayback.words = words(x.sayback);
+    x.typed = [...typed.values()].filter((r) => r.exchange === x.id);
+    // A refusal at this step that has not been claimed: shown again after a reload, and claimable.
+    x.refused = !x.closed ? x.typed.filter((r) => r.step === x.step && r.outcome === 'refused').at(-1) || null : null;
+    x.support = x.closed && x.closed.why === 'support' ? typed.get(x.closed.requestSeq) || null : null;
+    x.state = stateOf(x, content, now);
+  }
+  const open = exchanges.filter((x) => !x.closed).at(-1) || null;
+  return { exchanges, open };
+}
+
+function itemOf(x, content = DEFAULT_CONTENT) { return content.ITEMS[x.item] || null; }
+
+/** Where an exchange stands. Derived, never stored. */
+function stateOf(x, content = DEFAULT_CONTENT, now = Date.now()) {
+  if (x.closed) return 'closed';
+  const item = itemOf(x, content);
+  if (!item) return 'closed';
+  let state;
+  if (x.sayback) state = 'owncheck';
+  else if (!x.attempts.length) state = 'asked';
+  else if (x.attempts[0].matched === 'intended') state = item.reasons && !x.reason ? 'reason' : 'explained';
+  else if (x.attempts.length === 1) state = 'hinted';
+  else state = 'explained';
+  if (now - x.openedAt >= PARAMS.EXPIRE_AFTER) return 'expired';
+  return state;
+}
+
+/** How the student reached the explanation, for its lead line and the desk. */
+function routeOf(x) {
+  const [first, second] = x.attempts;
+  if (!first) return null;
+  if (first.matched === 'intended') return 'first';
+  if (!second) return x.closed && x.closed.why === 'left' ? 'left' : null;
+  if (second.matched === 'intended') return 'second';
+  if (second.matched === 'not-yet') return 'stuck';
+  return 'explained';
+}
+
+/** Whether an exchange counts as finished for scheduling. Support and leaving before trying do not. */
+function finished(x, now) {
+  if (x.closed) return ['done', 'left'].includes(x.closed.why) || (x.closed.why === 'expired' && x.attempts.length > 0);
+  return now - x.openedAt >= PARAMS.EXPIRE_AFTER && x.attempts.length > 0;
+}
+const finishedAt = (x) => (x.closed && x.closed.why !== 'expired' ? x.closed.at || x.openedAt : x.openedAt + PARAMS.EXPIRE_AFTER);
+/** Whether it went as intended: the intended option on the first try, and the intended reason if asked. */
+const wentAsIntended = (x) => Boolean(x.attempts[0] && x.attempts[0].matched === 'intended' && (!x.reason || x.reason.matched === 'intended' || x.reason.matched === 'none'));
+
+// ---------------------------------------------------------------------------------------------------------
+// Choosing the next question.
+// ---------------------------------------------------------------------------------------------------------
+
+const wholeWord = (text, word) => new RegExp(`(?:^|[^\\p{L}\\p{N}])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, 'iu').test(text);
+
+/** Per idea, what a student has done with it, for scheduling and for the list of ideas. */
+function conceptHistory(exchanges, conceptId, now) {
+  const mine = exchanges.filter((x) => x.concept === conceptId);
+  const done = mine.filter((x) => finished(x, now)).sort((a, b) => finishedAt(a) - finishedAt(b));
+  const last = done.at(-1) || null;
+  return { mine, done, last, attempted: mine.some((x) => x.attempts.length > 0) };
+}
+
+/** Exchanges that count for scheduling: one closed for support, or left before trying, never does. */
+const counted = (exchanges) => exchanges.filter((x) => !(x.closed && ['support', 'left-before-attempt'].includes(x.closed.why)));
+
+/** Where each idea of a project stands, in plain facts for the student's list. */
+function conceptStatus(exchanges, projectId, { now = Date.now(), content = DEFAULT_CONTENT, serveDrafts = false } = {}) {
+  const mine = counted(exchanges);
+  return servable(projectId, { content, serveDrafts }).map(({ concept }) => {
+    const h = conceptHistory(mine, concept.id, now);
+    let status = h.attempted ? 'practised' : 'new';
+    let comesBackAt = null;
+    if (h.last) {
+      const at = finishedAt(h.last);
+      if (wentAsIntended(h.last)) {
+        comesBackAt = at + PARAMS.REVIEW_AFTER;
+        if (now >= comesBackAt) status = 'review';
+      } else if (h.done.length - 1 < PARAMS.MAX_REASKS) {
+        comesBackAt = at + PARAMS.REASK_AFTER;
+        if (now >= comesBackAt) status = 'due';
+      }
+    }
+    return { id: concept.id, name: concept.name, skill: concept.skill, status, comesBackAt };
+  });
+}
+
+/**
+ * Which idea, and which case of it, to ask next.
+ * @returns {{ concept, item, chosenBy, cue } | { none: 'all-practised' | 'none-servable' }}
+ */
+function pick({ exchanges = [], projectId, now = Date.now(), message = '', conceptId = null, anyway = false, content = DEFAULT_CONTENT, serveDrafts = false }) {
+  const pool = servable(projectId, { content, serveDrafts });
+  if (!pool.length) return { none: 'none-servable' };
+  const byId = new Map(pool.map((p) => [p.concept.id, p]));
+  const scheduled = counted(exchanges);
+
+  let chosen = null;
+  let chosenBy = null;
+  let cue = null;
+  if (conceptId && byId.has(conceptId)) { chosen = byId.get(conceptId); chosenBy = 'chosen'; }
+  if (!chosen && message) {
+    for (const p of pool) {
+      const hit = (p.concept.cues || []).find((c) => wholeWord(message, c));
+      if (hit) { chosen = p; chosenBy = 'asked'; cue = hit; break; }
+    }
+  }
+  if (!chosen) {
+    const due = pool
+      .map((p) => ({ p, h: conceptHistory(scheduled, p.concept.id, now) }))
+      .filter(({ h }) => h.last && !wentAsIntended(h.last) && now - finishedAt(h.last) >= PARAMS.REASK_AFTER && h.done.length - 1 < PARAMS.MAX_REASKS)
+      .sort((a, b) => finishedAt(a.h.last) - finishedAt(b.h.last));
+    if (due.length) { chosen = due[0].p; chosenBy = 'due'; }
+  }
+  if (!chosen) {
+    const fresh = pool.find((p) => !conceptHistory(scheduled, p.concept.id, now).attempted);
+    if (fresh) { chosen = fresh; chosenBy = 'new'; }
+  }
+  if (!chosen) {
+    const review = pool
+      .map((p) => ({ p, h: conceptHistory(scheduled, p.concept.id, now) }))
+      .filter(({ h }) => h.last && wentAsIntended(h.last) && now - finishedAt(h.last) >= PARAMS.REVIEW_AFTER)
+      .sort((a, b) => finishedAt(a.h.last) - finishedAt(b.h.last));
+    if (review.length) { chosen = review[0].p; chosenBy = 'review'; }
+  }
+  if (!chosen && anyway) {
+    const least = pool
+      .map((p) => ({ p, h: conceptHistory(scheduled, p.concept.id, now) }))
+      .sort((a, b) => (a.h.last ? finishedAt(a.h.last) : 0) - (b.h.last ? finishedAt(b.h.last) : 0));
+    chosen = least[0].p; chosenBy = 'anyway';
+  }
+  if (!chosen) return { none: 'all-practised' };
+
+  // The case this student has seen least recently: never seen first, then authored order.
+  const seen = new Map();
+  for (const x of exchanges) if (x.concept === chosen.concept.id) seen.set(x.item, Math.max(seen.get(x.item) || 0, x.openedAt || 0));
+  const item = [...chosen.items].sort((a, b) => (seen.has(a.id) ? seen.get(a.id) + 1 : 0) - (seen.has(b.id) ? seen.get(b.id) + 1 : 0))[0];
+  return { concept: chosen.concept, item, chosenBy, cue };
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Transitions. Each returns the events to append, or an error with its status. Nothing here is stored.
+// ---------------------------------------------------------------------------------------------------------
+
+/** The open event for a new exchange. */
+function opening({ exchanges, projectId, sessionId, at, picked, requestSeq = null, carried = null }) {
+  const k = exchanges.length + 1;
+  const exchange = `${projectId}-${k}`;
+  const { item, concept } = picked;
+  const seed = `${sessionId}|${exchange}|${at}`;
+  return {
+    type: 'practice', act: 'open', exchange, concept: concept.id, item: item.id, itemHash: itemHash(item),
+    order: order(item.options.map((o) => o.id), seed),
+    reasonOrder: item.reasons ? order(item.reasons.options.map((r) => r.id), `${seed}|reasons`) : null,
+    chosenBy: picked.chosenBy, cue: picked.cue || null, requestSeq, carried, at,
+  };
+}
+
+const fail = (status, error) => ({ status, error });
+
+/**
+ * One action on an exchange.
+ * @param {object} x       the exchange, from fold()
+ * @param {object} body    { action, step, choice, confidence, text, ticked, requestSeq }
+ * @param {object} ctx     { now, content, typedNotYet, screen }: typedNotYet is the answer screen's reading
+ *                         that the box held only "I don't know yet" in words; screen is what it read.
+ */
+function act(x, body, { now = Date.now(), content = DEFAULT_CONTENT, typedNotYet = false, screen = null } = {}) {
+  const item = itemOf(x, content);
+  if (!item) return fail(409, TEXT.stale);
+  if (x.state === 'closed' || x.state === 'expired') return fail(409, TEXT.stale);
+  if (body.step !== x.step) return fail(409, TEXT.stale);
+  const base = { type: 'practice', exchange: x.id, step: x.step, at: now };
+  const text = typeof body.text === 'string' ? body.text.trim() : '';
+  const confidence = ['guessing', 'fairly', 'sure'].includes(body.confidence) ? body.confidence : null;
+
+  const attempt = (choice, how, words, claimedSeq = null) => {
+    if (!['asked', 'hinted'].includes(x.state) || x.attempts.length >= PARAMS.MAX_ATTEMPTS) return fail(409, TEXT.stale);
+    let matched;
+    if (choice === 'not-yet') matched = 'not-yet';
+    else {
+      const option = item.options.find((o) => o.id === choice);
+      if (!option) return fail(400, TEXT.needChoice);
+      matched = option.stands;
+    }
+    const n = x.attempts.length + 1;
+    return { append: [{ ...base, act: 'attempt', n, choice, matched, confidence: choice === 'not-yet' ? null : confidence, text: words, how, claimedSeq, msShown: Math.max(0, now - (x.shownAt || x.openedAt)), screen }] };
+  };
+
+  switch (body.action) {
+    case 'attempt': {
+      if (typeof body.choice === 'string' && body.choice && body.choice !== 'not-yet') return attempt(body.choice, 'option', text);
+      // Words alone are never judged. Only a whole-message "I don't know yet" counts as an answer.
+      if (typedNotYet) return attempt('not-yet', 'typed-not-yet', text);
+      return fail(400, TEXT.needChoice);
+    }
+    case 'notYet':
+      return attempt('not-yet', 'button', '');
+    case 'claim': {
+      // "It was my answer": the refused words become the answer they were meant as. They stay in the
+      // request they were typed as, which keeps counting everywhere; this points at it.
+      const r = x.refused;
+      if (!r || body.requestSeq !== r.seq) return fail(400, 'There is no refused answer at this step to claim.');
+      if (['asked', 'hinted'].includes(x.state)) return attempt(r.choice || body.choice, 'claimed', '', r.seq);
+      if (x.state === 'explained') return { append: [{ ...base, act: 'sayback', text: '', how: 'claimed', claimedSeq: r.seq, screen: null }] };
+      return fail(409, TEXT.stale);
+    }
+    case 'reason': {
+      if (x.state !== 'reason') return fail(409, TEXT.stale);
+      if (body.choice === 'none') return { append: [{ ...base, act: 'reason', choice: 'none', matched: 'none' }] };
+      const reason = item.reasons.options.find((r) => r.id === body.choice);
+      if (!reason) return fail(400, 'Choose one of the reasons shown, or “None of these is my reason”.');
+      return { append: [{ ...base, act: 'reason', choice: reason.id, matched: reason.stands }] };
+    }
+    case 'sayback': {
+      if (x.state !== 'explained') return fail(409, TEXT.stale);
+      if (!text) return { append: [{ ...base, act: 'close', why: 'done', requestSeq: null }] };
+      return { append: [{ ...base, act: 'sayback', text, how: 'typed', claimedSeq: null, screen }] };
+    }
+    case 'check': {
+      if (x.state !== 'owncheck') return fail(409, TEXT.stale);
+      const ids = new Set(item.ideas.map((i) => i.id));
+      if (!Array.isArray(body.ticked) || !body.ticked.every((t) => ids.has(t))) return fail(400, 'Tick the ideas you see, or skip.');
+      const ticked = item.ideas.map((i) => i.id).filter((id) => body.ticked.includes(id));
+      return { append: [{ ...base, act: 'check', ticked, of: ids.size, by: 'student' }, { ...base, step: x.step + 1, act: 'close', why: 'done', requestSeq: null }] };
+    }
+    case 'skip':
+      if (x.state !== 'owncheck') return fail(409, TEXT.stale);
+      return { append: [{ ...base, act: 'close', why: 'done', requestSeq: null }] };
+    case 'leave': {
+      // Leaving before an attempt reveals nothing, because leaving must not be a shortcut to the answer.
+      const why = x.attempts.length === 0 ? 'left-before-attempt' : (['explained', 'owncheck'].includes(x.state) ? 'done' : 'left');
+      return { append: [{ ...base, act: 'close', why, requestSeq: null }] };
+    }
+    default:
+      return fail(400, 'That is not something a practice question can do.');
+  }
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// What a client is shown. The only object that ever leaves the engine.
+// ---------------------------------------------------------------------------------------------------------
+
+const WHY = { asked: (cue) => TEXT.whyAsked(cue), new: (cue, fromChat) => (fromChat ? `${TEXT.whyNext} ${TEXT.whyNoCue}` : TEXT.whyNext), chosen: () => TEXT.whyChosen, due: () => TEXT.whyDue, review: () => TEXT.whyReview, anyway: () => TEXT.whyAnyway };
+
+/** The rows of the explanation: every option, its note, and which were the student's. */
+function rows(x, item) {
+  const [first, asked] = x.attempts;
+  // "Show me the explanation" is not a second choice, so the one option chosen is simply the student's.
+  const second = asked && asked.choice !== 'not-yet' ? asked : null;
+  return (x.order.length ? x.order : item.options.map((o) => o.id)).map((id) => {
+    const o = item.options.find((opt) => opt.id === id);
+    const tags = [];
+    if (o.stands === 'intended') tags.push('written');
+    // The same option chosen twice is simply the student's choice; two different ones are told apart.
+    if ((second && second.choice === id) || (first && first.choice === id && (!second || second.choice === id))) tags.push('yours');
+    else if (first && first.choice === id) tags.push('first');
+    return { option: id, text: o.text, note: o.note, tags };
+  });
+}
+
+function reasonRows(x, item) {
+  if (!item.reasons || !x.reason) return null;
+  return (x.reasonOrder || item.reasons.options.map((r) => r.id)).map((id) => {
+    const r = item.reasons.options.find((opt) => opt.id === id);
+    const tags = [];
+    if (r.stands === 'intended') tags.push('written');
+    if (x.reason.choice === id) tags.push('yours');
+    return { option: id, text: r.text, note: r.note, tags };
+  });
+}
+
+function leadFor(x, item) {
+  const intended = item.options.find((o) => o.stands === 'intended');
+  const [first, second] = x.attempts;
+  const route = routeOf(x);
+  if (route === 'first') return TEXT.afterIntendedFirst(intended.text) + (first.confidence === 'guessing' ? ` ${TEXT.afterGuessMarked}` : '');
+  if (route === 'second') return TEXT.afterIntendedSecond(intended.text);
+  if (route === 'explained') return TEXT.afterMixupSecond(item.options.find((o) => o.id === second.choice).text, intended.text);
+  if (route === 'stuck') return TEXT.afterStuck(intended.text);
+  return TEXT.afterStuck(intended.text);
+}
+
+/** The explanation, with every option's note: what every finished route ends in. */
+function explanationBlocks(x, item, lead) {
+  const blocks = [{ kind: 'lead', text: lead }, { kind: 'rows', lines: rows(x, item) }];
+  const rr = reasonRows(x, item);
+  if (rr) blocks.push({ kind: 'reasonRows', lines: rr });
+  blocks.push({ kind: 'explanation', paragraphs: [...item.explanation] });
+  return blocks;
+}
+
+/**
+ * The public view of an exchange. Before an attempt it holds nothing that reveals the intended option or
+ * any mix-up: no hint, diagnosis, note, explanation, key idea, transfer question or reason tier.
+ * @param {object} [options.carriedFrom] the exchange this one's open event names as carried, from fold()
+ * @param {boolean} [options.paused]     the teacher has paused practice for this project
+ */
+function publicView(x, { content = DEFAULT_CONTENT, pilot = false, carriedFrom = null, paused = false } = {}) {
+  const item = itemOf(x, content);
+  const concept = content.CONCEPTS[x.concept];
+  const view = {
+    exchange: x.id, step: x.step, state: x.state,
+    concept: { id: concept.id, name: concept.name },
+    why: { kind: x.chosenBy, text: (WHY[x.chosenBy] || WHY.new)(x.cue, x.requestSeq !== null), word: x.cue || null },
+    draft: !item.reviewed, pilot,
+    scenario: item.scenario, question: item.question,
+    options: (x.order.length ? x.order : item.options.map((o) => o.id)).map((id) => ({ id, text: item.options.find((o) => o.id === id).text })),
+    mine: {
+      first: x.attempts[0] ? { choice: x.attempts[0].choice, confidence: x.attempts[0].confidence, words: x.attempts[0].words || '' } : null,
+      second: x.attempts[1] ? { choice: x.attempts[1].choice, words: x.attempts[1].words || '' } : null,
+    },
+    blocks: [],
+    can: [],
+  };
+
+  // A question left last time while it stood at its hint is corrected before the new one begins, so a
+  // mix-up is never the last thing a student saw of an idea.
+  if (carriedFrom && x.state === 'asked') {
+    const prior = content.ITEMS[carriedFrom.item];
+    const first = carriedFrom.attempts[0];
+    if (prior && first) {
+      const option = first.choice !== 'not-yet' ? prior.options.find((o) => o.id === first.choice) : null;
+      view.blocks.push({ kind: 'carried', text: option ? TEXT.carried(option.text) : TEXT.leftAfterAttempt, lines: rows(carriedFrom, prior), paragraphs: [...prior.explanation] });
+    }
+  }
+
+  switch (x.state) {
+    case 'asked':
+      view.can = ['attempt', 'notYet', 'leave'];
+      break;
+    case 'hinted': {
+      const first = x.attempts[0];
+      if (first.matched === 'not-yet') {
+        view.blocks.push({ kind: 'lead', text: TEXT.afterNotYet }, { kind: 'hint', text: item.startHint });
+      } else {
+        const option = item.options.find((o) => o.id === first.choice);
+        const mixup = concept.mixups[option.stands];
+        view.blocks.push(
+          { kind: 'lead', text: TEXT.youChose(option.text) },
+          { kind: 'diagnosis', option: option.id, name: mixup.name, text: TEXT.writtenFor(mixup.name), diagnosis: mixup.diagnosis },
+        );
+        if (first.confidence === 'sure') view.blocks.push({ kind: 'lead', text: TEXT.sureMixup });
+        view.blocks.push({ kind: 'hint', text: option.hint });
+      }
+      view.blocks.push({ kind: 'lead', text: TEXT.againLine });
+      view.can = ['attempt', 'notYet', 'leave'];
+      break;
+    }
+    case 'reason':
+      view.blocks.push(
+        { kind: 'lead', text: leadFor(x, item) },
+        { kind: 'reasonTier', intro: TEXT.reasonTierIntro, prompt: item.reasons.prompt, options: (x.reasonOrder || item.reasons.options.map((r) => r.id)).map((id) => ({ id, text: item.reasons.options.find((r) => r.id === id).text })) },
+      );
+      view.can = ['reason', 'leave'];
+      break;
+    case 'explained':
+      view.blocks.push(...explanationBlocks(x, item, leadFor(x, item)), { kind: 'offer', text: TEXT.sayBackOffer });
+      view.can = ['sayback', 'leave'];
+      break;
+    case 'owncheck':
+      view.blocks.push(...explanationBlocks(x, item, leadFor(x, item)),
+        { kind: 'sayback', text: x.sayback.words || '' },
+        { kind: 'ideas', prompt: TEXT.ownCheckPrompt, note: TEXT.ownCheckNote, ideas: item.ideas.map((i) => ({ id: i.id, text: i.text })), ticked: null });
+      view.can = ['check', 'skip'];
+      break;
+    case 'expired':
+    case 'closed': {
+      const why = x.closed ? x.closed.why : 'expired';
+      if (why === 'support') {
+        // Only the reply the student was given, read back from the request it was given for.
+        const shown = x.support && x.support.shown ? x.support.shown : {};
+        view.blocks.push({ kind: 'support', reason: shown.reason || '', explain: shown.explain || '', requestSeq: x.closed.requestSeq });
+        view.can = [];
+        break;
+      }
+      if (!x.attempts.length) {
+        view.blocks.push({ kind: 'lead', text: TEXT.leftBeforeAttempt });
+      } else {
+        const route = routeOf(x);
+        const lead = !route || route === 'left' ? TEXT.leftAfterAttempt : leadFor(x, item);
+        view.blocks.push(...explanationBlocks(x, item, lead));
+        if (x.sayback && x.sayback.words) view.blocks.push({ kind: 'sayback', text: x.sayback.words });
+        if (x.check) view.blocks.push({ kind: 'ideas', prompt: TEXT.ownCheckPrompt, note: TEXT.ownCheckNote, ideas: item.ideas.map((i) => ({ id: i.id, text: i.text })), ticked: x.check.ticked, saved: TEXT.ownCheckSaved(x.check.ticked.length, x.check.of) });
+        view.blocks.push({ kind: 'transfer', lead: TEXT.transferLead, text: item.transfer }, { kind: 'lead', text: TEXT.comesBack });
+      }
+      view.can = ['another'];
+      break;
+    }
+    default:
+      break;
+  }
+
+  // Words typed here that were refused stay refused after a reload, and stay claimable.
+  if (x.refused && x.refused.shown) {
+    view.blocks.push({ kind: 'refusal', requestSeq: x.refused.seq, reason: x.refused.shown.reason || '', explain: x.refused.shown.explain || '', tail: TEXT.refusalTail, claim: TEXT.claimOffer });
+    view.can.push('claim');
+  }
+  if (paused && !['closed', 'expired'].includes(x.state)) {
+    view.blocks.unshift({ kind: 'paused', text: TEXT.paused });
+    view.can = [];
+  }
+  return view;
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Facts about an exchange, in sentences both the student and the teacher read.
+// ---------------------------------------------------------------------------------------------------------
+
+/** One exchange as plain sentences. A mix-up is never named here without what it misses. */
+function practiceFacts(x, content = DEFAULT_CONTENT) {
+  const item = itemOf(x, content);
+  const concept = content.CONCEPTS[x.concept];
+  if (!item || !concept) return [];
+  const described = (a) => {
+    if (a.matched === 'not-yet') return 'didn’t know yet';
+    if (a.matched === 'intended') return 'the intended answer';
+    const o = item.options.find((opt) => opt.id === a.choice);
+    return `the option written for “${concept.mixups[a.matched].name}” (what it misses: ${o.note})`;
+  };
+  const typed = (a) => (a.how === 'claimed'
+    ? `Typed words PathWay first read as a request; the student said they were an answer: “${a.words}”.`
+    : a.words ? `Reason typed: “${a.words}”.` : null);
+  const lines = [`Practice · ${concept.name} · ${item.id.split('/')[1].replace(/-/g, ' ')}.`];
+  if (x.closed && x.closed.why === 'support') { lines.push('Ended here: the student wrote something about themselves (see the record).'); return lines; }
+  if (!x.attempts.length) { lines.push(x.closed || x.state === 'expired' ? 'Left before answering.' : 'Not answered yet.'); return lines; }
+  const [first, second] = x.attempts;
+  lines.push(`First try: ${described(first)}${first.confidence ? `, marked ${first.confidence === 'fairly' ? 'fairly sure' : first.confidence}` : ''}, ${Math.round((first.msShown || 0) / 1000)} s after the question appeared.`);
+  if (typed(first)) lines.push(typed(first));
+  if (first.matched !== 'intended') lines.push('Hint shown.');
+  if (second) {
+    lines.push(`Second try: ${second.matched === 'not-yet' ? 'asked for the explanation' : described(second)}.`);
+    if (typed(second)) lines.push(typed(second));
+  }
+  if (x.reason) lines.push(x.reason.matched === 'none' ? 'Reason: none of the written reasons.' : `Reason chosen: ${x.reason.matched === 'intended' ? 'the intended reason' : `the one written for “${concept.mixups[x.reason.matched].name}”`}.`);
+  const route = routeOf(x);
+  if ((x.closed && x.closed.why === 'left') || (x.state === 'expired' && (!route || route === 'left'))) lines.push('Left after the hint; the explanation was shown.');
+  if (x.sayback && x.sayback.words) lines.push(`Said it back${x.sayback.how === 'claimed' ? ' (first read as a request; the student said it was an answer)' : ''}: “${x.sayback.words}”.`);
+  if (x.check) lines.push(`Own check: ticked ${x.check.ticked.length} of ${x.check.of} key ideas (the student’s own judgement; PathWay does not check this).`);
+  return lines;
+}
+
+/** How often the explanation was reached quickly without the intended answer. Noted, never judged. */
+function quickReveals(exchanges) {
+  let n = 0;
+  for (const x of exchanges) {
+    const route = routeOf(x);
+    if (!route || route === 'first' || route === 'second') continue;
+    const total = x.attempts.reduce((s, a) => s + (a.msShown || 0), 0);
+    if (total < PARAMS.QUICK_REVEAL) n += 1;
+  }
+  return n >= PARAMS.QUICK_REVEAL_NOTE_AT ? n : 0;
+}
+const quickRevealNote = (n) => `Reached the explanation within ${PARAMS.QUICK_REVEAL / 1000} seconds of the question appearing, without choosing the intended answer, ${n} times. Not evidence of anything on its own.`;
+
+// ---------------------------------------------------------------------------------------------------------
+// Validation. Run by the tests and the pilot build, never at module load.
+// ---------------------------------------------------------------------------------------------------------
+
+function validatePractice(content = DEFAULT_CONTENT, projects = require('./projects.js').PROJECTS) {
+  const { longestSharedRun } = require('./classify.js');
+  const { checkResponse, looksLikeSubmission } = require('./response-check.js');
+  const briefs = projects.map((p) => p.brief);
+  const allAvoid = Object.values(content.PRACTICE).flatMap((p) => p.avoid || []);
+  const problems = [];
+  const bad = (id, msg) => problems.push(`${id}: ${msg}`);
+  const wordHit = (text, w) => new RegExp(`(?:^|[^\\p{L}])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}])`, 'iu').test(text);
+  const runWithBriefs = (text) => Math.max(0, ...briefs.map((b) => longestSharedRun(text, b)));
+
+  const ids = new Set();
+  for (const [key, item] of Object.entries(content.ITEMS)) {
+    if (key !== item.id) bad(key, 'key and id differ');
+    if (ids.has(item.id)) bad(item.id, 'duplicate id');
+    ids.add(item.id);
+  }
+  let longestIntended = 0;
+  const intendedIds = {};
+  const items = Object.values(content.ITEMS);
+  for (const item of items) {
+    const c = content.CONCEPTS[item.concept];
+    if (!c) { bad(item.id, `unknown concept ${item.concept}`); continue; }
+    const intended = item.options.filter((o) => o.stands === 'intended');
+    if (intended.length !== 1) { bad(item.id, 'must have exactly one intended option'); continue; }
+    intendedIds[intended[0].id] = (intendedIds[intended[0].id] || 0) + 1;
+    if (item.options.length < 3 || item.options.length > 4) bad(item.id, 'needs 3 or 4 options');
+    const optionIds = item.options.map((o) => o.id);
+    if (new Set(optionIds).size !== optionIds.length) bad(item.id, 'option ids repeat');
+    for (const o of item.options) {
+      if (o.stands !== 'intended' && !c.mixups[o.stands]) bad(item.id, `option ${o.id} stands for unknown mix-up ${o.stands}`);
+      if (o.stands !== 'intended' && (!o.hint || !o.hint.trim().endsWith('?'))) bad(item.id, `option ${o.id} hint must end with ?`);
+      if (o.stands === 'intended' && o.hint) bad(item.id, 'the intended option has no hint');
+      if (!o.note) bad(item.id, `option ${o.id} needs a note`);
+      if (o.text.length > 120) bad(item.id, `option ${o.id} is ${o.text.length} characters (over 120)`);
+      if (o.hint && o.hint.length > 200) bad(item.id, `hint ${o.id} is ${o.hint.length} characters (over 200)`);
+    }
+    const mix = item.options.filter((o) => o.stands !== 'intended').map((o) => o.stands);
+    if (new Set(mix).size !== mix.length) bad(item.id, 'a mix-up appears twice among the options');
+    const lens = item.options.map((o) => o.text.length);
+    const max = Math.max(...lens);
+    if (intended[0].text.length === max && lens.filter((l) => l === max).length === 1) longestIntended += 1;
+    if (item.reasons) {
+      if (item.reasons.options.filter((r) => r.stands === 'intended').length !== 1) bad(item.id, 'reasons need exactly one intended');
+      for (const r of item.reasons.options) if (r.stands !== 'intended' && !c.mixups[r.stands]) bad(item.id, `reason ${r.id} stands for unknown mix-up`);
+      if (!item.reasons.prompt.endsWith('?')) bad(item.id, 'the reason prompt must end with ?');
+    }
+    if (!item.question.endsWith('?')) bad(item.id, 'the question must end with ?');
+    if (!item.startHint.endsWith('?')) bad(item.id, 'the start hint must end with ?');
+    if (!item.transfer.split(/(?<=[.?!])\s+/).every((s) => s.trim().endsWith('?'))) bad(item.id, 'every sentence of the transfer must be a question');
+    if (item.explanation.length < 1 || item.explanation.length > 3) bad(item.id, '1 to 3 explanation paragraphs');
+    if (item.ideas.length < 2 || item.ideas.length > 4) bad(item.id, '2 to 4 key ideas');
+    if (item.scenario.length > 300) bad(item.id, `scenario is ${item.scenario.length} characters (over 300)`);
+    for (const m of Object.values(c.mixups)) if (m.diagnosis.includes(intended[0].text)) bad(item.id, 'a diagnosis contains the intended option');
+    if (item.reviewed && !(item.reviewed.by && /^\d{4}-\d{2}-\d{2}$/.test(item.reviewed.on))) bad(item.id, 'reviewed needs a role and a date');
+
+    const strings = [item.scenario, item.question, item.startHint, item.transfer, ...item.explanation, ...item.ideas.map((i) => i.text)];
+    for (const o of item.options) strings.push(o.text, o.note, ...(o.hint ? [o.hint] : []));
+    if (item.reasons) { strings.push(item.reasons.prompt); for (const r of item.reasons.options) strings.push(r.text, r.note); }
+    for (const m of Object.values(c.mixups)) strings.push(m.name, m.diagnosis);
+    for (const s of strings) {
+      if (s.length > 320) bad(item.id, `a string is over 320 characters: ${s.slice(0, 50)}`);
+      const v = CONTENT_VERDICT.exec(s); if (v) bad(item.id, `verdict word “${v[0]}” in: ${s.slice(0, 60)}`);
+      for (const w of allAvoid) if (wordHit(s, w)) bad(item.id, `avoid word “${w}” in: ${s.slice(0, 60)}`);
+      if (runWithBriefs(s) >= 4) bad(item.id, `shares a run of 4 words with a brief: ${s.slice(0, 60)}`);
+      if (s.includes('<')) bad(item.id, `contains “<”: ${s.slice(0, 60)}`);
+      if (looksLikeSubmission(s)) bad(item.id, `reads like a submission: ${s.slice(0, 60)}`);
+    }
+
+    // Every screen, composed exactly as the card shows it, each string its own paragraph.
+    const views = {
+      asked: [TEXT.label, c.name, TEXT.whyNext, TEXT.scope, item.scenario, item.question, ...item.options.map((o) => o.text), TEXT.checkedLine],
+      notYet: [TEXT.afterNotYet, `${TEXT.hintLead} ${item.startHint}`, TEXT.againLine],
+      ...(item.reasons ? { reason: [TEXT.afterIntendedFirst(intended[0].text), TEXT.reasonTierIntro, item.reasons.prompt, ...item.reasons.options.map((r) => r.text)] } : {}),
+      explained: [TEXT.afterStuck(intended[0].text), ...item.options.map((o) => o.note), ...(item.reasons ? item.reasons.options.map((r) => r.note) : []), ...item.explanation, TEXT.sayBackOffer],
+      owncheck: [TEXT.ownCheckPrompt, ...item.ideas.map((i) => i.text), TEXT.ownCheckNote],
+      closed: [`${TEXT.transferLead} ${item.transfer}`, TEXT.comesBack],
+    };
+    for (const o of item.options.filter((opt) => opt.hint)) {
+      views[`hinted-${o.id}`] = [TEXT.youChose(o.text), TEXT.writtenFor(c.mixups[o.stands].name), c.mixups[o.stands].diagnosis, `${TEXT.hintLead} ${o.hint}`, TEXT.againLine];
+    }
+    for (const [name, parts] of Object.entries(views)) {
+      const reply = parts.join('\n\n');
+      const r = checkResponse({ reply, modeId: 'question' });
+      if (!r.ok) bad(item.id, `screen ${name} fails the response check: ${r.problems.join('; ')}`);
+      if (runWithBriefs(reply) >= 4) bad(item.id, `screen ${name} shares a run of 4 words with a brief`);
+      if (looksLikeSubmission(reply)) bad(item.id, `screen ${name} reads like a submission`);
+    }
+  }
+  if (longestIntended > items.length / 2) problems.push(`the intended option is the unique longest in ${longestIntended} of ${items.length} items`);
+  for (const [id, n] of Object.entries(intendedIds)) if (n > items.length / 2) problems.push(`option ${id} holds the intended answer in ${n} of ${items.length} items`);
+  for (const [pid, plan] of Object.entries(content.PRACTICE)) {
+    const project = projects.find((p) => p.id === pid);
+    if (!project) { problems.push(`${pid}: no such project`); continue; }
+    for (const cid of plan.concepts) {
+      const c = content.CONCEPTS[cid];
+      if (!c) { problems.push(`${pid}: unknown concept ${cid}`); continue; }
+      if (!project.skills.includes(c.skill)) problems.push(`${cid}: skill “${c.skill}” is not one of ${pid}’s`);
+      for (const m of Object.values(c.mixups)) if (m.basis === 'research' && !m.citation) problems.push(`${cid}: a research-based mix-up needs its citation`);
+      const n = items.filter((it) => it.concept === cid).length;
+      if (n < 2) problems.push(`${cid}: needs at least 2 items, so a re-ask is a new case (has ${n})`);
+    }
+  }
+  const fixed = [];
+  const walk = (v) => { if (typeof v === 'string') fixed.push(v); else if (typeof v === 'function') fixed.push(v('X', 'Y')); else if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') Object.values(v).forEach(walk); };
+  walk(TEXT);
+  for (const s of fixed) { const m = BANNED.exec(s); if (m) problems.push(`interface text uses “${m[0]}”: ${s.slice(0, 60)}`); }
+  return problems;
+}
+
+module.exports = {
+  PARAMS, TEXT, BANNED, order, itemHash, servable, fold, stateOf, routeOf, conceptStatus, pick, opening, act,
+  publicView, practiceFacts, quickReveals, quickRevealNote, validatePractice, wentAsIntended, finished, finishedAt, conceptHistory, DEFAULT_CONTENT, itemOf,
+};
+
+};
 modules["preview-app"] = function (module, exports, require, __dirname, __filename) {
 // The preview, as logic without a transport.
 //
@@ -3304,7 +4248,9 @@ modules["preview-app"] = function (module, exports, require, __dirname, __filena
 
 const { turn } = require('./session.js');
 const { classify } = require('./classify.js');
-const { draftEntry, summarise } = require('./record.js');
+const { entry, draftEntry, summarise } = require('./record.js');
+const { decideAttempt } = require('./boundary.js');
+const practice = require('./practice.js');
 const { MODES } = require('./modes.js');
 const identity = require('./identity.js');
 const { corrections } = require('./writing-review.js');
@@ -3329,7 +4275,8 @@ const REPLIES = Object.fromEntries(['understand', 'plan', 'question', 'sources']
  * homework and Cooper (2006), confidently and completely wrongly. Everything looked like it worked.
  */
 const replyFor = (projectId, modeId) => (PROJECT_REPLIES[projectId] && PROJECT_REPLIES[projectId][modeId]) || REPLIES[modeId];
-const ROUTES = ['/api/draft', '/api/policy', '/api/turn', '/api/review', '/api/edit', '/api/source', '/api/checklist', '/api/project'];
+const ROUTES = ['/api/draft', '/api/policy', '/api/turn', '/api/review', '/api/edit', '/api/source', '/api/checklist', '/api/project', '/api/practice'];
+const PRACTICE_ACTIONS = ['start', 'another', 'attempt', 'notYet', 'reason', 'sayback', 'check', 'skip', 'leave', 'claim'];
 const SESSION = 'demo';
 // The modes that can answer a chat message. "improve" and "rephrase" work on saved text through the
 // writing tools instead, which is why /api/turn refuses them.
@@ -3352,8 +4299,13 @@ const wordsIn = (text) => (String(text || '').match(/[\p{L}\p{N}']+/gu) || []).l
  * @param {function} [options.onRecord] called with each event as it is recorded. The browser pilot uses
  *                                      this to offer its requests to the learner; a listener that throws
  *                                      does not stop the record.
+ * @param {function} [options.now]      the clock, so tests can move a day forward without waiting one
+ * @param {object}   [options.practiceContent] the written practice questions; the pilot passes only reviewed ones
+ * @param {boolean}  [options.serveDrafts] serve practice questions no teacher has reviewed yet, labelled DRAFT.
+ *                                      Only a local server sets this, and only with PATHWAY_PRACTICE_DRAFTS=on.
+ * @param {boolean}  [options.pilot]    this runs in the browser pilot, where the questions ship in the page
  */
-function createPreviewApp({ store = null, memory = null, sessionId = SESSION, ask = null, onRecord = null } = {}) {
+function createPreviewApp({ store = null, memory = null, sessionId = SESSION, ask = null, onRecord = null, now = () => Date.now(), practiceContent = practice.DEFAULT_CONTENT, serveDrafts = false, pilot = false } = {}) {
   // The session id names a file on disk, so it is a filename first and an identifier second.
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/i.test(String(sessionId))) throw new Error(`invalid session id: ${String(sessionId).slice(0, 40)}`);
   // What the student has done in each project. The project's definition is fixed; this is the part that
@@ -3547,9 +4499,11 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
         draft: state.draft, sources: state.sources, savedSources: state.savedSources,
         checklist: state.checklist, activity: state.activity, kept, dropped,
         summary: summarise(allEvents.filter((e) => e.type === 'request'), allEvents.filter((e) => e.type === 'draft')),
+        practice: practiceBlock(now()),
       });
     if (method !== 'POST' || !ROUTES.includes(pathname)) return pathname.startsWith('/api/') ? reply(404, { error: 'Page not found.' }) : null;
     if (!body || typeof body !== 'object' || Array.isArray(body)) return reply(400, { error: 'Send a JSON object.' });
+    if (pathname === '/api/practice') return practiceRoute(body);
     // Before any check that could refuse the request for a reason unrelated to the student.
     if (pathname === '/api/turn') {
       const support = await supportFirst(body.message, { projectIdHint: body.projectId, modeHint: body.modeId });
@@ -3562,7 +4516,7 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
     // When this happened. Every event carries it: the activity page shows it, the observations read
     // bursts from it, and the desk orders students by it. A rewrite yesterday set this to null, and for a
     // day every event was recorded as having happened at the start of 1970.
-    const at = Date.now();
+    const at = now();
 
     if (pathname === '/api/project') {
       if (typeof body.id !== 'string' || !projectById(body.id)) return reply(400, { error: 'Choose one of your projects.' });
@@ -3657,9 +4611,14 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
     // come from every project on purpose: see the note at the top of this file.
     const history = allEvents.filter((e) => e.type === 'request');
     const message = body.message.trim();
+    // "Check my understanding" is a practice question now, never a paragraph and never a model. What it
+    // would open is worked out before the turn, so the reply names it, and is opened only if the boundary
+    // lets the request through.
+    const plan = planPractice({ message, at });
+    const practiceAsk = async () => plan.text;
     // With a model the prompt is what carries this project's brief and the student's own words; without
     // one, the fixed reply for this project stands in, and the interface says which it was.
-    const run = (modeId) => turn({ message, modeId, assignment: state.assignment, studentText: state.draft, ask: ask || (async () => replyFor(currentId, modeId)), who: who(), at, history });
+    const run = (modeId) => turn({ message, modeId, assignment: state.assignment, studentText: state.draft, ask: modeId === 'question' ? practiceAsk : ask || (async () => replyFor(currentId, modeId)), who: who(), at, history });
 
     // ROUTING. A student should be able to type a question and get an answer, not have to guess first which
     // of six kinds of help their question counts as and be sent back a step when they guess wrong. The
@@ -3683,9 +4642,159 @@ function createPreviewApp({ store = null, memory = null, sessionId = SESSION, as
         result = await run(modeId);
       }
     }
-    result.shown.replySource = ask ? 'model' : 'example';
-    await record({ type: 'request', ...result.record, shown: result.shown, policy: [...mine().modes], ...(routedTo ? { routedTo } : {}) });
-    return reply(200, { ...result.shown, mode: modeId, ...(routedTo ? { routedTo } : {}) });
+    const practised = modeId === 'question' && result.shown.kind === 'reply';
+    result.shown.replySource = practised ? 'practice' : ask ? 'model' : 'example';
+    const stored = await record({ type: 'request', ...result.record, shown: result.shown, policy: [...mine().modes], ...(routedTo ? { routedTo } : {}) });
+    let opened = null;
+    if (practised) opened = await commitPractice(plan, { requestSeq: stored.seq, at });
+    return reply(200, { ...result.shown, mode: modeId, ...(routedTo ? { routedTo } : {}), ...(practised ? { practice: practiceBlock(at), exchange: opened || (plan.existing ? plan.existing.id : null) } : {}) });
+  }
+
+  // ---------------------------------------------------------------------------------------------------
+  // Practice questions. lib/practice.js decides; this keeps the record and applies the route's order.
+  // ---------------------------------------------------------------------------------------------------
+
+  const folded = (projectId = currentId, at = now()) => practice.fold(allEvents, projectId, { now: at, content: practiceContent });
+  const questionOpen = (projectId = currentId) => (work.get(projectId) || mine()).modes.includes('question');
+
+  /** What the interface needs to draw every practice card of the open project, and the student's facts. */
+  function practiceBlock(at = now()) {
+    const { exchanges, open } = folded(currentId, at);
+    const byId = new Map(exchanges.map((x) => [x.id, x]));
+    const paused = !questionOpen();
+    const view = (x) => ({
+      ...practice.publicView(x, { content: practiceContent, pilot, paused, carriedFrom: x.carried ? byId.get(x.carried) || null : null }),
+      openSeq: x.openSeq, requestSeq: x.requestSeq,
+    });
+    // The facts cover every project, because the activity page reads the student's whole week.
+    const facts = [];
+    let reveals = 0;
+    for (const p of PROJECTS) {
+      const f = folded(p.id, at);
+      for (const x of f.exchanges) facts.push({ projectId: p.id, exchange: x.id, at: x.openedAt, lines: practice.practiceFacts(x, practiceContent) });
+      reveals += practice.quickReveals(f.exchanges);
+    }
+    return {
+      paused, pilot, drafts: serveDrafts,
+      servable: practice.servable(currentId, { content: practiceContent, serveDrafts }).length,
+      concepts: practice.conceptStatus(exchanges, currentId, { now: at, content: practiceContent, serveDrafts }),
+      exchanges: exchanges.map(view),
+      open: open ? open.id : null,
+      facts,
+      note: reveals ? practice.quickRevealNote(reveals) : null,
+      howChecked: practice.TEXT.howChecked,
+      // The card's fixed words come from the same place as everything else it says, so one scan covers them.
+      words: { label: practice.TEXT.label, draftLabel: practice.TEXT.draftLabel, scope: practice.TEXT.scope, checkedLine: practice.TEXT.checkedLine, pilotNote: practice.TEXT.pilotNote, noneServable: practice.TEXT.noneServable, sayBackPrompt: practice.TEXT.sayBackPrompt },
+    };
+  }
+
+  /**
+   * What starting a question would do, worked out without recording anything: the question still open, a
+   * new one and anything to close first, or nothing to ask. The chat's reply is written from this.
+   */
+  function planPractice({ message = '', conceptId = null, anyway = false, at = now() }) {
+    const { exchanges, open } = folded(currentId, at);
+    const closes = [];
+    let carried = null;
+    if (open && open.state !== 'expired') {
+      // A question not yet tried gives way to an idea the student chose from the list.
+      if (!open.attempts.length && conceptId && conceptId !== open.concept) closes.push({ x: open, why: 'left-before-attempt' });
+      else return { existing: open, text: practice.TEXT.stillOpen(practiceContent.CONCEPTS[open.concept].name) };
+    } else if (open) {
+      closes.push({ x: open, why: 'expired' });
+      // Left standing at its hint: the correction comes with the next question.
+      if (open.attempts.length === 1 && open.attempts[0].matched !== 'intended') carried = open.id;
+    }
+    const picked = practice.pick({ exchanges, projectId: currentId, now: at, message, conceptId, anyway, content: practiceContent, serveDrafts });
+    if (picked.none) return { none: picked.none, closes, carried: null, text: picked.none === 'none-servable' ? practice.TEXT.noneServable : practice.TEXT.allPractised };
+    return { picked, closes, carried, exchanges, text: practice.TEXT.opening(picked.concept.name) };
+  }
+
+  /** Record what planPractice() worked out. Returns the new exchange's id, or null. */
+  async function commitPractice(plan, { requestSeq = null, at = now() }) {
+    for (const { x, why } of plan.closes || []) await record({ type: 'practice', act: 'close', exchange: x.id, step: x.step, why, requestSeq: null, at });
+    if (!plan.picked) return null;
+    const event = practice.opening({ exchanges: plan.exchanges, projectId: currentId, sessionId, at, picked: plan.picked, requestSeq, carried: plan.carried });
+    await record(event);
+    return event.exchange;
+  }
+
+  /** The student's own words that the answer screen refused: an ordinary request, marked as typed here. */
+  const recordTyped = (text, decision, extra) => record({
+    type: 'request', ...entry({ at: extra.at, ...who(), modeId: 'question', message: text, decision }),
+    shown: { kind: 'refusal', ...decision.refusal }, policy: [...mine().modes],
+    via: 'practice', exchange: extra.exchange, step: extra.step, choice: extra.choice,
+  });
+
+  /**
+   * POST /api/practice. The order is the design, and each step is a test:
+   *   1. a JSON object (checked by handle)
+   *   2. typed words read for a disclosure, before anything else can refuse them
+   *   3. a stale project, 4. an unknown action, 5. practice paused, 6. over-long text, 7. a stale question
+   *   8. the answer screen on typed answers, 9. the action itself
+   */
+  async function practiceRoute(body) {
+    const at = now();
+    const text = typeof body.text === 'string' ? body.text : '';
+    const choice = typeof body.choice === 'string' && body.choice.length <= 20 ? body.choice : null;
+
+    // 2. Whatever else is wrong with the request, and whatever the action, even "Leave".
+    if (text.trim()) {
+      const projectId = typeof body.projectId === 'string' && projectById(body.projectId) ? body.projectId : currentId;
+      const { open } = folded(projectId, at);
+      const x = open && open.id === body.exchange && open.state !== 'expired' ? open : null;
+      const support = await supportFirst(text, { projectIdHint: projectId, modeHint: 'question', extra: { via: 'practice', exchange: x ? x.id : null, step: x ? x.step : null, choice } });
+      if (support) {
+        // The words stay in the request; the question only records that it ended here.
+        if (x) await record({ type: 'practice', act: 'close', projectId, exchange: x.id, step: x.step, why: 'support', requestSeq: support.stored.seq, at });
+        return reply(200, { ...support.shown, practice: practiceBlock(at), exchange: x ? x.id : null });
+      }
+    }
+    // 3.
+    if (body.projectId !== undefined && body.projectId !== currentId)
+      return reply(409, { error: 'The open project changed in another tab. Reload to see where it is.' });
+    // 4.
+    if (!PRACTICE_ACTIONS.includes(body.action)) return reply(400, { error: 'That is not something a practice question can do.' });
+    // 5.
+    if (!questionOpen()) return reply(403, { error: practice.TEXT.paused, practice: practiceBlock(at) });
+    // 6.
+    if (text.length > practice.PARAMS.TEXT_MAX) return reply(400, { error: 'Keep what you type within 2,000 characters.' });
+
+    if (body.action === 'start' || body.action === 'another') {
+      const conceptId = typeof body.conceptId === 'string' ? body.conceptId : null;
+      const plan = planPractice({ conceptId, anyway: body.anyway === true, at });
+      if (plan.existing) {
+        const status = plan.existing.attempts.length && conceptId && conceptId !== plan.existing.concept ? 409 : 200;
+        return reply(status, { ...(status === 409 ? { error: practice.TEXT.finishFirst } : {}), practice: practiceBlock(at), exchange: plan.existing.id });
+      }
+      const opened = await commitPractice(plan, { at });
+      return reply(200, { practice: practiceBlock(at), exchange: opened, ...(plan.none ? { none: plan.none, text: plan.text } : {}) });
+    }
+
+    // 7.
+    const { open: x } = folded(currentId, at);
+    if (!x || x.id !== body.exchange || body.step !== x.step || x.state === 'expired')
+      return reply(409, { error: practice.TEXT.stale, practice: practiceBlock(at) });
+
+    // 8. Only a typed answer or a say-back is screened; ticks, reasons and options are enumerated values.
+    let typedNotYet = false;
+    let screen = null;
+    const words = ['attempt', 'sayback'].includes(body.action) ? text.trim() : '';
+    if (words) {
+      const read = decideAttempt(words, { assignment: state.assignment, choiceMade: body.action === 'attempt' && Boolean(choice) && choice !== 'not-yet' });
+      screen = { read: read.read, chat: read.chat };
+      if (read.kind === 'refusal') {
+        await recordTyped(words, { allow: false, kind: 'refusal', category: read.category, refusal: read.refusal, read: read.read }, { at, exchange: x.id, step: x.step, choice: body.action === 'attempt' ? choice : null });
+        return reply(200, { kind: 'refusal', ...read.refusal, tail: practice.TEXT.refusalTail, practice: practiceBlock(at), exchange: x.id });
+      }
+      typedNotYet = read.kind === 'not-yet';
+    }
+
+    // 9.
+    const result = practice.act(x, { ...body, choice, text: words }, { now: at, content: practiceContent, typedNotYet, screen });
+    if (result.error) return reply(result.status, { error: result.error, practice: practiceBlock(at) });
+    for (const event of result.append) await record(event);
+    return reply(200, { practice: practiceBlock(at), exchange: x.id });
   }
 
   // The desk writes a teacher's correction into the student's own chain. Going through here rather than
@@ -3775,6 +4884,9 @@ var learning = {
   queue: function (event) {
     if (!event || event.type !== 'request') return;
     if (event.outcome === 'acknowledged' || event.outcome === 'error') return;
+    // Words typed in a practice question are answers, not requests: never logged, queued or shared. The
+    // consent card promises "the words of each request you type in the chat", and this keeps it literal.
+    if (event.via === 'practice') return;
     var line = forLearner(event);
     var log = readJson(LOG_KEY, []); log.push(line); while (log.length > 500) log.shift(); writeJson(LOG_KEY, log);
     if (learning.consent() !== 'yes') return;
@@ -3847,7 +4959,7 @@ var memory = {
     }
   }
 };
-var app = createPreviewApp({ memory: memory, onRecord: learning.queue });
+var app = createPreviewApp({ memory: memory, onRecord: learning.queue, pilot: true });
 window.PathWayPilot = {
   app: app,
   fetch: function (url, body) {

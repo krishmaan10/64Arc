@@ -15,16 +15,16 @@ const chatModes = ['understand', 'plan', 'question', 'sources'];
 const autoAvailable = () => chatModes.some(allowed);
 const words = text => (text.match(/[\p{L}\p{N}']+/gu) || []).length;
 const nameOf = id => state.modes.find(mode => mode.id === id)?.name || id;
-const guidanceLabel = shown => shown.replySource === 'example' ? 'Sample guidance' : shown.replySource === 'model' ? 'Guidance' : 'Earlier guidance';
+const guidanceLabel = shown => shown.replySource === 'example' ? 'Sample guidance' : shown.replySource === 'model' ? 'Guidance' : shown.replySource === 'practice' ? 'Practice question' : 'Earlier guidance';
 const guidanceNotice = shown => shown.replySource === 'example'
   ? 'This is a prepared example for the project, not an answer to your specific message. It does not follow the conversation.'
-  : shown.replySource === 'model' ? '' : 'This older record does not identify whether the reply was a prepared example or model-generated guidance.';
+  : ['model', 'practice'].includes(shown.replySource) ? '' : 'This older record does not identify whether the reply was a prepared example or model-generated guidance.';
 const writingMode = () => ['improve', 'rephrase'].includes(selected) && allowed(selected);
 const allowed = id => id === 'auto' ? autoAvailable() : Boolean(state?.assignment.modes.includes(id) && state.previewModes.includes(id));
 const descriptions = {
   understand: ['?', 'Unpack the task and understand what is expected.'],
   plan: ['▤', 'Find manageable steps. Decide how to spend your time.'],
-  question: ['◎', 'Test your thinking with questions you can explore.'],
+  question: ['◎', 'Practice questions on the ideas behind the assignment, with a hint and an explanation.'],
   improve: ['Aa', 'Review small grammar edits or practise a clearer tone.'],
   rephrase: ['↔', 'Review quotations, paraphrases and attribution in your saved draft.'],
   sources: ['▧', 'Explore this project’s reading list and evaluate the evidence.'],
@@ -228,7 +228,9 @@ function renderModes() {
   }
   $('mode-title').textContent = paused ? `Your teacher paused “${nameOf(selected)}”` : active ? nameOf(active) : 'Help is paused for this assignment';
   $('mode-purpose').textContent = paused ? 'Your message has not been sent. Pick another kind of help above and it will go there.' : active ? descriptions[active][1] : 'You can keep writing and saving your draft. Your teacher has turned off all help modes.';
-  $('request-form').hidden = writingMode(); $('writing-tools').hidden = !writingMode();
+  // "Check my understanding" is practice questions, not a request box.
+  $('request-form').hidden = writingMode() || active === 'question'; $('writing-tools').hidden = !writingMode();
+  renderPracticePanel();
   $('writing-title').textContent = active === 'rephrase' ? 'Review source use' : 'Review your writing';
   $('writing-options').hidden = active === 'rephrase'; $('rephrase-action').hidden = active !== 'rephrase';
   document.querySelectorAll('[data-mode]').forEach(node => lockable(node, !allowed(node.dataset.mode)));
@@ -252,18 +254,24 @@ function detail(parent, title, text) {
 }
 function renderActivity() {
   const filter = $('activity-filter').value;
-  const inScope = state.activity.filter(event => activityScope === 'all' || eventProject(event) === state.projectId);
-  const events = inScope.filter(event => filter === 'all' || event.type === filter || filter === 'writing' && ['review', 'edit'].includes(event.type));
-  $('activity-count').textContent = `${events.length} of ${inScope.length} events`;
+  const inScope = state.activity.filter(event => event.type !== 'practice' && (activityScope === 'all' || eventProject(event) === state.projectId));
+  // A practice question is one entry, in the same sentences the teacher reads, not a row per click.
+  const facts = (state.practice?.facts || []).filter(f => activityScope === 'all' || f.projectId === state.projectId).map(f => ({ type: 'practice', at: f.at, lines: f.lines, projectId: f.projectId }));
+  const shown = [...inScope.filter(event => filter === 'all' || event.type === filter || filter === 'writing' && ['review', 'edit'].includes(event.type) || filter === 'practice' && event.via === 'practice'), ...(['all', 'practice'].includes(filter) ? facts : [])];
+  const events = shown.sort((a, b) => (a.at || 0) - (b.at || 0));
+  const total = inScope.length + facts.length;
+  $('activity-count').textContent = `${events.length} of ${total} events`;
   $('activity-list').replaceChildren();
   if (!events.length) $('activity-list').append(element('li', state.activity.length ? 'No activity matches this filter.' : 'Your learning story starts here. Save a draft or ask for guidance to begin.', 'empty-state'));
+  if (state.practice?.note && ['all', 'practice'].includes(filter)) $('activity-list').append(element('li', state.practice.note, 'small muted'));
   for (const event of [...events].reverse()) {
     const li = element('li'); const heading = element('div', undefined, 'event-heading');
-    const titles = { draft: `Draft saved · ${event.words} words`, policy: 'Assignment permissions updated', review: `${event.kind} review · ${event.count} suggestions`, edit: `Writing suggestion ${event.action === 'accept' ? 'accepted' : 'rejected'}`, correction: 'Your teacher checked a decision' };
+    const titles = { draft: `Draft saved · ${event.words} words`, policy: 'Assignment permissions updated', review: `${event.kind} review · ${event.count} suggestions`, edit: `Writing suggestion ${event.action === 'accept' ? 'accepted' : 'rejected'}`, correction: 'Your teacher checked a decision', practice: 'Practice question' };
     const time = element('time', new Date(event.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    time.dateTime = new Date(event.at).toISOString(); heading.append(element('strong', titles[event.type] || nameOf(event.mode) || event.type));
+    time.dateTime = new Date(event.at).toISOString(); heading.append(element('strong', titles[event.type] || `${nameOf(event.mode) || event.type}${event.via === 'practice' ? ' · typed in a practice question' : ''}`));
     if (event.type === 'request') { const chip = element('span', event.outcome, 'outcome-chip'); chip.dataset.outcome = event.outcome; heading.append(chip); }
     heading.append(time); li.append(heading);
+    if (event.type === 'practice') for (const line of event.lines) li.append(element('p', line));
     if (event.type === 'draft') detail(li, 'Read saved draft', event.text || '(Empty draft)');
     if (event.type === 'policy') li.append(element('p', event.modes.length ? `Allowed: ${event.modes.map(nameOf).join(', ')}` : 'All assistant help is paused.'));
     if (event.type === 'review') li.append(element('p', event.guide));
@@ -466,8 +474,8 @@ function renderModelState() {
   const live = state.model === 'live';
   const chatNote = $('chat-note');
   if (chatNote) chatNote.firstChild.textContent = live
-    ? 'Automated guidance can make mistakes. Requests are recorded in '
-    : 'Fixed demo guidance, not a personal tutor yet. Requests are recorded in ';
+    ? 'Automated guidance can make mistakes; practice questions are written in advance. Requests are recorded in '
+    : 'Fixed demo guidance and practice questions written in advance, not a personal tutor. Requests are recorded in ';
   if ($('guidance-note')) $('guidance-note').textContent = live
     ? 'Automated guidance can make mistakes. Each request is checked and recorded.'
     : 'Fixed demo guidance. Each request is checked and recorded.';
@@ -478,7 +486,7 @@ function renderModelState() {
   if (banner) {
     banner.textContent = (live
       ? 'Live model replies · automated boundary checks can make mistakes'
-      : 'Fixed replies · local request reader · no AI model connected for replies')
+      : 'Fixed replies · practice questions written in advance · local request reader · no AI model connected for replies')
       + (travel.length ? ` · ${travel.join(' · ')}` : ' · nothing you write leaves this device');
   }
   const promise = $('promise-text');
@@ -486,6 +494,7 @@ function renderModelState() {
     promise.textContent = (live
       ? 'The local server sends permitted chat requests and the project brief to an external model provider. Automated checks screen the reply but cannot guarantee that it stays within every assessment boundary. Refused requests do not reach the model. Grammar replacements come from local rules.'
       : 'There is no connected generative model in this preview. Guidance is fixed, and grammar replacements come from local rules. The preview cannot generate a finished project.')
+      + ' Practice questions are written in advance and checked only by which option you choose. No AI model reads or marks your answers.'
       + (sharing ? ' Sharing is on: the words of your chat requests, and how each was decided, go to the learner.' : '')
       + (!live && !sharing ? ' Nothing you write leaves this device.' : '')
       + ' This practice space does not alert a teacher or provide monitored support.';
@@ -535,6 +544,397 @@ function renderLearningCard() {
   save.addEventListener('click', () => download('pathway-practice-log.jsonl', learning.download(), 'application/x-ndjson'));
   actions.append(save);
   card.append(actions);
+}
+// ---------------------------------------------------------------------------------------------------------
+// Practice questions. The server decides every step and sends a view; this draws it. What a student has
+// chosen or typed but not yet sent is kept per question here, so a redraw never loses it.
+// ---------------------------------------------------------------------------------------------------------
+const practiceDrafts = new Map();
+const practiceDraft = id => {
+  if (!practiceDrafts.has(id)) practiceDrafts.set(id, { choice: '', confidence: '', text: '', reason: '', sayback: '', writing: false, ticks: [] });
+  return practiceDrafts.get(id);
+};
+const ROW_TAGS = { written: 'The answer this question was written to have', yours: 'Your choice', first: 'Your first choice' };
+const CONFIDENCE = [['guessing', 'Guessing'], ['fairly', 'Fairly sure'], ['sure', 'Sure']];
+const practiceWaiting = () => {
+  const open = state?.practice?.exchanges.find(view => view.exchange === state.practice.open);
+  return Boolean(open && ['asked', 'hinted', 'reason'].includes(open.state));
+};
+const paragraphs = (parent, texts, className) => { for (const text of texts) parent.append(element('p', text, className)); };
+function practiceButton(text, className, onClick) {
+  const button = lockable(element('button', text, className));
+  button.type = 'button';
+  button.addEventListener('click', onClick);
+  return button;
+}
+function practiceRows(lines) {
+  const list = element('ul', undefined, 'practice-rows');
+  for (const line of lines) {
+    const mine = line.tags.some(tag => tag !== 'written');
+    const row = element('li', undefined, `practice-row${line.tags.includes('written') ? ' is-written' : ''}${mine ? ' is-mine' : ''}`);
+    const tags = line.tags.map(tag => ROW_TAGS[tag]).filter(Boolean);
+    if (tags.length) row.append(element('span', tags.join(' · '), 'practice-tag'));
+    row.append(element('strong', line.text), element('p', line.note, 'practice-note'));
+    list.append(row);
+  }
+  return list;
+}
+function practiceBlocks(card, view, blocks) {
+  for (const block of blocks) {
+    if (block.kind === 'lead') card.append(element('p', block.text, 'practice-lead'));
+    else if (block.kind === 'diagnosis') { card.append(element('p', block.text), element('p', block.diagnosis)); }
+    else if (block.kind === 'hint') {
+      const hint = element('p', undefined, 'practice-hint');
+      hint.append(element('strong', 'Hint: '), document.createTextNode(block.text));
+      card.append(hint);
+    } else if (block.kind === 'rows') card.append(practiceRows(block.lines));
+    else if (block.kind === 'reasonRows') { card.append(element('p', 'The reasons, and what each one misses:', 'practice-subhead')); card.append(practiceRows(block.lines)); }
+    else if (block.kind === 'explanation') {
+      const why = element('section', undefined, 'practice-why-block');
+      why.append(element('h4', 'Why'));
+      paragraphs(why, block.paragraphs);
+      card.append(why);
+    } else if (block.kind === 'sayback') {
+      const said = element('div', undefined, 'practice-said');
+      said.append(element('span', 'In your words', 'practice-tag'), element('p', block.text));
+      card.append(said);
+    } else if (block.kind === 'transfer') {
+      const take = element('div', undefined, 'practice-transfer');
+      take.append(element('strong', block.lead), element('p', block.text));
+      card.append(take);
+    }
+  }
+}
+/** Which of this question's blocks come before its form, and which is the refusal under the box. */
+const splitBlocks = view => ({
+  refusal: view.blocks.find(b => b.kind === 'refusal') || null,
+  carried: view.blocks.find(b => b.kind === 'carried') || null,
+  paused: view.blocks.find(b => b.kind === 'paused') || null,
+  support: view.blocks.find(b => b.kind === 'support') || null,
+  rest: view.blocks.filter(b => !['refusal', 'carried', 'paused', 'support', 'offer', 'ideas'].includes(b.kind)),
+  offer: view.blocks.find(b => b.kind === 'offer') || null,
+  ideas: view.blocks.find(b => b.kind === 'ideas') || null,
+});
+/**
+ * One practice card, drawn from the server's view. `where` keeps two copies of one question (the chat and
+ * the workspace) from sharing radio names; `latest` says whether a finished card is drawn in full.
+ */
+function renderPractice(view, { where = 'chat', latest = true } = {}) {
+  const card = element('article', undefined, `practice-card state-${view.state}`);
+  card.dataset.exchange = view.exchange;
+  card.dataset.where = where;
+  const parts = splitBlocks(view);
+  const finished = ['closed', 'expired'].includes(view.state);
+  const draft = practiceDraft(view.exchange);
+  const name = `${where}-${view.exchange}`;
+  const head = element('div', undefined, 'practice-head');
+  const words = state.practice.words;
+  head.append(element('span', words.label, 'practice-label'));
+  if (view.draft) head.append(element('span', words.draftLabel, 'practice-draft'));
+  card.append(head);
+  const title = element('h3', view.concept.name); title.tabIndex = -1; card.append(title);
+
+  if (parts.support) {
+    // Only the reply a person would want read to them. Nothing that reads as "back to the question".
+    card.classList.add('is-support');
+    card.append(element('p', parts.support.reason, 'practice-support'), element('p', parts.support.explain));
+    return card;
+  }
+  if (finished && !latest) {
+    const summary = element('details', undefined, 'practice-finished');
+    summary.append(element('summary', `Practice question · ${view.concept.name} · finished · Show it again`));
+    const body = element('div');
+    body.append(element('p', view.scenario, 'practice-scenario'), element('p', view.question, 'practice-question'));
+    practiceBlocks(body, view, parts.rest);
+    summary.append(body);
+    card.replaceChildren(summary);
+    return card;
+  }
+  card.append(element('p', view.why.text, 'practice-why'));
+  if (['asked', 'hinted'].includes(view.state)) card.append(element('p', words.scope, 'practice-scope'));
+  if (parts.carried) {
+    const carried = element('section', undefined, 'practice-carried');
+    carried.append(element('p', parts.carried.text, 'practice-lead'), practiceRows(parts.carried.lines));
+    paragraphs(carried, parts.carried.paragraphs);
+    card.append(carried);
+  }
+  if (parts.paused) card.append(element('p', parts.paused.text, 'practice-paused'));
+  card.append(element('p', view.scenario, 'practice-scenario'));
+
+  const can = new Set(view.can);
+  if (view.state === 'asked' || view.state === 'hinted') {
+    if (view.state === 'hinted') {
+      const about = element('section', undefined, 'practice-about');
+      const heading = element('h4', 'About your choice'); heading.tabIndex = -1; heading.className = 'practice-step';
+      about.append(heading);
+      practiceBlocks(about, view, parts.rest);
+      card.append(about);
+    }
+    const form = element('form', undefined, 'practice-form');
+    const set = element('fieldset');
+    set.append(element('legend', view.question));
+    for (const option of view.options) {
+      const label = element('label', undefined, 'practice-option');
+      const radio = lockable(element('input'), !can.has('attempt'));
+      radio.type = 'radio'; radio.name = `${name}-option`; radio.value = option.id; radio.checked = draft.choice === option.id;
+      radio.addEventListener('change', () => { draft.choice = option.id; sync(); });
+      label.append(radio, element('span', option.text));
+      if (view.mine.first && view.mine.first.choice === option.id) {
+        label.classList.add('is-first');
+        label.append(element('span', 'Your first choice', 'practice-tag'));
+        if (view.mine.first.words) label.append(element('small', `You wrote: “${view.mine.first.words}”`, 'practice-first-words'));
+      }
+      set.append(label);
+    }
+    form.append(set);
+    if (view.state === 'asked') {
+      const sure = element('div', undefined, 'practice-confidence');
+      sure.append(element('span', 'How sure are you? (optional)', 'practice-subhead'));
+      for (const [id, text] of CONFIDENCE) {
+        const toggle = lockable(element('button', text, 'practice-toggle'), !can.has('attempt'));
+        toggle.type = 'button'; toggle.setAttribute('aria-pressed', String(draft.confidence === id));
+        toggle.addEventListener('click', () => {
+          draft.confidence = draft.confidence === id ? '' : id;
+          sure.querySelectorAll('.practice-toggle').forEach((node, i) => node.setAttribute('aria-pressed', String(draft.confidence === CONFIDENCE[i][0])));
+        });
+        sure.append(toggle);
+      }
+      form.append(sure);
+    }
+    const boxId = `${name}-why`;
+    const boxLabel = element('label', 'Why that one? (optional)'); boxLabel.htmlFor = boxId;
+    const box = lockable(element('textarea'), !can.has('attempt'));
+    box.id = boxId; box.maxLength = 600; box.rows = 2; box.value = draft.text;
+    box.placeholder = 'Because… a few words is enough. A guess is fine.';
+    const count = element('span', `${draft.text.length} / 600`, 'small muted');
+    box.addEventListener('input', () => { draft.text = box.value; count.textContent = `${box.value.length} / 600`; sync(); });
+    form.append(boxLabel, box, count);
+    const actions = element('div', undefined, 'practice-actions');
+    const check = practiceButton('Check my choice', 'primary', () => practiceSend(view, { action: 'attempt', choice: draft.choice || undefined, confidence: draft.confidence || undefined, text: draft.text }));
+    const notYet = practiceButton(view.state === 'asked' ? 'I don’t know yet' : 'Show me the explanation', '', () => practiceSend(view, { action: 'notYet', text: draft.text }));
+    actions.append(check, notYet);
+    form.append(actions);
+    // Enabled when an option is chosen or anything is typed, so a student can always send what they wrote.
+    const sync = () => { check.dataset.unavailable = String(!can.has('attempt') || (!draft.choice && !draft.text.trim())); check.disabled = busy || check.dataset.unavailable === 'true'; };
+    sync();
+    form.addEventListener('submit', event => event.preventDefault());
+    card.append(form);
+    if (parts.refusal) card.append(practiceRefusal(view, parts.refusal));
+    const leave = practiceButton('Leave this question', 'text-link', () => practiceSend(view, { action: 'leave', text: draft.text }));
+    if (!can.has('leave')) leave.dataset.unavailable = 'true';
+    card.append(leave);
+    card.append(element('p', words.checkedLine, 'practice-footnote'));
+    if (view.pilot && view.state === 'asked') card.append(element('p', words.pilotNote, 'practice-footnote'));
+    const how = element('details', undefined, 'practice-how');
+    how.append(element('summary', 'How your answer is checked'));
+    const list = element('ul', undefined, 'readable-list');
+    for (const line of state.practice.howChecked || []) list.append(element('li', line));
+    how.append(list);
+    card.append(how);
+    return card;
+  }
+
+  card.append(element('p', view.question, 'practice-question'));
+  if (view.state === 'reason') {
+    practiceBlocks(card, view, parts.rest.filter(b => b.kind !== 'reasonTier'));
+    const tier = view.blocks.find(b => b.kind === 'reasonTier');
+    const step = element('h4', tier.intro, 'practice-step'); step.tabIndex = -1;
+    const form = element('form', undefined, 'practice-form');
+    const set = element('fieldset');
+    set.append(element('legend', tier.prompt));
+    for (const option of [...tier.options, { id: 'none', text: 'None of these is my reason' }]) {
+      const label = element('label', undefined, 'practice-option');
+      const radio = lockable(element('input'), !can.has('reason'));
+      radio.type = 'radio'; radio.name = `${name}-reason`; radio.value = option.id; radio.checked = draft.reason === option.id;
+      radio.addEventListener('change', () => { draft.reason = option.id; choose.dataset.unavailable = 'false'; choose.disabled = busy; });
+      label.append(radio, element('span', option.text));
+      set.append(label);
+    }
+    const choose = practiceButton('Choose this reason', 'primary', () => practiceSend(view, { action: 'reason', choice: draft.reason }));
+    choose.dataset.unavailable = String(!draft.reason || !can.has('reason')); choose.disabled = busy || choose.dataset.unavailable === 'true';
+    form.append(set, choose);
+    form.addEventListener('submit', event => event.preventDefault());
+    card.append(step, form, practiceButton('Leave this question', 'text-link', () => practiceSend(view, { action: 'leave' })));
+    return card;
+  }
+
+  if (view.state === 'explained' && draft.writing) {
+    // The explanation leaves the page while the student writes, so the words are theirs rather than a
+    // copy of the paragraph above. "Show the explanation again" brings it back and records nothing.
+    const form = element('form', undefined, 'practice-form');
+    const boxId = `${name}-sayback`;
+    const label = element('label', state.practice.words.sayBackPrompt); label.htmlFor = boxId;
+    const box = lockable(element('textarea'));
+    box.id = boxId; box.maxLength = 600; box.rows = 3; box.value = draft.sayback;
+    const save = practiceButton('Save my version', 'primary', () => practiceSend(view, { action: 'sayback', text: draft.sayback }));
+    box.addEventListener('input', () => { draft.sayback = box.value; save.dataset.unavailable = String(!box.value.trim()); save.disabled = busy || !box.value.trim(); });
+    save.dataset.unavailable = String(!draft.sayback.trim()); save.disabled = busy || !draft.sayback.trim();
+    const actions = element('div', undefined, 'practice-actions');
+    actions.append(save, practiceButton('Skip', '', () => practiceSend(view, { action: 'sayback', text: '' })));
+    form.append(label, box, actions);
+    form.addEventListener('submit', event => event.preventDefault());
+    const again = practiceButton('Show the explanation again', 'text-link', () => { draft.writing = false; redrawPractice(view.exchange); });
+    card.append(form);
+    if (parts.refusal) card.append(practiceRefusal(view, parts.refusal));
+    card.append(again);
+    return card;
+  }
+
+  practiceBlocks(card, view, parts.rest);
+  if (parts.ideas) card.append(practiceIdeas(view, parts.ideas, name));
+  if (parts.refusal) card.append(practiceRefusal(view, parts.refusal));
+  const actions = element('div', undefined, 'practice-actions');
+  if (parts.offer) {
+    card.append(element('p', parts.offer.text, 'practice-subhead'));
+    actions.append(
+      practiceButton('Say it in my own words', 'primary', () => { draft.writing = true; redrawPractice(view.exchange, true); }),
+      practiceButton('Finish', '', () => practiceSend(view, { action: 'sayback', text: '' })),
+    );
+  }
+  if (can.has('another')) {
+    actions.append(practiceButton('Another question', 'primary', () => startPractice({ action: 'another' })));
+    if (where === 'chat') actions.append(practiceButton('Back to the chat', '', () => $('chat-input').focus()));
+  }
+  if (actions.childElementCount) card.append(actions);
+  return card;
+}
+function practiceIdeas(view, block, name) {
+  const section = element('section', undefined, 'practice-ideas');
+  if (block.ticked) {
+    section.append(element('p', block.saved, 'practice-lead'));
+    const list = element('ul', undefined, 'readable-list');
+    for (const idea of block.ideas) list.append(element('li', `${block.ticked.includes(idea.id) ? 'Ticked' : 'Not ticked'}: ${idea.text}`));
+    section.append(list, element('p', block.note, 'practice-footnote'));
+    return section;
+  }
+  const draft = practiceDraft(view.exchange);
+  const form = element('form', undefined, 'practice-form');
+  const set = element('fieldset');
+  const legend = element('legend', block.prompt); set.append(legend);
+  for (const idea of block.ideas) {
+    const label = element('label', undefined, 'practice-option');
+    const box = lockable(element('input'));
+    box.type = 'checkbox'; box.name = `${name}-idea`; box.value = idea.id; box.checked = draft.ticks.includes(idea.id);
+    box.addEventListener('change', () => { draft.ticks = box.checked ? [...new Set([...draft.ticks, idea.id])] : draft.ticks.filter(id => id !== idea.id); });
+    label.append(box, element('span', idea.text));
+    set.append(label);
+  }
+  const actions = element('div', undefined, 'practice-actions');
+  actions.append(
+    practiceButton('Save my check', 'primary', () => practiceSend(view, { action: 'check', ticked: draft.ticks })),
+    practiceButton('Skip', '', () => practiceSend(view, { action: 'skip' })),
+  );
+  form.append(set, element('p', block.note, 'practice-footnote'), actions);
+  form.addEventListener('submit', event => event.preventDefault());
+  section.append(form);
+  return section;
+}
+function practiceRefusal(view, block) {
+  const box = element('div', undefined, 'practice-refusal');
+  box.setAttribute('role', 'status');
+  box.append(element('strong', block.reason), element('p', block.explain), element('p', block.tail), element('p', block.claim, 'practice-footnote'));
+  box.append(practiceButton('It was my answer', '', () => practiceSend(view, { action: 'claim', requestSeq: block.requestSeq, choice: practiceDraft(view.exchange).choice || undefined })));
+  return box;
+}
+/** Redraw one question wherever it is shown, keeping each copy's place. */
+function redrawPractice(exchange, focusBox = false) {
+  const view = state.practice.exchanges.find(v => v.exchange === exchange);
+  if (!view) return;
+  for (const node of document.querySelectorAll(`.practice-card[data-exchange="${exchange}"]`)) {
+    const fresh = renderPractice(view, { where: node.dataset.where, latest: true });
+    node.replaceWith(fresh);
+    if (focusBox) fresh.querySelector('textarea')?.focus();
+  }
+}
+function practiceFeedback(text) {
+  const onChat = location.hash === '#chat' || !location.hash;
+  if (onChat) $('chat-feedback').textContent = text; else notice(text);
+}
+/** After any step: the new step's heading takes focus, and a polite live region says what changed. */
+function focusPractice(exchange) {
+  const where = location.hash === '#workspace' ? 'workspace' : 'chat';
+  const card = document.querySelector(`.practice-card[data-exchange="${exchange}"][data-where="${where}"]`);
+  if (!card) return;
+  // The new step, not the end of the card: the hint sits above the options it is about.
+  const target = card.querySelector('.practice-step') || card.querySelector('h3');
+  target?.focus?.({ preventScroll: true });
+  target?.scrollIntoView?.({ block: 'start' });
+}
+function practiceSend(view, body) {
+  const draft = practiceDraft(view.exchange);
+  action(async () => {
+    let result;
+    try {
+      result = await api('/api/practice', { exchange: view.exchange, step: view.step, ...body });
+    } catch (error) {
+      practiceFeedback(`${error.message} What you typed is still in the box.`);
+      try { await refresh(); } catch { /* the message above already says what to do */ }
+      return;
+    }
+    if (result.kind === 'refusal') {
+      // The words stay in the box, and the question stays open.
+      state.practice = result.practice; chatSignature = ''; renderChat(); renderPracticePanel();
+      practiceFeedback(`${result.reason} ${result.tail}`);
+      return;
+    }
+    Object.assign(draft, { choice: '', confidence: '', text: '', reason: '', writing: false });
+    if (result.kind === 'support') practiceDrafts.delete(view.exchange);
+    try { await refresh(); } catch { state.practice = result.practice; chatSignature = ''; renderChat(); renderPracticePanel(); }
+    const now = state.practice.exchanges.find(v => v.exchange === view.exchange);
+    practiceFeedback(result.kind === 'support' ? 'Your message was read as being about you, not the question.' : now && now.state === 'hinted' ? 'About your choice: a hint, then another go.' : now && ['explained', 'closed'].includes(now.state) ? 'The explanation is below your choice.' : 'Saved.');
+    focusPractice(view.exchange);
+  });
+}
+function startPractice(body = {}) {
+  action(async () => {
+    let result;
+    try { result = await api('/api/practice', { action: 'start', ...body }); }
+    catch (error) { practiceFeedback(error.message); try { await refresh(); } catch { /* reported above */ } return; }
+    await refresh();
+    if (result.none) {
+      practiceFeedback(result.text);
+      if (result.none === 'all-practised' && location.hash !== '#workspace') {
+        const anyway = practiceButton('Practise one anyway', 'text-link', () => startPractice({ anyway: true }));
+        $('chat-feedback').append(document.createTextNode(' '), anyway);
+      }
+      return;
+    }
+    practiceFeedback('A practice question is open. Answer it in the card.');
+    focusPractice(result.exchange);
+  });
+}
+const aboutHours = at => {
+  const hours = Math.max(1, Math.round((at - Date.now()) / 3_600_000));
+  return hours > 36 ? `about ${Math.round(hours / 24)} days` : `about ${hours} hour${hours === 1 ? '' : 's'}`;
+};
+/** The workspace's "Check my understanding": the project's ideas, and the open question. */
+function renderPracticePanel() {
+  const panel = $('practice-panel');
+  if (!panel) return;
+  const on = selected === 'question' && allowed('question');
+  panel.hidden = !on;
+  if (!on || !state.practice) return;
+  panel.replaceChildren();
+  const practice = state.practice;
+  panel.append(element('h3', 'Practise a key idea'));
+  panel.append(element('p', 'Questions written in advance about ideas this project depends on, set in other situations. You answer first; a wrong option gets a hint and a second try; every question ends with the explanation.', 'muted'));
+  if (!practice.servable) {
+    panel.append(element('p', practice.words.noneServable, 'practice-footnote'));
+    return;
+  }
+  const list = element('ul', undefined, 'practice-concepts');
+  const words = { new: 'Not tried yet', due: 'Ready for another go', review: 'Ready for a check' };
+  for (const concept of practice.concepts) {
+    const li = element('li');
+    const status = words[concept.status] || (concept.comesBackAt ? `Tried · comes back in ${aboutHours(concept.comesBackAt)}` : 'Tried');
+    const text = element('div');
+    text.append(element('strong', concept.name), element('span', status, 'small muted'));
+    li.append(text, practiceButton('Practise this', 'text-link', () => startPractice({ conceptId: concept.id })));
+    list.append(li);
+  }
+  panel.append(list, practiceButton('Start a question', 'primary', () => startPractice({})));
+  const open = practice.exchanges.find(v => v.exchange === practice.open) || practice.exchanges.at(-1);
+  if (open) panel.append(renderPractice(open, { where: 'workspace', latest: true }));
 }
 function renderAll() { renderLearningCard(); renderModelState(); renderStorageState(); renderAssignment(); renderSavedReferences(); renderProjects(); renderChat(); renderModes(); renderChecklist(); renderSources(); renderActivity(); renderObservations(); draftStatus(); }
 function download(filename, text, type) {
@@ -609,21 +1009,35 @@ function renderChat() {
   $('chat-mode').value = chatMode;
   $('chat-assignment').textContent = state.assignment.title;
   $('chat-brief').textContent = state.assignment.brief;
-  const thinkingStarter = document.querySelector('[data-chat-mode="question"]');
-  thinkingStarter.dataset.prompt = `Ask me questions to help me think about this project: ${state.assignment.title}`;
   $('chat-policy').textContent = chatMode ? '◇  Guidance within assignment boundaries · You write the final work' : 'Chat assistance is paused. You can still write and save your draft.';
+  $('chat-input').placeholder = practiceWaiting() ? 'Answer in the card above, or ask something else here.' : 'Try a request to see how the boundary responds';
   // One conversation per project. Seeing the History questions above the English ones would be a different
-  // student's transcript as far as the person reading it is concerned.
-  const turns = [...state.activity.filter(event => event.type === 'request' && eventProject(event) === state.projectId), ...pendingChatTurns];
-  const signature = JSON.stringify([turns, state.assignment.modes, state.projectId]);
+  // student's transcript as far as the person reading it is concerned. Words typed inside a practice
+  // question are answers, drawn in its card, so they never come back as chat turns.
+  const cards = state.practice ? state.practice.exchanges : [];
+  // A message about the student typed in a card is answered in that card. One that reached no open card
+  // (it was closed in another tab, say) is answered here, as chat answers it, so the reply is never lost.
+  const answeredInCard = new Set(cards.flatMap(view => view.blocks.filter(b => b.kind === 'support').map(b => b.requestSeq)));
+  const requests = state.activity.filter(event => event.type === 'request' && eventProject(event) === state.projectId
+    && (!event.via || (event.outcome === 'supported' && !answeredInCard.has(event.seq))));
+  const latest = cards.at(-1)?.exchange;
+  const items = [...requests.map(event => ({ seq: event.seq, event })), ...cards.map(view => ({ seq: view.openSeq, view }))].sort((a, b) => a.seq - b.seq);
+  const signature = JSON.stringify([items, pendingChatTurns, state.assignment.modes, state.projectId]);
   if (signature !== chatSignature) {
     lastOffers = '';
-    $('chat-transcript').replaceChildren(); turns.forEach(appendChatTurn); chatSignature = signature;
-    if (turns.length && (location.hash === '#chat' || !location.hash)) latestTurn();
+    $('chat-transcript').replaceChildren();
+    for (const item of items) {
+      if (item.event) appendChatTurn(item.event);
+      else $('chat-transcript').append(renderPractice(item.view, { where: 'chat', latest: item.view.exchange === latest }));
+    }
+    pendingChatTurns.forEach(appendChatTurn);
+    chatSignature = signature;
+    if (items.length && (location.hash === '#chat' || !location.hash)) latestTurn();
   }
-  $('chat-welcome').hidden = turns.length > 0;
-  $('chat-transcript').hidden = turns.length === 0;
-  $('page-chat').classList.toggle('is-empty', turns.length === 0);
+  const any = items.length + pendingChatTurns.length > 0;
+  $('chat-welcome').hidden = any;
+  $('chat-transcript').hidden = !any;
+  $('page-chat').classList.toggle('is-empty', !any);
 }
 $('chat-input').addEventListener('input', () => {
   $('chat-count').textContent = `${$('chat-input').value.length.toLocaleString()} / 2,000`; controls();
@@ -631,6 +1045,9 @@ $('chat-input').addEventListener('input', () => {
 $('chat-mode').addEventListener('change', () => { chatMode = $('chat-mode').value; controls(); });
 document.querySelectorAll('[data-chat-mode]').forEach(button => button.addEventListener('click', () => {
   if (busy || !allowed(button.dataset.chatMode)) return;
+  // A practice question starts directly. A prefilled message would be read by the request boundary, and
+  // "give me a practice question for this project" is read as asking for the work with a reason attached.
+  if (button.dataset.chatMode === 'question') { startPractice({}); return; }
   chatMode = button.dataset.chatMode; $('chat-mode').value = chatMode;
   $('chat-input').value = button.dataset.prompt;
   $('chat-input').dispatchEvent(new Event('input')); $('chat-input').focus();
@@ -654,9 +1071,11 @@ $('chat-form').addEventListener('submit', event => {
       pendingChatTurns.push({ asked: message, mode: shown.mode || modeId, shown, projectId: state.projectId, routedTo: shown.routedTo });
       $('chat-input').value = ''; $('chat-count').textContent = '0 / 2,000';
       renderChat();
-      try { await refresh(); $('chat-feedback').textContent = 'Response received. Request and reply recorded in shared activity.'; }
+      try { await refresh(); $('chat-feedback').textContent = shown.exchange ? 'A practice question is open. Answer it in the card.' : 'Response received. Request and reply recorded in shared activity.'; }
       catch { $('chat-feedback').textContent = 'Response received and recorded. Activity could not refresh; reload to sync. Do not resend this message.'; }
-      $('chat-transcript').lastElementChild?.scrollIntoView?.({ block: 'nearest' });
+      // A question already open is where the student is sent back to, rather than the end of the chat.
+      const card = shown.exchange && document.querySelector(`.practice-card[data-exchange="${shown.exchange}"][data-where="chat"]`);
+      (card || $('chat-transcript').lastElementChild)?.scrollIntoView?.({ block: 'nearest' });
     } catch (error) {
       $('chat-feedback').textContent = `${error.message} Your message is still here. Try sending again.`;
     }
