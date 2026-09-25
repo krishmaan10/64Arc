@@ -91,33 +91,33 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
           <span class="line">where they are.</span>
         </span>
         <span data-lvl="2">
-          <span class="line">One set of numbers</span>
-          <span class="line">across your branches.</span>
-          <span class="line">Your ERP stays the</span>
-          <span class="line">system of record.</span>
+          <span class="line">We build one system</span>
+          <span class="line">across your branches,</span>
+          <span class="line">connected to the</span>
+          <span class="line">ERP you keep.</span>
         </span>
         <span data-lvl="3">
-          <span class="line">We build the system</span>
-          <span class="line">your business runs on.</span>
-          <span class="line">The one everything</span>
-          <span class="line">else has to agree with.</span>
+          <span class="line">We build the server</span>
+          <span class="line">and the apps, against</span>
+          <span class="line">the ERP you</span>
+          <span class="line">already run.</span>
         </span>
       </h1>
 
       <div class="hero-cols">
         <div>
           <p class="lead" data-lvl="1">
-            Orders, stock, dues and collections, across your branches &mdash; typed once, on the
-            phone as well as at the desk. The system your books already run on stays where it is.
+            Each order is typed once, on a phone in a dealer&rsquo;s shop or in a browser, and nobody
+            types it again at the branch. The software that keeps your books today goes on keeping them.
           </p>
           <p class="lead" data-lvl="2">
-            Orders, stock, credit and dues across your branches, integrated with the ERP you keep
-            as the system of record. Each order is entered once, and every screen resolves
-            against one owner.
+            Each order is entered once, in the field or in a browser, and stock from a branch whose feed
+            has stopped is marked with the date it was last read.
           </p>
           <p class="lead" data-lvl="3">
-            Built against the system of record you already have. One owner per fact, a read layer
-            across the branch estate, and a separate write store for what the ERP has nowhere to put.
+            The read side is a snapshot of the ERP, rebuilt every two hours through the working day, with each branch read from the
+            live stock feed or from a fallback copy. Writes go to a Postgres store beside the ERP and travel
+            back to the branches as files and email.
           </p>
         </div>
         <div class="btn-row">
@@ -130,14 +130,16 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
       </div>
 
       <p class="hero-credential">
-        Built and running: one business system in daily use, and two early products of our
-        own you can open in a browser now.
+        A field and ordering system built by 64ARCS has been in daily use across a parts
+        distributor&rsquo;s 93 branches since July 2026. Its production Android app went on the
+        Play Store on 14 July 2026. Two products of 64ARCS&rsquo;s own, PathWay AI and 64Griddle,
+        have been open in a browser as pilots since 15 September 2026.
       </p>
 
       <!-- The reader sets the register. Everything below is written three times;
            the level lives on <html data-level> so the page is right without JS. -->
       <div class="dial" data-dial>
-        <p class="dial-q" id="dial-q">More detail?</p>
+        <p class="dial-q" id="dial-q">Choose the level of detail.</p>
         <div class="dial-row">
           <input type="range" min="1" max="3" step="1" value="1"
                  aria-labelledby="dial-q" aria-valuetext="Plain words, no jargon.">
@@ -153,23 +155,14 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
   </section>
 
   <!-- ==================================================================
-       02 / WHAT WE DO  — the same four commitments, three registers
+       02 / WHAT WE DO: the same four commitments, three registers
        ================================================================== -->
   <section class="section section--lg s-ivory">
     <div class="wrap">
       <div class="section-head">
-        <h2 class="t-h2" data-lvl="1">
-          One place owns each number.<br>
-          <span class="muted">Every screen goes back to it.</span>
-        </h2>
-        <h2 class="t-h2" data-lvl="2">
-          One place owns each fact.<br>
-          <span class="muted">Every screen, and your ERP, agree because of it.</span>
-        </h2>
-        <h2 class="t-h2" data-lvl="3">
-          One owner per fact.<br>
-          <span class="muted">Everything else resolves against it at read time.</span>
-        </h2>
+        <h2 class="t-h2" data-lvl="1">Each number has one home, and every screen reads it from there.</h2>
+        <h2 class="t-h2" data-lvl="2">Each fact has one owner, and every screen and report reads it from that owner.</h2>
+        <h2 class="t-h2" data-lvl="3">Every read resolves against a single owner for each fact.</h2>
       </div>
 
       <div class="cards cards--wide">
@@ -177,84 +170,90 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
         <div class="card">
           <h3 class="t-h3" data-lvl="1">One place owns each number</h3>
           <h3 class="t-h3" data-lvl="2">One owner for each fact</h3>
-          <h3 class="t-h3" data-lvl="3">One owner per fact, resolved at read time</h3>
-          <p data-lvl="1">Stock, price, dues, credit limits &mdash; each number is owned in one place, and
-            every screen goes back to that place to read it. Where a branch&rsquo;s figure has not
-            reached head office yet, the screen says so instead of guessing.</p>
-          <p data-lvl="2">Customer, stock, price, credit limit &mdash; each has one place that owns it, and
-            every screen and every integration resolves against that owner. Where a branch&rsquo;s figure
-            has not reached head office, the screen shows which source it used and how old it is.</p>
-          <p data-lvl="3">In the estate we built for, every branch feeds a central copy. Two in three
-            branches are on the live stock feed; the rest fall back to an older one, and two are
-            dormant. The read layer picks the source branch by branch, stamps the row with the date
-            it is as of, and keeps the dormant branches out of cross-branch availability.</p>
+          <h3 class="t-h3" data-lvl="3">The read side picks a source per branch</h3>
+          <p data-lvl="1">Stock, prices, dues and credit limits are each kept in one place. In the
+            distributor&rsquo;s system, stock for two in three branches
+            comes from the live feed. The rest comes from a copy that runs about a day behind, and a
+            branch whose copy has stopped updating shows its date next to its stock.</p>
+          <p data-lvl="2">Customer, stock, price and credit limit each come from one place. Two in three
+            branches are on the live stock feed. The others fall back to a copy about a day behind, and rows
+            from a branch whose feed has stopped carry their as-of date.</p>
+          <p data-lvl="3">The ERP sits on-premises behind a slow WAN link, so the read side is baked into
+            the container image as read-only SQLite and rebuilt every two hours from 07:00 to 19:00 IST. A branch is read from the
+            live stock master when its newest reading is under three days old, and otherwise from a
+            fallback copy that lags about a day. Of the 93 branches, 62 read live. The supplier screen
+            shows each branch&rsquo;s as-of date, transfer suggestions state the source branch&rsquo;s
+            date, and stock rows from a dormant branch carry a dated warning. A fallback branch with no purchase in over 45 days is flagged dormant and is
+            never offered as a source for a transfer.</p>
         </div>
 
         <div class="card">
           <h3 class="t-h3" data-lvl="1">Your own system stays</h3>
-          <h3 class="t-h3" data-lvl="2">Your ERP stays the system of record</h3>
-          <h3 class="t-h3" data-lvl="3">The system of record stays</h3>
-          <p data-lvl="1">It is written for your business, not bought and bent to fit. We read from the
-            system your books already run on, write back into it, and add what it was never built to
-            hold &mdash; field visits, orders, attendance, credit decisions.</p>
-          <p data-lvl="2">Built to your process, integrated with what you already run. Nothing has to be
-            migrated. We read from the ERP and write back through it; what it has nowhere to put
-            &mdash; field activity, attendance, credit decisions &mdash; goes to a store of our own,
-            beside it, not inside it.</p>
-          <p data-lvl="3">In the one we built, the ERP is about 1.1 million lines of hand-written VB.NET
-            and is still the system of record. A separate write store on managed Postgres holds what it
-            cannot: field activity, orders, attendance, credit decisions. The captured order lives
-            there; the priced sales order lives in the branch ERP, as it always has.</p>
+          <h3 class="t-h3" data-lvl="2">Your ERP keeps the books</h3>
+          <h3 class="t-h3" data-lvl="3">The ERP stays the system of record</h3>
+          <p data-lvl="1">It is written for your business. It reads from the software your books already
+            run on, sends orders back into it, and keeps what that software was never built to hold,
+            such as field visits, attendance and credit decisions.</p>
+          <p data-lvl="2">Nothing has to be migrated. It reads from the ERP and writes back through it,
+            and keeps field activity, attendance and credit decisions, which the ERP has nowhere to put,
+            in a separate store beside it.</p>
+          <p data-lvl="3">In the one built so far, the ERP is 1,087,117 lines of hand-written VB.NET and
+            keeps the books. A write store on Cloud SQL Postgres holds what it cannot: field activity,
+            orders, attendance and credit decisions, with photographs in object storage. The captured
+            order lives there, and the priced sales order lives in the branch ERP, as it always has.</p>
         </div>
 
         <div class="card">
           <h3 class="t-h3" data-lvl="1">A screen for each person</h3>
-          <h3 class="t-h3" data-lvl="2">The interface each role needs</h3>
-          <h3 class="t-h3" data-lvl="3">Different apps, one write path</h3>
-          <p data-lvl="1">A rep on a bike, a dealer at midnight, a supplier, a clerk at the counter and
-            you on a Sunday &mdash; phone, website or desk, in the language each one reads. The app is
-            in thirteen. An order taken where there is no signal waits on the phone and goes in when
-            the signal returns. It cannot go in twice.</p>
-          <p data-lvl="2">Reps in the field, dealers ordering at night, suppliers, admin staff at head
-            office and directors reading the month each get their own application on the same orders,
-            stock and dues &mdash; web and phones, in thirteen languages. Orders taken without signal
-            queue on the device and post when it returns; the same order cannot be booked twice.</p>
-          <p data-lvl="3">Reps, dealers, suppliers and head office each get their own app &mdash; Android,
-            installable web, thirteen locales. The device holds an outbox for orders taken offline; it holds
-            no rules. Each order carries a client-generated key, so a timed-out post that the phone
-            retries is deduped rather than booked twice &mdash; and the file the branch ERP receives is
-            keyed the same way, so it cannot be applied twice there either.</p>
+          <h3 class="t-h3" data-lvl="2">A view for each role</h3>
+          <h3 class="t-h3" data-lvl="3">One front-end, one write path</h3>
+          <p data-lvl="1">Reps on the road, dealers ordering at night, suppliers and head-office staff
+            each see the screens their job needs, on a phone or in a browser, in any of thirteen
+            languages. An order
+            taken where there is no signal waits on the phone and goes in when the signal returns. It
+            cannot go in twice.</p>
+          <p data-lvl="2">Reps, dealers, suppliers and head office each see what their role needs of the
+            same orders, stock and dues, on Android and the web, in thirteen languages. Orders taken
+            without signal queue on the phone and post when it returns, and a retried order is booked
+            once.</p>
+          <p data-lvl="3">Reps, dealers, suppliers and head office share one web front-end in thirteen
+            locales, with each role fenced on the server. The Play Store app is a Trusted Web Activity
+            around that front-end, so a feature ships with a web deploy. The phone keeps an outbox of
+            orders taken offline. Each cart carries a client-generated transaction ID that is reused on
+            every retry, so a post that timed out is booked once. The file sent to the branch is named
+            after the order ID, and the ERP refuses a filename it has already saved.</p>
         </div>
 
         <div class="card">
           <h3 class="t-h3" data-lvl="1">What happens when you press save</h3>
           <h3 class="t-h3" data-lvl="2">The rules run on the server</h3>
-          <h3 class="t-h3" data-lvl="3">The rules live on the server</h3>
-          <p data-lvl="1">The screen is the easy part. Before an order is saved, the dues and the credit
-            limit are checked against head office&rsquo;s own record of that dealer &mdash; nobody has to
-            ring anyone. Over the limit, the order still goes through, marked, with the reason kept on
-            it. A payment and the photograph of its receipt are recorded together, or neither is.</p>
-          <p data-lvl="2">Screens are the small part. Credit is re-checked on the server against head
-            office&rsquo;s own dealer record before an order is written &mdash; a soft block, not a
-            refusal, and where someone ticks through, the reasons stay on the order and show on its
-            card. A payment and its proof photograph commit together, or neither is recorded. A rule
-            changes in one place and every application follows.</p>
-          <p data-lvl="3">Credit is re-derived server-side and the write returns 409 with the reasons
-            unless the client acknowledges, so a stale or modified phone cannot talk its way past it
-            &mdash; a soft block, with the acknowledged reasons persisted on the order row. A payment
-            and its proof photograph arrive in one multipart request and commit on one connection:
-            there is no window in which a payment exists proof-less, and a client too old to send the
-            pair is refused. Orders travel carrying no rates; the branch ERP prices them from its own
-            masters at save.</p>
+          <h3 class="t-h3" data-lvl="3">Credit is re-derived on the server</h3>
+          <p data-lvl="1">Before an order is saved, the server checks the dealer&rsquo;s dues and credit
+            limit again against head office&rsquo;s own record, whatever the phone showed. If the dealer
+            is over the limit, had a cheque bounce in the last 120 days, or has a bill 90 days or more
+            overdue, the server sends the order back with the reasons, and nothing is saved yet. The rep can confirm
+            and book it anyway, and the reasons stay on the order for good. A dealer ordering from their
+            own login cannot confirm past it. A payment and the photograph of its receipt are saved
+            together, or neither is.</p>
+          <p data-lvl="2">Credit is re-checked on the server against head office&rsquo;s own dealer record
+            before an order is written, a soft block, not a refusal. Where a rep confirms past it, the
+            reasons stay on the order and show on its card. A dealer&rsquo;s own login cannot confirm
+            past it. A payment and its proof photograph commit together, or neither is recorded.</p>
+          <p data-lvl="3">The order endpoint re-derives the credit level and answers 409 with needs_ack
+            and the reasons unless the request carries an acknowledgement, so a client running old code
+            cannot skip it. For a customer login the acknowledgement is forced false.
+            Acknowledged reasons are persisted on the order row. A payment and its proof photograph
+            arrive in one multipart request and commit on one connection, and the old proof-less path
+            answers 426. The file sent to the branch carries no rates, and the branch ERP prices the order from its own masters at save.</p>
         </div>
 
       </div>
 
-      <p class="was-principle">Where the standard way of working fits you, keep it.<br>
-           What we build is the part that doesn&rsquo;t.</p>
+      <p class="was-principle">Where a standard package already fits the way you work, it stays, and
+        64ARCS builds only the part it cannot do.</p>
 
       <p style="margin-top:2.5rem">
-        <a class="link" href="what-we-build.html">Everything we build
+        <a class="link" href="what-we-build.html">What we build, area by area
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
         &nbsp;&nbsp;
@@ -266,16 +265,15 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
   </section>
 
   <!-- ==================================================================
-       03 / BUILT AND RUNNING — three things, equal weight
+       03 / BUILT AND RUNNING: three things, equal weight
        ================================================================== -->
   <section class="section section--lg s-carbon-deep" id="built">
     <div class="wrap">
       <div class="section-head">
         <h2 class="t-h2">Three things we have built.</h2>
         <p class="lead measure">
-          One is a business system in daily use. Two are early products of our own that you
-          can open in a browser now. Each is described honestly on its own page, including
-          where it stops.
+          One is the distributor&rsquo;s system. The other two are early products of our own, both browser
+          pilots, and each has a panel on the Products page that says where it stops.
         </p>
       </div>
 
@@ -286,8 +284,8 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
             <span class="eco-tag">In daily use since July 2026</span>
           </div>
           <h3 class="t-h3">A distributor&rsquo;s field and ordering system</h3>
-          <p>Reps, dealers and head office on one set of numbers across 93 branches. The ERP
-             they already had stays the system of record.</p>
+          <p>Reps, dealers, suppliers and head office work from one set of numbers across 93
+             branches. Orders are still priced and billed in the ERP the branches already had.</p>
           <a class="link link--dark" href="work.html#pss">How it was built
             <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
           </a>
@@ -299,8 +297,9 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
             <span class="eco-tag eco-tag--pilot">Pilot</span>
           </div>
           <h3 class="t-h3">PathWay AI</h3>
-          <p>A place for a student to work, inside the boundary their teacher set &mdash; with a
-             record of how the work happened, not a verdict on who wrote it.</p>
+          <p>A student works on an assignment inside the terms their teacher set, and the session is
+             kept as a record both of them see. It shows how the work happened and does not judge who
+             wrote it. Replies are prepared examples, and no generative model is connected.</p>
           <a class="link link--dark" href="products.html#pathway">What it does, and where it stops
             <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
           </a>
@@ -312,8 +311,9 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
             <span class="eco-tag eco-tag--pilot">Pilot</span>
           </div>
           <h3 class="t-h3">64Griddle</h3>
-          <p>Reads an AI prompt before you send it, marks where an assistant would have to
-             guess, and offers wording you accept or reject. You stay the author.</p>
+          <p>It reads an AI prompt before you send it, marks where an assistant would have to guess,
+             and offers wording that you accept or reject. Version 0.5.3 runs on local rules in the
+             browser and makes no network requests.</p>
           <a class="link link--dark" href="products.html#griddle">What it does, and where it stops
             <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
           </a>
@@ -323,38 +323,35 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
   </section>
 
   <!-- ==================================================================
-       04 / HOW IT WORKS — five phases, three registers
+       04 / HOW IT WORKS: five phases, three registers
        ================================================================== -->
   <section class="section section--lg s-ivory">
     <div class="wrap">
       <div class="section-head">
-        <h2 class="t-h2">
-          We don&rsquo;t start with software.<br>
-          <span class="muted">We start with how your business actually works.</span>
-        </h2>
+        <h2 class="t-h2">The work starts in your branches, with how orders, stock and money move today.</h2>
       </div>
 
       <div data-lvl="1">
         <div class="steps">
           <article class="step">
-            <div><span class="step-n">01 — Understand</span></div>
-            <div class="step-body"><p>We sit in your branches and watch how the work actually happens.</p></div>
+            <div><span class="step-n">01 &middot; Understand</span></div>
+            <div class="step-body"><p>We sit in your branches and watch how the work is done today.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">02 — Decide</span></div>
-            <div class="step-body"><p>We agree with you where each number lives and who is allowed to change it.</p></div>
+            <div><span class="step-n">02 &middot; Decide</span></div>
+            <div class="step-body"><p>Together with you, we settle where each number lives and who may change it.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">03 — Build</span></div>
-            <div class="step-body"><p>We write it in small pieces you can watch working, one at a time.</p></div>
+            <div><span class="step-n">03 &middot; Build</span></div>
+            <div class="step-body"><p>It is written in small pieces, and you see each one working before the next begins.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">04 — Join up</span></div>
-            <div class="step-body"><p>Orders reach your system with no rates on them; it prices them, and nobody retypes anything.</p></div>
+            <div><span class="step-n">04 &middot; Join up</span></div>
+            <div class="step-body"><p>Orders reach your system with no rates on them. It prices them, and nobody retypes anything.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">05 — Stay on</span></div>
-            <div class="step-body"><p>We stay on afterwards. A piece is only replaced after you have watched the new one running.</p></div>
+            <div><span class="step-n">05 &middot; Stay on</span></div>
+            <div class="step-body"><p>We stay on afterwards. A piece is replaced only after you have watched the new one run beside it.</p></div>
           </article>
         </div>
       </div>
@@ -362,24 +359,24 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
       <div data-lvl="2">
         <div class="steps">
           <article class="step">
-            <div><span class="step-n">01 — Understand</span></div>
-            <div class="step-body"><p>We sit in your branches and map the exceptions and the workarounds, not the org chart.</p></div>
+            <div><span class="step-n">01 &middot; Understand</span></div>
+            <div class="step-body"><p>We sit in your branches and write down the exceptions and workarounds that never reach the org chart.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">02 — Architect</span></div>
-            <div class="step-body"><p>We agree what each system owns, what gets integrated, and what gets built.</p></div>
+            <div><span class="step-n">02 &middot; Architect</span></div>
+            <div class="step-body"><p>We agree which system owns each fact, what gets connected and what gets built.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">03 — Build</span></div>
-            <div class="step-body"><p>In slices you can put in front of a branch &mdash; not a reveal at the end.</p></div>
+            <div><span class="step-n">03 &middot; Build</span></div>
+            <div class="step-body"><p>Each slice goes in front of a branch as soon as it works.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">04 — Connect</span></div>
-            <div class="step-body"><p>Orders write back through your ERP and are priced there, without anyone retyping them.</p></div>
+            <div><span class="step-n">04 &middot; Connect</span></div>
+            <div class="step-body"><p>Orders write back through your ERP and are priced there, so nobody retypes them.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">05 — Evolve</span></div>
-            <div class="step-body"><p>We stay on. Any replacement happens a piece at a time, running beside the original.</p></div>
+            <div><span class="step-n">05 &middot; Evolve</span></div>
+            <div class="step-body"><p>We stay on, and any replacement runs beside the original before it takes over.</p></div>
           </article>
         </div>
       </div>
@@ -387,24 +384,24 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
       <div data-lvl="3">
         <div class="steps">
           <article class="step">
-            <div><span class="step-n">01 — Understand</span></div>
-            <div class="step-body"><p>Sit in the branches; trace every place a fact is contradicted and find out which copy people actually believe.</p></div>
+            <div><span class="step-n">01 &middot; Understand</span></div>
+            <div class="step-body"><p>Sit in the branches, trace every place a fact is contradicted, and find out which copy people trust.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">02 — Architect</span></div>
-            <div class="step-body"><p>Agree the owner of each fact, where rules are enforced, and what the write path is.</p></div>
+            <div><span class="step-n">02 &middot; Architect</span></div>
+            <div class="step-body"><p>Agree the owner of each fact, where each rule is enforced, and the one write path.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">03 — Build</span></div>
-            <div class="step-body"><p>Server first &mdash; rules, transactions, migrations &mdash; then the apps, in shipping slices.</p></div>
+            <div><span class="step-n">03 &middot; Build</span></div>
+            <div class="step-body"><p>The server comes first, with its rules, transactions and migrations, and the apps follow in slices that ship.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">04 — Connect</span></div>
-            <div class="step-body"><p>Read the estate; write back through one path, idempotently, priced by the system of record.</p></div>
+            <div><span class="step-n">04 &middot; Connect</span></div>
+            <div class="step-body"><p>Read from snapshots of the ERP, and write back through one deduplicated path that the ERP prices at save.</p></div>
           </article>
           <article class="step">
-            <div><span class="step-n">05 — Evolve</span></div>
-            <div class="step-body"><p>We stay on. Replace only what has earned the switch by running beside the original first.</p></div>
+            <div><span class="step-n">05 &middot; Evolve</span></div>
+            <div class="step-body"><p>Replace a module only after it has run beside the original, read-only, on real data.</p></div>
           </article>
         </div>
       </div>
@@ -418,42 +415,21 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
   </section>
 
   <!-- ==================================================================
-       05 / WHAT IT ASKS OF YOU
+       05 / WHO IT SUITS
        ================================================================== -->
   <section class="section section--lg s-raised">
     <div class="wrap">
       <div class="section-head">
-        <h2 class="t-h2">
-          A family of technology, at home in the way you already work.<br>
-          <span class="muted">You get the family. Not the wiring behind it.</span>
-        </h2>
-        <p class="lead measure">
-          For established mid-sized businesses that have outgrown spreadsheets and isolated
-          software &mdash; and do not want a five-year programme, or a technology department, to
-          get there.
-        </p>
+        <h2 class="t-h2">It suits established mid-sized businesses that have outgrown spreadsheets and want neither a five-year programme nor a technology department.</h2>
       </div>
 
-      <div class="cards cards--3">
-        <div class="card">
-          <h3 class="t-h3">Words you already use</h3>
-          <p>You should be able to repeat our explanation to your staff, word for word. The dial at
-             the top of this page is that promise, made operational.</p>
-        </div>
-        <div class="card">
-          <h3 class="t-h3">Nothing stops</h3>
-          <p>Your business keeps trading while we build. One room at a time &mdash; orders, then
-             stock, then the rest &mdash; so no weekend has everything change at once.</p>
-        </div>
-        <div class="card">
-          <h3 class="t-h3">Sometimes you don&rsquo;t need us</h3>
-          <p>Some problems are a process fix, not a platform. If a spreadsheet is already doing the
-             job, it stays. You will hear that early, not late.</p>
-        </div>
-      </div>
+      <p class="measure">
+        Sometimes you don&rsquo;t need us. Some problems are a process fix, not a platform. If a
+        spreadsheet is already doing the job, it stays, and you will hear that early.
+      </p>
 
-      <p  style="margin-top:2.5rem">
-        <a class="link" href="what-we-build.html#india">64ARCS for India &mdash; GST, TDS, dealer schemes and WhatsApp
+      <p style="margin-top:2.5rem">
+        <a class="link" href="what-we-build.html#india">GST, TDS, dealer schemes and WhatsApp, for businesses in India
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
       </p>
@@ -461,13 +437,9 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
   </section>
 
   <!-- ==================================================================
-       06 / STATEMENT
+       06 / CLOSER
        ================================================================== -->
-
-  <!-- ==================================================================
-       07 / FINAL CTA
-       ================================================================== -->
-<section class="section closer-wrap"><div class="wrap"><p class="closer">If this sounds like your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">If your branches each hold a different figure for the same stock or the same dues, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Organization","name":"64ARCS","url":"https://64arcs.com/",

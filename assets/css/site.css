@@ -2259,3 +2259,28 @@ html[data-level="3"] .dial-stops span:nth-child(3) { color: var(--ink); font-wei
 .dial input[type="range"]::-webkit-slider-thumb { background: var(--carbon); border-color: var(--ivory); box-shadow: 0 0 0 1px var(--carbon); }
 .dial input[type="range"]::-moz-range-thumb { background: var(--carbon); border-color: var(--ivory); box-shadow: 0 0 0 1px var(--carbon); }
 .hero-credential { color: var(--ink-muted); border-left-color: var(--signal); }
+
+/* =====================================================================
+   De-vibe pass 3 — no monospace or uppercase outside code.
+   The label look survived the first two passes under other class names
+   (footer headings, form labels, pickers, phase rail, case card, the
+   diagram's phone variant, figure captions). Monospace is for code.
+   ===================================================================== */
+.skip-link, .mobile-nav a.m-link .n, .page-hero .eyebrow, .card--numbered .n, .outcome .n,
+.field label, .footer-nav h4, .footer-bottom, .compare-head .tag, .case-head .sector,
+.case-cell h3, .pmap-row, .picker-q, .picker-btn, .picker-status, .rail-step,
+.eco-node .who, .eco-core .t, .eco-books .t, .eco-note, .ledger-head, .ledger li span,
+.hero-credential, .dial-hint, .note-figure figcaption {
+  font-family: var(--font-body);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.field label, .picker-q, .picker-status, .rail-step, .picker-btn, .dial-hint,
+.eco-node .who, .eco-note, .ledger-head, .compare-head .tag, .footer-bottom { font-size: .8125rem; }
+.case-cell h3, .footer-nav h4 { font-size: .9375rem; font-weight: 600; }
+.case-head .sector, .eco-core .t, .eco-books .t { font-size: .875rem; font-weight: 600; }
+.hero-credential { font-size: .9375rem; line-height: 1.6; }
+.note-figure figcaption { font-size: .9375rem; line-height: 1.5; }
+.pmap-row { font-size: .875rem; }
+/* The hero's "quiet field of light" was a decorative glow. Gone. */
+.hero::after { content: none; display: none; }

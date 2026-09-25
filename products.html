@@ -74,12 +74,11 @@
 <main id="main">
   <section class="page-hero">
     <div class="wrap">
-      <h1 class="t-h1">Two things we built<br><span class="muted">for ourselves.</span></h1>
+      <h1 class="t-h1">The two products, and where each one stops.</h1>
       <p class="lead">
-        64ARCS builds business systems for other people, and these two products of
-        its own. Both are early pilots you can open in a browser right
-        now &mdash; nothing to install, no sign-in. Neither is finished, and each one below says
-        exactly where it stops.
+        64Griddle and PathWay AI are the products 64ARCS has built for itself. Both are early pilots that
+        open in a browser, with nothing to install and no sign-in. Neither is finished, and
+        each has a panel listing where it stops.
       </p>
     </div>
   </section>
@@ -92,16 +91,23 @@
         <div class="pilot-lede">
           <div class="pilot-head">
             <h2 class="t-h2" id="griddle-title">64Griddle</h2>
-            <span class="chip chip--signal">Pilot</span>
+            <span class="chip">Pilot</span>
           </div>
           <p class="pilot-one-line">It reads your prompt before you send it and tells you what is missing.</p>
-          <p>You write a request to an AI, and it answers the question you actually asked &mdash;
-             which is rarely the one you meant. 64Griddle reads the draft in the box, marks the
-             places where an assistant would have to guess, and offers wording for each one.
-             You accept or reject every change. Nothing is rewritten behind your back, and the
-             words that end up in the box are yours.</p>
+          <p>Browser pilot v0.5.3; guidance reviewed 8 September 2026.</p>
+          <p>You write a request to an AI assistant in the draft box. As you type, local rules mark
+             vague requirements, missing task details, repetition and conflicting instructions
+             in the draft. Building, debugging,
+             research, writing, summaries and data analysis each get their own checks, and you
+             can correct the task type the pilot detects. Each suggestion shows what triggered it
+             and the principle it rests on.</p>
+          <p>You apply a suggestion or leave it, compare the original with the proposed text, edit
+             the preview, then copy it or replace your draft. Nothing is rewritten behind your
+             back, and the words that end up in the box are yours. Eight example drafts, from a
+             web app build to a simple question, are there to try before you paste your own.</p>
+          <p>An extension for Chrome and Edge and a macOS companion are part of a pilot by arrangement.</p>
 
-          <figure class="pilot-figure"><img src="assets/img/griddle.png" width="1120" height="787" loading="lazy" alt="The 64Griddle prompt workspace: a draft on the left, a review panel on the right listing what the draft does not say, with the note that review happens on the device and no prompt is uploaded."><figcaption>The 64Griddle browser pilot, as it runs today. Screenshot taken 24 September 2026.</figcaption></figure>
+          <figure class="pilot-figure"><img src="assets/img/griddle.png" width="1120" height="700" loading="lazy" alt="The 64Griddle prompt workspace with a one-line draft typed in, asking for something about sales numbers for the board. The review panel has set the task type to writing on its own and shows one suggestion, Supply the facts to include, with a box for the details and buttons to apply or skip it. The footer reads on-device review, no prompt uploads, browser pilot version 0.5.3."><figcaption>The 64Griddle browser pilot with a draft typed in, captured 25 September 2026 (v0.5.3). The one suggestion shown is the pilot&rsquo;s own.</figcaption></figure>
         </div>
 
         <aside class="pilot-bounds">
@@ -110,7 +116,7 @@
             <li>It reads only the current textbox. It cannot see earlier messages or read attachments.</li>
             <li>It uses local rules, not a model. It cannot guarantee a better answer.</li>
             <li>It never invents names, deadlines, technologies or requirements &mdash; it only points at gaps.</li>
-            <li>These checks have not been tested for whether they actually improve a model&rsquo;s output.</li>
+            <li>These checks have not been tested for whether they improve a model&rsquo;s output.</li>
             <li>Token counts are approximate.</li>
             <li>Editors for live AI providers are not certified yet.</li>
           </ul>
@@ -137,16 +143,23 @@
         <div class="pilot-lede">
           <div class="pilot-head">
             <h2 class="t-h2" id="pathway-title">PathWay AI</h2>
-            <span class="chip chip--signal">Pilot</span>
+            <span class="chip">Pilot</span>
           </div>
           <p class="pilot-one-line">A place for a student to work, inside the boundary their teacher set.</p>
-          <p>A teacher says what this piece of work is for and what help is allowed. The student
-             writes inside that boundary, with tools that work on their own draft &mdash; plan it,
-             test their own reasoning, find a starting reference. Everything they do is kept as
-             a record of the session, shown to the student and the teacher alike. It is a record
-             of how the work happened, not a judgement about who wrote it.</p>
+          <p>A teacher sets the terms for each project separately, choosing which kinds of help are
+             allowed. Inside those terms the student writes their own draft and can ask for help
+             to understand the task, plan the work in steps, practise an idea it depends on, or
+             review small corrections to their own saved writing. When a request crosses the
+             boundary, the reply says why and offers a permitted next step. The pilot carries four
+             practice projects, in English, History, Geography and Science, each with a fixed
+             reading list.</p>
+          <p>Practice questions are written in advance; the browser pilot serves only questions a
+             teacher has reviewed, and none are reviewed yet.</p>
+          <p>Saved drafts, help requests, the replies shown, writing reviews and permission changes
+             go into an activity record that the student and the teacher preview both see. Unsaved
+             typing is not recorded, and the record makes no judgement about who wrote the work.</p>
 
-          <figure class="pilot-figure"><img src="assets/img/pathway.png" width="1120" height="787" loading="lazy" alt="The PathWay AI learning chat: a project list on the left, the assignment and its boundaries at the top, three starting points, and a banner stating that replies are fixed and no AI model is connected."><figcaption>The PathWay AI browser pilot, as it runs today. Screenshot taken 24 September 2026.</figcaption></figure>
+          <figure class="pilot-figure"><img src="assets/img/pathway.png" width="1120" height="700" loading="lazy" alt="The PathWay AI learning chat after a student asks for help understanding a homework assignment. A banner across the top reads that replies are fixed, practice questions are written in advance, no AI model is connected for replies and nothing written leaves the device. The reply is marked Sample guidance and begins by saying it is a prepared example, not an answer to the specific message."><figcaption>The PathWay AI browser pilot after one request, captured 25 September 2026. The reply is a prepared example, as the banner and the reply itself say.</figcaption></figure>
         </div>
 
         <aside class="pilot-bounds">
@@ -160,8 +173,8 @@
             <li>It cannot produce a finished piece of work.</li>
           </ul>
           <p class="pilot-data">Work stays in your browser by default. Sharing practice requests is
-             optional and off unless you turn it on &mdash;
-             <a class="link" href="privacy.html#pathway-pilot">what that sends, and what it does not</a>.</p>
+             optional and off unless you turn it on.
+             <a class="link" href="privacy.html#pathway-pilot">What that sends, and what it does not</a>.</p>
         </aside>
       </div>
 
@@ -176,7 +189,7 @@
   </section>
 
   <!-- ================================ BACK TO THE WORK ================================ -->
-<section class="section closer-wrap"><div class="wrap"><p class="closer">If this sounds like your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">64ARCS builds business systems for other companies. These two are our own. The systems are on <a class="link" href="work.html">the Work page</a>. To ask about a pilot of either one, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 </main>
 
 <footer class="footer">
