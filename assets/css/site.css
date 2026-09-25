@@ -56,9 +56,9 @@
   --signal-glow:   rgba(83, 103, 255, .55);
 
   /* ---- Type ---- */
-  --font-display: "Space Grotesk", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-body:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono:    "IBM Plex Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono:    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Fluid type scale — engineered, not cramped */
   --t-hero:    clamp(2.125rem, 1.1rem + 4.4vw, 5rem);     /* 34 → 80px  */
@@ -2179,3 +2179,83 @@ h1 .muted, h2 .muted, .t-hero .muted, .t-h1 .muted, .t-h2 .muted { color: inheri
 .notes { max-width: 68ch; margin: 1.5rem 0 0; }
 .notes dt { font-weight: 600; margin-top: 1.5rem; }
 .notes dd { margin: .35rem 0 0; color: var(--ink-muted); line-height: 1.6; }
+
+
+/* =====================================================================
+   De-vibe pass 2 — one light surface per page.
+   The heroes and every mid-page section sit on ivory; the footer is the
+   only dark surface; diagram figures keep their dark frame because they
+   are self-contained components with light ink baked into their SVG.
+   Appended so source order settles every earlier dark rule.
+   ===================================================================== */
+h1, h2, h3, h4, .t-hero, .t-h1, .t-h2, .t-h3, .t-h4 { font-weight: 600; letter-spacing: -.01em; }
+.section--lg { padding-block: clamp(2.5rem, 2rem + 2vw, 4rem); }
+
+/* header: always ivory, dark logo, no surface swap */
+.header, .header.is-stuck { background: var(--ivory); border-bottom: 1px solid var(--soft-grey); backdrop-filter: none; }
+.header .brand, .header .nav-link, .header.is-stuck .brand, .header.is-stuck .nav-link { color: var(--carbon); }
+.header .nav-link::after { background: var(--carbon); }
+.header .burger span { background: var(--carbon); }
+.header .brand-logo--light { visibility: hidden; }
+.header .brand-logo--dark { visibility: visible; }
+.header .btn--on-dark, .header.is-stuck .btn--on-dark { --btn-bg: transparent; --btn-fg: var(--carbon); --btn-bd: var(--carbon-line-2, #B9BDC8); }
+.header .btn--on-dark:hover { --btn-bg: var(--signal); --btn-fg: #fff; --btn-bd: var(--signal); }
+
+/* heroes and dark sections become ivory */
+.hero, .page-hero, .s-carbon, .s-carbon-deep { background: var(--ivory); color: var(--ink); }
+.hero, .page-hero { border-bottom: 1px solid var(--soft-grey); }
+.hero-cols .lead, .page-hero .lead { color: var(--ink-muted); }
+.s-carbon .muted, .s-carbon-deep .muted, .hero .muted { color: var(--ink-muted); }
+.s-carbon .faint, .s-carbon-deep .faint { color: var(--ink-faint); }
+.s-carbon .label, .s-carbon-deep .label { color: var(--ink-muted); }
+.s-carbon .link, .s-carbon-deep .link, .link--dark { color: var(--signal-ink); }
+.btn--ghost-dark { --btn-bg: transparent; --btn-fg: var(--carbon); --btn-bd: var(--carbon-line-2, #B9BDC8); }
+.btn--ghost-dark:hover { --btn-bg: var(--carbon); --btn-fg: var(--ivory); --btn-bd: var(--carbon); }
+.contrast-list li::before { background: var(--ink-faint); }
+.rows--dark p { color: var(--ink-muted); }
+
+/* components that assumed a dark parent */
+.card--dark { background: var(--ivory-raised); border-color: var(--soft-grey); color: var(--ink); }
+.card--dark h3 { color: var(--ink); }
+.card--dark p, .card--dark .muted { color: var(--ink-muted); }
+.built-head .label { color: var(--ink-muted); }
+.eco-tag { border-color: var(--signal-line); color: var(--signal-ink); background: var(--signal-soft); }
+.eco-tag--pilot { border-color: var(--soft-grey); color: var(--ink-muted); background: transparent; }
+.eco-stack .eco-tag, .eco-stack .eco-tag--pilot, .note-figure .frame .eco-tag { border-color: var(--signal); color: var(--signal-on-dark); background: rgba(83,103,255,.12); }
+.pilot-bounds { background: var(--ivory-raised); border-color: var(--soft-grey); }
+.pilot-bounds li { color: var(--ink-muted); }
+.pilot-bounds .label { color: var(--signal-ink); }
+.pilot-data { color: var(--ink-faint); border-top-color: var(--soft-grey); }
+.pilot-data .link { color: var(--signal-ink); }
+.case-head { background: var(--ivory-raised); color: var(--ink); border: 1px solid var(--soft-grey); border-bottom: 0; }
+.case-head .sector { color: var(--signal-ink); }
+.case-cell--outcome { background: var(--ivory-raised); }
+.case-cell--outcome h3 { color: var(--signal-ink); }
+.case-cell--outcome p, .case-cell--outcome ul { color: var(--ink-muted); }
+.case-cell--outcome strong { color: var(--ink); }
+.artefact { background: var(--ivory-raised); border: 1px solid var(--soft-grey); }
+.artefact-bar { color: var(--ink-faint); }
+.pmap-row { color: var(--ink-muted); }
+.pmap-row .who, .pmap-row .t { color: var(--ink-faint); }
+.ai-demo { background: var(--ivory-raised); border: 1px solid var(--soft-grey); }
+.ai-ask q { color: var(--ink); }
+.ai-stop { color: var(--ink-muted); border-color: var(--soft-grey); }
+.ai-result strong { color: var(--ink); }
+.outcomes, .outcome { background: var(--ivory-raised); }
+.outcome h3 { color: var(--ink); } .outcome p { color: var(--ink-muted); } .outcome .n { color: var(--signal-ink); }
+.note-figure--on-dark figcaption { color: var(--ink-muted); }
+.note-figure--on-dark .scroll-hint { color: var(--signal-ink); }
+.skip-link { background: var(--carbon); color: var(--ivory); }
+
+/* the dial, on ivory and neutral */
+.dial { border-top-color: var(--soft-grey); }
+.dial-q, .dial-stops span, .dial-hint { color: var(--ink-faint); }
+.dial-status { color: var(--ink-muted); }
+html[data-level="1"] .dial-stops span:nth-child(1),
+html[data-level="2"] .dial-stops span:nth-child(2),
+html[data-level="3"] .dial-stops span:nth-child(3) { color: var(--ink); font-weight: 600; }
+.dial input[type="range"]::-webkit-slider-runnable-track { background: var(--soft-grey); }
+.dial input[type="range"]::-moz-range-track { background: var(--soft-grey); }
+.dial input[type="range"]::-webkit-slider-thumb { background: var(--carbon); border-color: var(--ivory); box-shadow: 0 0 0 1px var(--carbon); }
+.dial input[type="range"]::-moz-range-thumb { background: var(--carbon); border-color: var(--ivory); box-shadow: 0 0 0 1px var(--carbon); }
+.hero-credential { color: var(--ink-muted); border-left-color: var(--signal); }
