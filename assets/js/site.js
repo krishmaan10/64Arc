@@ -132,20 +132,7 @@
      arbitrary dash guess.
      ====================================================================== */
 
-  function measureStrokes(root) {
-    $$('.draw, .flow', root || document).forEach(function (el) {
-      if (el.dataset.measured) return;
-      var len;
-      try { len = el.getTotalLength(); } catch (err) { len = 0; }
-      if (!len || !isFinite(len)) {
-        // Fall back for shapes without getTotalLength support
-        var box = el.getBBox ? el.getBBox() : null;
-        len = box ? (box.width + box.height) * 2 : 1000;
-      }
-      el.style.setProperty('--len', Math.ceil(len));
-      el.dataset.measured = '1';
-    });
-  }
+
 
   /* ======================================================================
      4 · SCROLL REVEAL
@@ -153,52 +140,13 @@
      connecting, fragments snapping into alignment.
      ====================================================================== */
 
-  function initReveal() {
-    var targets = $$('.reveal, .reveal-l, .reveal-r, .rule-draw, .observe, .mega');
 
-    // Auto-stagger children of any [data-stagger] container
-    $$('[data-stagger]').forEach(function (group) {
-      var step = parseFloat(group.dataset.stagger) || 0.08;
-      var kids = $$(':scope > *', group);
-      kids.forEach(function (kid, i) {
-        if (!kid.style.getPropertyValue('--delay')) {
-          kid.style.setProperty('--delay', (i * step).toFixed(2) + 's');
-        }
-      });
-    });
-
-    if (!('IntersectionObserver' in window) || reduceMotion) {
-      targets.forEach(function (el) { el.classList.add('in-view'); });
-      measureStrokes();
-      return;
-    }
-
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        measureStrokes(entry.target);
-        entry.target.classList.add('in-view');
-        io.unobserve(entry.target);
-      });
-    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.12 });
-
-    targets.forEach(function (el) { io.observe(el); });
-  }
 
   /* ======================================================================
      5 · HERO ENTRANCE
      ====================================================================== */
 
-  function initHero() {
-    var hero = $('[data-hero]');
-    if (!hero) return;
-    measureStrokes(hero);
-    window.requestAnimationFrame(function () {
-      window.requestAnimationFrame(function () {
-        hero.classList.add('is-ready', 'in-view');
-      });
-    });
-  }
+
 
   /* ======================================================================
      6 · AI QUERY DEMONSTRATIONS
@@ -206,65 +154,7 @@
      business layers, and returns an answer.
      ====================================================================== */
 
-  function initAiDemos() {
-    var demos = $$('.ai-demo');
-    if (!demos.length) return;
 
-    function run(demo) {
-      if (demo.dataset.running === '1') return;
-      demo.dataset.running = '1';
-
-      var stops  = $$('.ai-stop', demo);
-      var wires  = $$('.ai-wire', demo);
-      var result = $('.ai-result', demo);
-      var stepMs = reduceMotion ? 0 : 460;
-
-      stops.forEach(function (s) { s.classList.remove('is-lit'); });
-      wires.forEach(function (w) { w.classList.remove('is-lit'); });
-      if (result) result.classList.remove('is-shown');
-
-      var timers = [];
-      stops.forEach(function (stop, i) {
-        timers.push(setTimeout(function () {
-          stop.classList.add('is-lit');
-          if (wires[i]) wires[i].classList.add('is-lit');
-        }, i * stepMs));
-      });
-
-      timers.push(setTimeout(function () {
-        if (result) result.classList.add('is-shown');
-        demo.dataset.running = '0';
-      }, stops.length * stepMs + 260));
-
-      demo._timers = timers;
-    }
-
-    demos.forEach(function (demo) {
-      var replay = $('.ai-replay', demo);
-      if (replay) {
-        replay.addEventListener('click', function () {
-          (demo._timers || []).forEach(clearTimeout);
-          demo.dataset.running = '0';
-          run(demo);
-        });
-      }
-    });
-
-    if (!('IntersectionObserver' in window)) {
-      demos.forEach(run);
-      return;
-    }
-
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        setTimeout(function () { run(entry.target); }, 320);
-        io.unobserve(entry.target);
-      });
-    }, { threshold: 0.4 });
-
-    demos.forEach(function (d) { io.observe(d); });
-  }
 
   /* ======================================================================
      7 · CONTACT FORM
@@ -527,11 +417,8 @@
     // each step is isolated, and initReveal runs first so content is visible
     // even if a later enhancement fails.
     [
-      ['reveal', initReveal],
       ['header', initHeader],
       ['mobileNav', initMobileNav],
-      ['hero', initHero],
-      ['aiDemos', initAiDemos],
       ['form', initForm],
       ['pickers', initPickers],
       ['dial', initDial],

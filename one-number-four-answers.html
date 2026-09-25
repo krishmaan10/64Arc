@@ -27,19 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;450;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
-<noscript><style>
-  /* Without JS the reveal system never runs — show everything immediately. */
-  .reveal, .reveal-l, .reveal-r, .frag, .mega .sub, .mega .mark { opacity: 1 !important; transform: none !important; }
-  .rise > span { transform: none !important; }
-  .rule-draw, .layer-stitch i, .core-drops i, .core-rail, .pmap-bar { transform: none !important; }
-  .draw { stroke-dashoffset: 0 !important; }
-  .flow { display: none; }
-  .hero-eyebrow, .hero-cols, .hero-figure { opacity: 1 !important; transform: none !important; }
-  .ai-stop { color: var(--ivory); border-color: var(--signal); }
-  .ai-result { opacity: 1 !important; transform: none !important; }
-  .ai-replay { display: none; }
-  [data-contact-form] button[type="submit"] { display: none; }
-</style></noscript>
+<noscript><style>[data-contact-form] button[type="submit"] { display: none; }</style></noscript>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -89,24 +77,20 @@
 <main id="main">
 
   <!-- ================================ HERO ================================ -->
-  <section class="page-hero blueprint">
+  <section class="page-hero">
     <div class="wrap wrap--narrow">
-      <span class="eyebrow">Build note</span>
       <h1 class="t-h1">One number. Four answers.</h1>
       <p class="lead">
         We agreed what one of the business&rsquo;s core figures meant, built it, and shipped it
         into exactly one screen &mdash; and it was not the screen the decision-maker reads.
       </p>
-      <div class="page-meta">
-        <span>August 2026</span><span>Build note</span><span>Reporting</span>
-      </div>
     </div>
   </section>
 
   <!-- ================================ NOTE ================================= -->
   <section class="section section--lg s-ivory">
     <div class="wrap wrap--narrow">
-      <div class="prose reveal">
+      <div class="prose">
 
         <p>The owner of the business told us that the ageing calculation had already been
            discussed and finalised, and asked why the figure on his screen was still wrong. He was
@@ -154,7 +138,7 @@
            decision-maker does not use, while the screen he does use carried the oldest and most
            divergent version. Nobody had checked which screen the person complaining was reading.</p>
 
-        <figure class="note-figure observe">
+        <figure class="note-figure">
           <div class="frame only-wide">
             <svg viewBox="0 0 900 690" role="img" aria-label="Before: the bills feed four screens, each holding its own formula, and the four formulas differ. After: the bills feed one computation that produces a company band and a per-dealer figure, and the four screens simply read those.">
 
@@ -162,7 +146,7 @@
               <text class="d-label" x="0" y="14">Before &mdash; the arithmetic lives inside each screen</text>
 
               <!-- the bills -->
-              <g class="pop" style="--delay:.1s">
+              <g>
                 <rect class="d-node" x="8"  y="108" width="104" height="14" rx="2"/>
                 <rect class="d-node" x="8"  y="128" width="104" height="14" rx="2"/>
                 <rect class="d-node" x="8"  y="148" width="104" height="14" rx="2"/>
@@ -172,32 +156,32 @@
 
               <!-- four divergent paths -->
               <g class="d-link">
-                <path class="draw" style="--delay:.35s" d="M118 145 C190 145 200 82 268 82"/>
-                <path class="draw" style="--delay:.42s" d="M118 145 C190 145 200 130 268 130"/>
-                <path class="draw" style="--delay:.49s" d="M118 145 C190 145 200 178 268 178"/>
-                <path class="draw" style="--delay:.56s" d="M118 145 C190 145 200 226 268 226"/>
+                <path  d="M118 145 C190 145 200 82 268 82"/>
+                <path  d="M118 145 C190 145 200 130 268 130"/>
+                <path  d="M118 145 C190 145 200 178 268 178"/>
+                <path  d="M118 145 C190 145 200 226 268 226"/>
               </g>
 
               <!-- four screens, each with its own formula box -->
-              <g class="pop" style="--delay:.7s">
+              <g>
                 <rect class="d-node" x="268" y="62" width="624" height="40" rx="6"/>
                 <text class="d-title" x="284" y="87" style="font-size:12px">Headline bar</text>
                 <rect x="480" y="72" width="400" height="20" rx="3" fill="rgba(83,103,255,.10)" stroke="#343947"/>
                 <text class="d-label" x="496" y="86">bill age &middot; gross &middot; per bill</text>
               </g>
-              <g class="pop" style="--delay:.78s">
+              <g>
                 <rect class="d-node" x="268" y="110" width="624" height="40" rx="6"/>
                 <text class="d-title" x="284" y="135" style="font-size:12px">Netted bar</text>
                 <rect x="480" y="120" width="400" height="20" rx="3" fill="rgba(83,103,255,.10)" stroke="#343947"/>
                 <text class="d-label" x="496" y="134">bill age &middot; net &middot; per bill</text>
               </g>
-              <g class="pop" style="--delay:.86s">
+              <g>
                 <rect class="d-node" x="268" y="158" width="624" height="40" rx="6"/>
                 <text class="d-title" x="284" y="183" style="font-size:12px">Dealer view</text>
                 <rect x="480" y="168" width="400" height="20" rx="3" fill="rgba(83,103,255,.10)" stroke="#343947"/>
                 <text class="d-label" x="496" y="182">days past terms &middot; net &middot; per dealer</text>
               </g>
-              <g class="pop" style="--delay:.94s">
+              <g>
                 <rect class="d-node" x="268" y="206" width="624" height="40" rx="6" stroke="#5367FF"/>
                 <text class="d-title" x="284" y="231" style="font-size:12px">Dashboard row</text>
                 <rect x="480" y="216" width="400" height="20" rx="3" fill="rgba(83,103,255,.10)" stroke="#5367FF"/>
@@ -211,7 +195,7 @@
               <!-- ============================= AFTER ============================= -->
               <text class="d-label" x="0" y="368">After &mdash; the arithmetic lives once, upstream</text>
 
-              <g class="pop" style="--delay:1.15s">
+              <g>
                 <rect class="d-node" x="8"  y="470" width="104" height="14" rx="2"/>
                 <rect class="d-node" x="8"  y="490" width="104" height="14" rx="2"/>
                 <rect class="d-node" x="8"  y="510" width="104" height="14" rx="2"/>
@@ -219,10 +203,10 @@
                 <text class="d-label" x="60" y="562" text-anchor="middle">The bills</text>
               </g>
 
-              <path class="d-link draw" style="--delay:1.3s" d="M118 507 H236"/>
+              <path class="d-link" d="M118 507 H236"/>
 
               <!-- the single computation -->
-              <g class="pop" style="--delay:1.4s">
+              <g>
                 <rect x="236" y="466" width="216" height="82" rx="8" fill="rgba(83,103,255,.10)" stroke="#5367FF"/>
                 <text class="d-title" x="344" y="500" text-anchor="middle" style="font-size:12px">One pass,</text>
                 <text class="d-title" x="344" y="518" text-anchor="middle" style="font-size:12px">one bucketing rule</text>
@@ -230,21 +214,21 @@
 
               <!-- two outputs -->
               <g class="d-link">
-                <path class="draw" style="--delay:1.6s" d="M452 490 C500 490 500 462 548 462"/>
-                <path class="draw" style="--delay:1.66s" d="M452 524 C500 524 500 552 548 552"/>
+                <path  d="M452 490 C500 490 500 462 548 462"/>
+                <path  d="M452 524 C500 524 500 552 548 552"/>
               </g>
               <text class="d-label" x="470" y="452" style="fill:#7A89FF">company band</text>
               <text class="d-label" x="470" y="578" style="fill:#7A89FF">per-dealer figure</text>
 
               <g class="d-link">
-                <path class="draw" style="--delay:1.8s" d="M548 462 C620 462 630 424 700 424"/>
-                <path class="draw" style="--delay:1.86s" d="M548 462 C620 462 630 472 700 472"/>
-                <path class="draw" style="--delay:1.92s" d="M548 552 C620 552 630 520 700 520"/>
-                <path class="draw" style="--delay:1.98s" d="M548 552 C620 552 630 568 700 568"/>
+                <path  d="M548 462 C620 462 630 424 700 424"/>
+                <path  d="M548 462 C620 462 630 472 700 472"/>
+                <path  d="M548 552 C620 552 630 520 700 520"/>
+                <path  d="M548 552 C620 552 630 568 700 568"/>
               </g>
 
               <!-- the same four screens, now with nothing to compute -->
-              <g class="pop" style="--delay:2.1s">
+              <g>
                 <rect class="d-node" x="700" y="406" width="192" height="36" rx="6"/>
                 <text class="d-title" x="716" y="429" style="font-size:12px">Headline bar</text>
                 <rect class="d-node" x="700" y="454" width="192" height="36" rx="6"/>
@@ -255,7 +239,7 @@
                 <text class="d-title" x="716" y="573" style="font-size:12px">Dashboard row</text>
               </g>
 
-              <path class="flow" style="--delay:2.4s;--flow-dur:3s" d="M118 507 H236"/>
+              <path  style="--flow-dur:3s" d="M118 507 H236"/>
               <text class="d-label" x="236" y="620" style="fill:#808795">No formulas left in the screens. They read what the pass produced.</text>
             </svg>
           </div>
@@ -335,7 +319,7 @@
 
       </div>
 
-      <p class="reveal" style="margin-top:3.5rem">
+      <p  style="margin-top:3.5rem">
         <a class="link" href="work.html#pss">The system this came from
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
@@ -344,23 +328,7 @@
   </section>
 
   <!-- =============================== CTA ================================= -->
-  <section class="cta blueprint">
-    <div class="wrap">
-      <p class="label label--signal reveal">Begin</p>
-      <h2 class="reveal" style="--delay:.08s">
-        How many answers does your business have to its own most important number?
-        <span class="lets">Let&rsquo;s find out.</span>
-      </h2>
-      <div class="btn-row reveal" style="--delay:.14s">
-        <a class="btn btn--primary" href="contact.html">
-          Map your business
-          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
-        </a>
-        <a class="btn btn--ghost-dark" href="work.html">See the system it came from</a>
-      </div>
-      <p class="cta-note reveal">A conversation about your business &mdash; not a product demo.</p>
-    </div>
-  </section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">If this sounds like your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 
 </main>
 

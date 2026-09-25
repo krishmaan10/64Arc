@@ -27,19 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;450;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
-<noscript><style>
-  /* Without JS the reveal system never runs — show everything immediately. */
-  .reveal, .reveal-l, .reveal-r, .frag, .mega .sub, .mega .mark { opacity: 1 !important; transform: none !important; }
-  .rise > span { transform: none !important; }
-  .rule-draw, .layer-stitch i, .core-drops i, .core-rail, .pmap-bar { transform: none !important; }
-  .draw { stroke-dashoffset: 0 !important; }
-  .flow { display: none; }
-  .hero-eyebrow, .hero-cols, .hero-figure { opacity: 1 !important; transform: none !important; }
-  .ai-stop { color: var(--ivory); border-color: var(--signal); }
-  .ai-result { opacity: 1 !important; transform: none !important; }
-  .ai-replay { display: none; }
-  [data-contact-form] button[type="submit"] { display: none; }
-</style></noscript>
+<noscript><style>[data-contact-form] button[type="submit"] { display: none; }</style></noscript>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -89,9 +77,8 @@
 <main id="main">
 
   <!-- ================================ HERO ================================ -->
-  <section class="page-hero blueprint">
+  <section class="page-hero">
     <div class="wrap">
-      <span class="eyebrow">How it works</span>
       <h1 class="t-h1 measure-l">
         From your first email<br>
         <span style="color:var(--ink-inv-muted)">to a branch using it.</span>
@@ -101,9 +88,6 @@
         Five phases, in order. The structure is agreed before anything is built, and it stays
         written down for as long as the system runs.
       </p>
-      <div class="page-meta">
-        <span>Understand</span><span>Architect</span><span>Build</span><span>Connect</span><span>Evolve</span>
-      </div>
     </div>
   </section>
 
@@ -111,9 +95,8 @@
   <section class="section s-sunken">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">What changes</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">One order, before and after.</h2>
-        <p class="lead reveal measure" style="--delay:.14s">
+        <h2 class="t-h2">One order, before and after.</h2>
+        <p class="lead measure">
           An order on its way to dispatch, as we usually find it, and the same order once the
           work is done. Same dealer, same branch. What changes is how many people have to carry
           the information across the gaps by hand.
@@ -121,37 +104,37 @@
       </div>
 
       <div class="split">
-        <div class="artefact reveal observe">
+        <div class="artefact">
           <div class="artefact-bar">Artefact 01 — Before · as we typically find it</div>
           <div class="artefact-body">
             <div class="pmap">
-              <div class="pmap-row"><span class="who">Dealer</span><span class="pmap-bar" style="--delay:.05s;width:22%"></span><span class="t">Sends the order by message</span></div>
-              <div class="pmap-row is-friction"><span class="who">Sales desk</span><span class="pmap-bar" style="--delay:.15s;width:48%"></span><span class="t">Re-keys it into the ERP</span></div>
-              <div class="pmap-row is-friction"><span class="who">Sales desk</span><span class="pmap-bar" style="--delay:.25s;width:64%"></span><span class="t">Calls warehouse for stock</span></div>
-              <div class="pmap-row"><span class="who">Warehouse</span><span class="pmap-bar" style="--delay:.35s;width:38%"></span><span class="t">Confirms availability</span></div>
-              <div class="pmap-row is-friction"><span class="who">Accounts</span><span class="pmap-bar" style="--delay:.45s;width:70%"></span><span class="t">Checks credit in a second system</span></div>
-              <div class="pmap-row"><span class="who">Dispatch</span><span class="pmap-bar" style="--delay:.55s;width:30%"></span><span class="t">Releases · updates the sheet</span></div>
-              <div class="pmap-row is-friction"><span class="who">Dealer</span><span class="pmap-bar" style="--delay:.65s;width:86%"></span><span class="t">Calls back to ask where it is</span></div>
+              <div class="pmap-row"><span class="who">Dealer</span><span class="pmap-bar" style="width:22%"></span><span class="t">Sends the order by message</span></div>
+              <div class="pmap-row is-friction"><span class="who">Sales desk</span><span class="pmap-bar" style="width:48%"></span><span class="t">Re-keys it into the ERP</span></div>
+              <div class="pmap-row is-friction"><span class="who">Sales desk</span><span class="pmap-bar" style="width:64%"></span><span class="t">Calls warehouse for stock</span></div>
+              <div class="pmap-row"><span class="who">Warehouse</span><span class="pmap-bar" style="width:38%"></span><span class="t">Confirms availability</span></div>
+              <div class="pmap-row is-friction"><span class="who">Accounts</span><span class="pmap-bar" style="width:70%"></span><span class="t">Checks credit in a second system</span></div>
+              <div class="pmap-row"><span class="who">Dispatch</span><span class="pmap-bar" style="width:30%"></span><span class="t">Releases · updates the sheet</span></div>
+              <div class="pmap-row is-friction"><span class="who">Dealer</span><span class="pmap-bar" style="width:86%"></span><span class="t">Calls back to ask where it is</span></div>
             </div>
             <p class="figure-cap">Four systems. Two phone calls. One dealer still in the dark.</p>
           </div>
         </div>
 
-        <div class="artefact reveal observe" style="--delay:.12s">
+        <div class="artefact">
           <div class="artefact-bar">Artefact 01 — After · the same flow, once built</div>
           <div class="artefact-body">
             <div class="pmap">
-              <div class="pmap-row"><span class="who">Dealer</span><span class="pmap-bar" style="--delay:.05s;width:20%"></span><span class="t">Orders in the app · typed once</span></div>
-              <div class="pmap-row"><span class="who">Server</span><span class="pmap-bar" style="--delay:.14s;width:14%"></span><span class="t">Credit checked before it saves</span></div>
-              <div class="pmap-row"><span class="who">Branch</span><span class="pmap-bar" style="--delay:.23s;width:24%"></span><span class="t">Opens it in the ERP · priced there</span></div>
-              <div class="pmap-row"><span class="who">Dealer</span><span class="pmap-bar" style="--delay:.32s;width:16%"></span><span class="t">Sees it under My orders</span></div>
+              <div class="pmap-row"><span class="who">Dealer</span><span class="pmap-bar" style="width:20%"></span><span class="t">Orders in the app · typed once</span></div>
+              <div class="pmap-row"><span class="who">Server</span><span class="pmap-bar" style="width:14%"></span><span class="t">Credit checked before it saves</span></div>
+              <div class="pmap-row"><span class="who">Branch</span><span class="pmap-bar" style="width:24%"></span><span class="t">Opens it in the ERP · priced there</span></div>
+              <div class="pmap-row"><span class="who">Dealer</span><span class="pmap-bar" style="width:16%"></span><span class="t">Sees it under My orders</span></div>
             </div>
             <p class="figure-cap">One system. No phone calls. Nobody carrying information.</p>
           </div>
         </div>
       </div>
 
-      <p class="figure-cap reveal" style="margin-top:1.75rem">Illustrative — the shape of the flow, not a single measured engagement. Both sides are drawn to the same scale.</p>
+      <p class="figure-cap" style="margin-top:1.75rem">Illustrative — the shape of the flow, not a single measured engagement. Both sides are drawn to the same scale.</p>
     </div>
   </section>
 
@@ -171,13 +154,13 @@
   <div class="rail-scope">
 
   <!-- ============================= 01 UNDERSTAND ========================== -->
-  <section class="section s-ivory gridlines anchor" id="understand">
+  <section class="section s-ivory anchor" id="understand">
     <div class="wrap">
       <div class="split split--sticky">
         <div>
-          <p class="label reveal">01 — Understand</p>
-          <h2 class="t-h2 reveal" style="--delay:.06s">Map the business as it is.</h2>
-          <p class="lead reveal measure-s" style="--delay:.1s">
+          <p class="label">01 — Understand</p>
+          <h2 class="t-h2">Map the business as it is.</h2>
+          <p class="lead measure-s">
             Before any structure can be decided, the business has to be described accurately
             &mdash; including the parts that were never written down. This is where the
             &ldquo;before&rdquo; picture above comes from.
@@ -185,7 +168,7 @@
         </div>
 
         <div class="stack" style="--stack:2rem">
-          <div class="rows reveal">
+          <div class="rows">
             <div>
               <h3>What we map</h3>
               <p>People and roles. Processes as they are actually performed. Customers, dealers and
@@ -204,31 +187,28 @@
             </div>
           </div>
 
-          <div class="principle reveal">
-            <p class="label">Understand principle</p>
-            <p>We map what people do, not what the org chart says they do.<br>
+          <p class="was-principle">We map what people do, not what the org chart says they do.<br>
                The workaround is usually the requirement.</p>
-          </div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- ============================= 02 ARCHITECT =========================== -->
-  <section class="section s-carbon blueprint anchor" id="architect">
+  <section class="section s-carbon anchor" id="architect">
     <div class="wrap">
       <div class="split split--sticky">
         <div>
-          <p class="label label--signal reveal">02 — Architect</p>
-          <h2 class="t-h2 reveal" style="--delay:.06s">Decide the structure.</h2>
-          <p class="lead reveal measure-s" style="--delay:.1s">
+          <p class="label label--signal">02 — Architect</p>
+          <h2 class="t-h2">Decide the structure.</h2>
+          <p class="lead measure-s">
             What stays, what changes, what connects, what gets built, and where AI belongs.
             This is the decision the rest of the engagement depends on.
           </p>
         </div>
 
         <div class="stack" style="--stack:2rem">
-          <div class="rows rows--dark reveal">
+          <div class="rows rows--dark">
             <div>
               <h3 style="color:var(--ivory)">The business model</h3>
               <p>One definition of a customer, a product, a price, an order and a stock position
@@ -250,7 +230,7 @@
             </div>
           </div>
 
-          <div class="artefact reveal observe">
+          <div class="artefact">
             <div class="artefact-bar">Artefact 02 — Keep · replace · build</div>
             <div class="artefact-body">
               <div class="pmap">
@@ -265,11 +245,8 @@
             </div>
           </div>
 
-          <div class="principle reveal">
-            <p class="label label--signal">Delivery principle</p>
-            <p>The structure is agreed with the business before it is built.<br>
+          <p class="was-principle">The structure is agreed with the business before it is built.<br>
                If it cannot be explained to the people who run the company, it is not finished.</p>
-          </div>
         </div>
       </div>
     </div>
@@ -280,42 +257,42 @@
     <div class="wrap">
       <div class="split split--sticky">
         <div>
-          <p class="label reveal">03 — Build</p>
-          <h2 class="t-h2 reveal" style="--delay:.06s">Build what the structure calls for.</h2>
-          <p class="lead reveal measure-s" style="--delay:.1s">
+          <p class="label">03 — Build</p>
+          <h2 class="t-h2">Build what the structure calls for.</h2>
+          <p class="lead measure-s">
             Built in sequence, released in pieces a branch can use, and always on the shared
             foundation &mdash; never as separate products that will need joining later.
           </p>
         </div>
 
-        <div class="cards cards--2" data-stagger=".07">
-          <div class="card reveal">
+        <div class="cards cards--2">
+          <div class="card">
             <h3 class="t-h4">Foundation first</h3>
             <p>The shared business model, the data layer, permissions and the rules are built
                before the screens that depend on them.</p>
           </div>
-          <div class="card reveal">
+          <div class="card">
             <h3 class="t-h4">Released in working slices</h3>
             <p>Each release does a real job for a real team. Nothing waits for a single distant
                go-live.</p>
           </div>
-          <div class="card reveal">
+          <div class="card">
             <h3 class="t-h4">Built with your people</h3>
             <p>The teams who will use a screen shape it while it is being made, not during a
                training session afterwards.</p>
           </div>
-          <div class="card reveal">
+          <div class="card">
             <h3 class="t-h4">Designed, not merely functional</h3>
             <p>Interfaces people use for eight hours a day deserve the same care as the ones
                customers see.</p>
           </div>
-          <div class="card reveal">
+          <div class="card">
             <h3 class="t-h4">Nothing has to be migrated</h3>
             <p>Your books stay where they are. We read from the system of record and write back
                through it. Where a piece is replaced later, the new one runs beside the original
                until you have watched it work.</p>
           </div>
-          <div class="card reveal">
+          <div class="card">
             <h3 class="t-h4">Documented as built</h3>
             <p>The structure, the data model and the integrations stay written down and current.</p>
           </div>
@@ -329,9 +306,9 @@
     <div class="wrap">
       <div class="split split--sticky">
         <div>
-          <p class="label reveal">04 — Connect</p>
-          <h2 class="t-h2 reveal" style="--delay:.06s">Make it one system.</h2>
-          <p class="lead reveal measure-s" style="--delay:.1s">
+          <p class="label">04 — Connect</p>
+          <h2 class="t-h2">Make it one system.</h2>
+          <p class="lead measure-s">
             Screens, data and workflows joined until information moves on its own &mdash;
             including through the systems you chose to keep. This is the phase that turns the
             &ldquo;before&rdquo; at the top of this page into the &ldquo;after&rdquo;.
@@ -339,7 +316,7 @@
         </div>
 
         <div class="stack" style="--stack:2rem">
-          <div class="rows reveal">
+          <div class="rows">
             <div>
               <h3>Systems you keep</h3>
               <p>Accounting, payroll, statutory tools and specialist machinery software are
@@ -368,11 +345,8 @@
             </div>
           </div>
 
-          <div class="principle reveal">
-            <p class="label">Connect principle</p>
-            <p>If someone still carries a number from one screen to another by hand,<br>
+          <p class="was-principle">If someone still carries a number from one screen to another by hand,<br>
                the connection is not finished.</p>
-          </div>
         </div>
       </div>
     </div>
@@ -383,31 +357,31 @@
     <div class="wrap">
       <div class="split split--sticky">
         <div>
-          <p class="label reveal">05 — Evolve</p>
-          <h2 class="t-h2 reveal" style="--delay:.06s">Keep extending it.</h2>
-          <p class="lead reveal measure-s" style="--delay:.1s">
+          <p class="label">05 — Evolve</p>
+          <h2 class="t-h2">Keep extending it.</h2>
+          <p class="lead measure-s">
             The system is not handed over and left. We stay on, and new capability attaches to
             the structure that already holds your orders, stock and dues.
           </p>
         </div>
 
-        <div class="cards cards--2" data-stagger=".07">
-          <div class="card reveal">
+        <div class="cards cards--2">
+          <div class="card">
             <h3 class="t-h4">New interfaces</h3>
             <p>A new region, channel, brand or partner type gets its own screen without a new
                data silo behind it.</p>
           </div>
-          <div class="card reveal">
+          <div class="card">
             <h3 class="t-h4">New intelligence</h3>
             <p>As the system builds up real history, more decisions become worth automating
                or forecasting.</p>
           </div>
-          <div class="card reveal">
+          <div class="card">
             <h3 class="t-h4">Ongoing structure review</h3>
             <p>The structure is revisited as the business changes, rather than quietly drifting
                out of date.</p>
           </div>
-          <div class="card reveal">
+          <div class="card">
             <h3 class="t-h4">Support that knows the system</h3>
             <p>The people who maintain it are the people who designed it. A piece is only
                replaced after you have watched the new one running.</p>
@@ -423,10 +397,9 @@
   <section class="section section--lg s-carbon">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">Delivery principles</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">Three things we will not do.</h2>
+        <h2 class="t-h2">Three things we will not do.</h2>
       </div>
-      <div class="outcomes reveal">
+      <div class="outcomes">
         <div class="outcome">
           <span class="n">01</span>
           <h3>No rip-and-replace mandate</h3>
@@ -448,23 +421,7 @@
   </section>
 
   <!-- =============================== CTA ================================= -->
-  <section class="cta blueprint">
-    <div class="wrap">
-      <p class="label label--signal reveal">Begin</p>
-      <h2 class="reveal" style="--delay:.08s">
-        Every engagement starts the same way &mdash; by understanding the business.
-        <span class="lets">Let&rsquo;s map yours.</span>
-      </h2>
-      <div class="btn-row reveal" style="--delay:.14s">
-        <a class="btn btn--primary" href="contact.html">
-          Map your business
-          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
-        </a>
-        <a class="btn btn--ghost-dark" href="what-we-build.html">See what gets built</a>
-      </div>
-      <p class="cta-note reveal">A conversation about your business &mdash; not a product demo.</p>
-    </div>
-  </section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">If this sounds like your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 </main>
 
 <footer class="footer">

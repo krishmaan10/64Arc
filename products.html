@@ -27,19 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;450;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
-<noscript><style>
-  /* Without JS the reveal system never runs — show everything immediately. */
-  .reveal, .reveal-l, .reveal-r, .frag, .mega .sub, .mega .mark { opacity: 1 !important; transform: none !important; }
-  .rise > span { transform: none !important; }
-  .rule-draw, .layer-stitch i, .core-drops i, .core-rail, .pmap-bar { transform: none !important; }
-  .draw { stroke-dashoffset: 0 !important; }
-  .flow { display: none; }
-  .hero-eyebrow, .hero-cols, .hero-figure { opacity: 1 !important; transform: none !important; }
-  .ai-stop { color: var(--ivory); border-color: var(--signal); }
-  .ai-result { opacity: 1 !important; transform: none !important; }
-  .ai-replay { display: none; }
-  [data-contact-form] button[type="submit"] { display: none; }
-</style></noscript>
+<noscript><style>[data-contact-form] button[type="submit"] { display: none; }</style></noscript>
 </head>
 <body class="products-page">
 <a class="skip-link" href="#main">Skip to content</a>
@@ -89,7 +77,6 @@
 <main id="main">
   <section class="page-hero">
     <div class="wrap">
-      <span class="eyebrow">Our own pilots</span>
       <h1 class="t-h1">Two things we built<br><span class="muted">for ourselves.</span></h1>
       <p class="lead">
         64ARCS builds business systems for other people, and these two products of
@@ -97,9 +84,6 @@
         now &mdash; nothing to install, no sign-in. Neither is finished, and each one below says
         exactly where it stops.
       </p>
-      <div class="pilot-strip">
-        <span>Opens in a browser</span><span>No sign-in</span><span>Early pilots</span>
-      </div>
     </div>
   </section>
 
@@ -120,35 +104,35 @@
              You accept or reject every change. Nothing is rewritten behind your back, and the
              words that end up in the box are yours.</p>
 
-          <figure class="pilot-figure observe">
+          <figure class="pilot-figure">
             <svg viewBox="0 0 520 250" role="img" aria-label="A draft prompt with three gaps marked: no audience named, no format given, no constraint stated. Each gap offers a suggested wording that the writer accepts or rejects.">
               <rect class="d-node-light" x="8" y="8" width="504" height="70" rx="8"/>
               <text class="d-label" x="26" y="34">Your draft</text>
               <text class="d-title" x="26" y="60">&ldquo;Write me something about our sales numbers.&rdquo;</text>
 
               <g class="d-link">
-                <path class="draw" style="--delay:.3s" d="M120 78 V104"/>
-                <path class="draw" style="--delay:.38s" d="M260 78 V104"/>
-                <path class="draw" style="--delay:.46s" d="M400 78 V104"/>
+                <path  d="M120 78 V104"/>
+                <path  d="M260 78 V104"/>
+                <path  d="M400 78 V104"/>
               </g>
 
-              <g class="pop" style="--delay:.55s">
+              <g>
                 <rect x="20" y="104" width="160" height="62" rx="6" fill="rgba(83,103,255,.07)" stroke="#5367FF" stroke-width="1"/>
                 <text class="d-label is-signal" x="34" y="126">Missing</text>
                 <text class="d-label" x="34" y="146">Who reads it</text>
               </g>
-              <g class="pop" style="--delay:.63s">
+              <g>
                 <rect x="180" y="104" width="160" height="62" rx="6" fill="rgba(83,103,255,.07)" stroke="#5367FF" stroke-width="1"/>
                 <text class="d-label is-signal" x="194" y="126">Missing</text>
                 <text class="d-label" x="194" y="146">What shape</text>
               </g>
-              <g class="pop" style="--delay:.71s">
+              <g>
                 <rect x="340" y="104" width="160" height="62" rx="6" fill="rgba(83,103,255,.07)" stroke="#5367FF" stroke-width="1"/>
                 <text class="d-label is-signal" x="354" y="126">Missing</text>
                 <text class="d-label" x="354" y="146">Which period</text>
               </g>
 
-              <g class="pop" style="--delay:.85s">
+              <g>
                 <rect class="d-node-light" x="8" y="188" width="504" height="54" rx="8"/>
                 <text class="d-label" x="26" y="212">Suggested &mdash; accept or reject, one at a time</text>
                 <text class="d-label" x="26" y="232">&ldquo;&hellip; for the board, as a one-page summary, for Q3.&rdquo;</text>
@@ -200,33 +184,33 @@
              a record of the session, shown to the student and the teacher alike. It is a record
              of how the work happened, not a judgement about who wrote it.</p>
 
-          <figure class="pilot-figure observe">
+          <figure class="pilot-figure">
             <svg viewBox="0 0 520 250" role="img" aria-label="A teacher sets the boundary for a piece of work. Inside it the student plans, drafts and tests their thinking. Outside it sits a record of the session, shown to student and teacher alike.">
               <rect x="8" y="8" width="504" height="50" rx="8" fill="rgba(83,103,255,.07)" stroke="#5367FF" stroke-width="1"/>
               <text class="d-label is-signal" x="26" y="30">The teacher sets</text>
               <text class="d-label" x="26" y="48">What this work is for &middot; what help is allowed</text>
 
-              <path class="d-link draw" style="--delay:.3s" d="M260 58 V82"/>
+              <path class="d-link" d="M260 58 V82"/>
 
-              <g class="pop" style="--delay:.45s">
+              <g>
                 <rect class="d-node-light" x="8" y="82" width="504" height="92" rx="8"/>
                 <text class="d-label" x="26" y="106">The student works inside it</text>
               </g>
-              <g class="pop" style="--delay:.6s">
+              <g>
                 <rect x="26" y="120" width="172" height="40" rx="5" fill="#FFFFFF" stroke="#D9D5CC"/>
                 <text class="d-label" x="40" y="145">Understand the task</text>
               </g>
-              <g class="pop" style="--delay:.68s">
+              <g>
                 <rect x="208" y="120" width="128" height="40" rx="5" fill="#FFFFFF" stroke="#D9D5CC"/>
                 <text class="d-label" x="222" y="145">Make a plan</text>
               </g>
-              <g class="pop" style="--delay:.76s">
+              <g>
                 <rect x="346" y="120" width="148" height="40" rx="5" fill="#FFFFFF" stroke="#D9D5CC"/>
                 <text class="d-label" x="360" y="145">Test my thinking</text>
               </g>
 
-              <path class="d-link draw" style="--delay:.9s" d="M260 174 V198"/>
-              <g class="pop" style="--delay:1s">
+              <path class="d-link" d="M260 174 V198"/>
+              <g>
                 <rect class="d-node-light" x="8" y="198" width="504" height="44" rx="8"/>
                 <text class="d-label" x="26" y="226">A record of the session &mdash; shown to both. Not a verdict.</text>
               </g>
@@ -262,23 +246,7 @@
   </section>
 
   <!-- ================================ BACK TO THE WORK ================================ -->
-  <section class="cta blueprint">
-    <div class="wrap">
-      <p class="label label--signal reveal">The day job</p>
-      <h2 class="reveal" style="--delay:.08s">
-        The day job is building systems for other people.
-        <span class="lets">That is what 64ARCS does.</span>
-      </h2>
-      <div class="btn-row reveal" style="--delay:.14s">
-        <a class="btn btn--primary" href="what-we-build.html">
-          See what we build
-          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
-        </a>
-        <a class="btn btn--ghost-dark" href="work.html#pss">See one we have built</a>
-      </div>
-      <p class="cta-note reveal">A conversation about your business — not a product demo.</p>
-    </div>
-  </section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">If this sounds like your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 </main>
 
 <footer class="footer">

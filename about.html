@@ -27,19 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;450;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
-<noscript><style>
-  /* Without JS the reveal system never runs — show everything immediately. */
-  .reveal, .reveal-l, .reveal-r, .frag, .mega .sub, .mega .mark { opacity: 1 !important; transform: none !important; }
-  .rise > span { transform: none !important; }
-  .rule-draw, .layer-stitch i, .core-drops i, .core-rail, .pmap-bar { transform: none !important; }
-  .draw { stroke-dashoffset: 0 !important; }
-  .flow { display: none; }
-  .hero-eyebrow, .hero-cols, .hero-figure { opacity: 1 !important; transform: none !important; }
-  .ai-stop { color: var(--ivory); border-color: var(--signal); }
-  .ai-result { opacity: 1 !important; transform: none !important; }
-  .ai-replay { display: none; }
-  [data-contact-form] button[type="submit"] { display: none; }
-</style></noscript>
+<noscript><style>[data-contact-form] button[type="submit"] { display: none; }</style></noscript>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -89,46 +77,42 @@
 <main id="main">
 
   <!-- ================================ HERO ================================ -->
-  <section class="page-hero blueprint">
+  <section class="page-hero">
     <div class="wrap">
-      <span class="eyebrow">About</span>
       <h1 class="t-h1 measure-l">
         A small software studio.<br>
         <span style="color:var(--ink-inv-muted)">We build the systems other businesses run on, and products of our own.</span>
       </h1>
-      <div class="page-meta">
-        <span>What we are</span><span>How we work</span><span>The name</span><span>Where</span>
-      </div>
     </div>
   </section>
 
   <!-- ============================ WHAT WE ARE ============================= -->
-  <section class="section section--lg s-ivory gridlines">
+  <section class="section section--lg s-ivory">
     <div class="wrap">
       <div class="split">
         <div>
-          <p class="label reveal">What 64ARCS is</p>
-          <h2 class="t-h2 reveal" style="--delay:.06s">
+          <p class="label">What 64ARCS is</p>
+          <h2 class="t-h2">
             A small studio.<br>
             <span class="muted">Three things built so far.</span>
           </h2>
         </div>
 
         <div class="stack" style="--stack:1.5rem">
-          <p class="lead reveal">
+          <p class="lead">
             We build the system a business runs on &mdash; orders, stock, dues and collections
             across its branches, typed once &mdash; and we build products of our own.
           </p>
-          <p class="reveal" style="--delay:.06s">
+          <p>
             The first system was built for the founder&rsquo;s own family business, where it could be
             tried on a real operation with real money before being offered to anyone else. It is in
             daily use.
           </p>
-          <p class="reveal" style="--delay:.1s">
+          <p>
             We also build two products of our own. Both are early pilots you can open in a browser
             now, and each says exactly where it stops.
           </p>
-          <p class="reveal" style="--delay:.14s">
+          <p>
             <a class="link" href="work.html">See the work
               <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
             </a>
@@ -146,11 +130,10 @@
   <section class="section section--lg s-ivory">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">How we work</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">Four rules, and what each one means in practice.</h2>
+        <h2 class="t-h2">Four rules, and what each one means in practice.</h2>
       </div>
 
-      <div class="rows reveal">
+      <div class="rows">
         <div>
           <h3>The business is the specification.</h3>
           <p>We sit in your branches and build to how the work actually happens, because the
@@ -176,23 +159,22 @@
   </section>
 
   <!-- ============================== THE NAME ============================== -->
-  <section class="section section--lg s-carbon blueprint">
+  <section class="section section--lg s-carbon">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">The name</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">64ARCS</h2>
-        <p class="lead reveal measure" style="--delay:.14s">
+        <h2 class="t-h2">64ARCS</h2>
+        <p class="lead measure">
           The 64 is a nod to computing architecture and 64-bit systems, with personal significance
           to the founder; the arc is a structure that carries weight while leaving an opening.
         </p>
       </div>
 
-      <div class="reveal" style="display:flex;justify-content:center;margin:clamp(3rem,2rem + 3vw,5rem) 0 0">
-        <svg width="180" height="170" viewBox="0 0 180 170" fill="none" aria-hidden="true" class="observe">
-          <path class="d-arc draw" style="--delay:.2s" d="M20 155V95a70 70 0 0 1 140 0v60" stroke="#5367FF" stroke-width="1.5" opacity=".5"/>
-          <path class="d-link draw" style="--delay:.5s" d="M20 155h140"/>
-          <circle class="pop" style="--delay:.9s" cx="90" cy="25" r="7" fill="#5367FF"/>
-          <path class="flow" style="--delay:1.3s;--flow-dur:3.2s" d="M20 155V95a70 70 0 0 1 140 0v60"/>
+      <div  style="display:flex;justify-content:center;margin:clamp(3rem,2rem + 3vw,5rem) 0 0">
+        <svg width="180" height="170" viewBox="0 0 180 170" fill="none" aria-hidden="true">
+          <path class="d-arc" d="M20 155V95a70 70 0 0 1 140 0v60" stroke="#5367FF" stroke-width="1.5" opacity=".5"/>
+          <path class="d-link" d="M20 155h140"/>
+          <circle  cx="90" cy="25" r="7" fill="#5367FF"/>
+          <path  style="--flow-dur:3.2s" d="M20 155V95a70 70 0 0 1 140 0v60"/>
         </svg>
       </div>
     </div>
@@ -203,17 +185,17 @@
     <div class="wrap">
       <div class="split">
         <div>
-          <p class="label reveal">Where</p>
-          <h2 class="t-h2 reveal" style="--delay:.06s">
+          <p class="label">Where</p>
+          <h2 class="t-h2">
             India.<br>
             <span class="muted">Working with businesses elsewhere.</span>
           </h2>
         </div>
         <div class="stack" style="--stack:1.25rem">
-          <p class="lead reveal">
+          <p class="lead">
             We are based in India and build for businesses wherever they operate.
           </p>
-          <p class="reveal" style="--delay:.06s">
+          <p>
             The ones we work with are mid-sized, have outgrown disconnected software and manual
             coordination, and do not want to build a large technology department &mdash; the kind
             where a generic product almost fits, and the gap between &ldquo;almost&rdquo; and
@@ -225,23 +207,7 @@
   </section>
 
   <!-- =============================== CTA ================================= -->
-  <section class="cta blueprint">
-    <div class="wrap">
-      <p class="label label--signal reveal">Begin</p>
-      <h2 class="reveal" style="--delay:.08s">
-        What would your business look like if every screen showed the same number?
-        <span class="lets">Let&rsquo;s map it.</span>
-      </h2>
-      <div class="btn-row reveal" style="--delay:.14s">
-        <a class="btn btn--primary" href="contact.html">
-          Start a conversation
-          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
-        </a>
-        <a class="btn btn--ghost-dark" href="work.html">See the systems we build</a>
-      </div>
-      <p class="cta-note reveal">A conversation about your business &mdash; not a product demo.</p>
-    </div>
-  </section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">If this sounds like your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 </main>
 
 <footer class="footer">

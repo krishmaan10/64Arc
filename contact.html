@@ -27,19 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;450;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
-<noscript><style>
-  /* Without JS the reveal system never runs — show everything immediately. */
-  .reveal, .reveal-l, .reveal-r, .frag, .mega .sub, .mega .mark { opacity: 1 !important; transform: none !important; }
-  .rise > span { transform: none !important; }
-  .rule-draw, .layer-stitch i, .core-drops i, .core-rail, .pmap-bar { transform: none !important; }
-  .draw { stroke-dashoffset: 0 !important; }
-  .flow { display: none; }
-  .hero-eyebrow, .hero-cols, .hero-figure { opacity: 1 !important; transform: none !important; }
-  .ai-stop { color: var(--ivory); border-color: var(--signal); }
-  .ai-result { opacity: 1 !important; transform: none !important; }
-  .ai-replay { display: none; }
-  [data-contact-form] button[type="submit"] { display: none; }
-</style></noscript>
+<noscript><style>[data-contact-form] button[type="submit"] { display: none; }</style></noscript>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -89,9 +77,8 @@
 <main id="main">
 
   <!-- ================================ HERO ================================ -->
-  <section class="page-hero blueprint">
+  <section class="page-hero">
     <div class="wrap">
-      <span class="eyebrow">Contact</span>
       <h1 class="t-h1 measure-l">
         What would your business look like if everything worked together?<br>
         <span style="color:var(--ink-inv-muted)">Let's map it.</span>
@@ -100,18 +87,15 @@
         Tell us how your business runs today. The first conversation is about your operation,
         not our capabilities.
       </p>
-      <div class="page-meta">
-        <span>No demo</span><span>No pitch deck</span><span>No obligation</span>
-      </div>
     </div>
   </section>
 
   <!-- =============================== FORM ================================= -->
-  <section class="section section--lg s-ivory gridlines">
+  <section class="section section--lg s-ivory">
     <div class="wrap">
       <div class="contact-grid">
 
-        <div class="reveal">
+        <div>
           <p class="label" style="margin-bottom:1.75rem">Start an architecture conversation</p>
 
           <!-- method="post" matters: without it a JavaScript-less submit would be a GET,
@@ -201,7 +185,7 @@
           </form>
         </div>
 
-        <aside class="contact-aside reveal" style="--delay:.1s">
+        <aside class="contact-aside">
           <p class="label" style="margin-bottom:1.75rem">What happens next</p>
 
           <div class="rows">
@@ -240,19 +224,18 @@
   </section>
 
   <!-- ============================ REASSURANCE ============================= -->
-  <section class="section s-carbon blueprint">
+  <section class="section s-carbon">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">Good first conversations</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">Questions worth bringing.</h2>
+        <h2 class="t-h2">Questions worth bringing.</h2>
       </div>
-      <div class="cards cards--2" data-stagger=".07">
-        <div class="card card--dark reveal"><p style="color:var(--ivory)">"Our systems each work, but nobody trusts the numbers. Where does that get fixed?"</p></div>
-        <div class="card card--dark reveal"><p style="color:var(--ivory)">"We are about to replace our ERP. Is that actually the right move?"</p></div>
-        <div class="card card--dark reveal"><p style="color:var(--ivory)">"Our dealers still order by phone. What would it take to change that?"</p></div>
-        <div class="card card--dark reveal"><p style="color:var(--ivory)">"We want AI to be useful here. What has to be true first?"</p></div>
-        <div class="card card--dark reveal"><p style="color:var(--ivory)">"Four of my people spend their week moving data between systems. What else could they be doing?"</p></div>
-        <div class="card card--dark reveal"><p style="color:var(--ivory)">"We have grown past our software. What should we build, and in what order?"</p></div>
+      <div class="cards cards--2">
+        <div class="card card--dark"><p style="color:var(--ivory)">"Our systems each work, but nobody trusts the numbers. Where does that get fixed?"</p></div>
+        <div class="card card--dark"><p style="color:var(--ivory)">"We are about to replace our ERP. Is that actually the right move?"</p></div>
+        <div class="card card--dark"><p style="color:var(--ivory)">"Our dealers still order by phone. What would it take to change that?"</p></div>
+        <div class="card card--dark"><p style="color:var(--ivory)">"We want AI to be useful here. What has to be true first?"</p></div>
+        <div class="card card--dark"><p style="color:var(--ivory)">"Four of my people spend their week moving data between systems. What else could they be doing?"</p></div>
+        <div class="card card--dark"><p style="color:var(--ivory)">"We have grown past our software. What should we build, and in what order?"</p></div>
       </div>
     </div>
   </section>

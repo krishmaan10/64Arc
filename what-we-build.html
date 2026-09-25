@@ -27,19 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;450;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
-<noscript><style>
-  /* Without JS the reveal system never runs — show everything immediately. */
-  .reveal, .reveal-l, .reveal-r, .frag, .mega .sub, .mega .mark { opacity: 1 !important; transform: none !important; }
-  .rise > span { transform: none !important; }
-  .rule-draw, .layer-stitch i, .core-drops i, .core-rail, .pmap-bar { transform: none !important; }
-  .draw { stroke-dashoffset: 0 !important; }
-  .flow { display: none; }
-  .hero-eyebrow, .hero-cols, .hero-figure { opacity: 1 !important; transform: none !important; }
-  .ai-stop { color: var(--ivory); border-color: var(--signal); }
-  .ai-result { opacity: 1 !important; transform: none !important; }
-  .ai-replay { display: none; }
-  [data-contact-form] button[type="submit"] { display: none; }
-</style></noscript>
+<noscript><style>[data-contact-form] button[type="submit"] { display: none; }</style></noscript>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -89,42 +77,30 @@
 <main id="main">
 
   <!-- ================================ HERO ================================ -->
-  <section class="page-hero blueprint">
+  <section class="page-hero">
     <div class="wrap">
-      <span class="eyebrow">What we build</span>
       <h1 class="t-h1 measure-l">Six areas of a business system. We build the ones you are missing.</h1>
       <p class="lead">
         Each line says whether we have built it already, or would build it first with you. This is what we build for customers. The two products we build for ourselves, PathWay AI and 64Griddle, are on the <a class="link" href="products.html">Products page</a>.
       </p>
-      <div class="page-meta">
-        <span><a href="#operations">Operations</a></span>
-        <span><a href="#commerce">Commerce</a></span>
-        <span><a href="#applications">Applications</a></span>
-        <span><a href="#experiences">Experiences</a></span>
-        <span><a href="#data">Data &amp; integration</a></span>
-        <span><a href="#ai">AI &amp; automation</a></span>
-        <span><a href="#india">64ARCS for India</a></span>
-        <span><a href="#back-end">The back end</a></span>
-      </div>
     </div>
   </section>
 
   <!-- ============================ THE SIX AREAS =========================== -->
-  <section class="section section--tight s-ivory gridlines anchor" id="areas">
+  <section class="section section--tight s-ivory anchor" id="areas">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">Six areas</p>
-        <h2 class="t-h2 reveal" style="--delay:.06s">
+        <h2 class="t-h2">
           Built means running for a customer today.<br>
           <span class="muted">Not built yet means we would build it on the same records.</span>
         </h2>
-        <p class="lead reveal measure" style="--delay:.1s">
+        <p class="lead measure">
           Everything marked built runs in one distributor&rsquo;s business across 93 branches.
           Pilot means read-only.
         </p>
       </div>
 
-      <div class="picker reveal" data-picker="cap"
+      <div class="picker" data-picker="cap"
            data-picker-all="Showing all six areas"
            data-picker-note="The other five are still on the page &mdash; this is only where you would begin.">
         <p class="picker-q">Where would you start?</p>
@@ -140,7 +116,7 @@
         <p class="picker-status" role="status" aria-live="polite" data-picker-status></p>
       </div>
 
-      <div class="rows reveal">
+      <div class="rows">
 
         <div class="anchor" id="operations" data-cap="operations">
           <h3>Operations</h3>
@@ -212,7 +188,7 @@
 
       </div>
 
-      <p class="reveal" style="margin-top:2.5rem">
+      <p  style="margin-top:2.5rem">
         <a class="link" href="ai-intelligence.html">Where AI fits
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
@@ -224,18 +200,17 @@
   <section class="section section--tight s-sunken anchor" id="india">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">64ARCS for India</p>
-        <h2 class="t-h2 reveal" style="--delay:.06s">
+        <h2 class="t-h2">
           Built for how business is done here.<br>
           <span class="muted">GST, TDS, dealer schemes, WhatsApp, credit.</span>
         </h2>
-        <p class="lead reveal measure" style="--delay:.1s">
+        <p class="lead measure">
           The statutory side is well served here; the trade itself ends up in a spreadsheet
           beside the software.
         </p>
       </div>
 
-      <div class="rows reveal">
+      <div class="rows">
         <div>
           <h3>Statutory work</h3>
           <div class="stack" style="--stack:.5rem">
@@ -260,26 +235,22 @@
         </div>
       </div>
 
-      <div class="principle reveal" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
-        <p class="label label--signal">Worth being clear about</p>
-        <p>We build the system that produces the numbers.<br>
+      <p class="was-principle">We build the system that produces the numbers.<br>
            Your CA still signs the return.</p>
-      </div>
     </div>
   </section>
 
   <!-- =========================== THE BACK END ============================= -->
-  <section class="section section--tight s-carbon blueprint anchor" id="back-end">
+  <section class="section section--tight s-carbon anchor" id="back-end">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">The back end</p>
-        <h2 class="t-h2 reveal" style="--delay:.06s">
+        <h2 class="t-h2">
           We build the server, not just the screens.<br>
           <span class="muted">An order taken in a dealer&rsquo;s shop opens in the ERP as a sales order. Nobody retypes a line.</span>
         </h2>
       </div>
 
-      <div class="rows rows--dark reveal">
+      <div class="rows rows--dark">
         <div>
           <h3>Decided on the server</h3>
           <p>Credit is re-checked against head office&rsquo;s own record before an order is written;
@@ -292,13 +263,10 @@
         </div>
       </div>
 
-      <div class="principle reveal" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
-        <p class="label label--signal">The order of the work</p>
-        <p>One customer&rsquo;s system; the order is always the same.<br>
+      <p class="was-principle">One customer&rsquo;s system; the order is always the same.<br>
            The records first, the screens after.</p>
-      </div>
 
-      <p class="reveal" style="margin-top:2.5rem">
+      <p  style="margin-top:2.5rem">
         <a class="link" href="work.html#pss">See the whole system
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
@@ -310,39 +278,19 @@
   <section class="section section--tight s-ivory anchor" id="existing">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">What you keep</p>
-        <h2 class="t-h2 reveal" style="--delay:.06s">
+        <h2 class="t-h2">
           Most of what you have stays.<br>
           <span class="muted">Your books stay where they are. We rebuild only where friction is the cost.</span>
         </h2>
       </div>
 
-      <div class="principle reveal">
-        <p class="label label--signal">The rule</p>
-        <p>Where the standard way of working fits you, keep it.<br>
+      <p class="was-principle">Where the standard way of working fits you, keep it.<br>
            We do not replace what works. We remove what is costing you.</p>
-      </div>
     </div>
   </section>
 
   <!-- =============================== CTA ================================= -->
-  <section class="cta blueprint">
-    <div class="wrap">
-      <p class="label label--signal reveal">Begin</p>
-      <h2 class="reveal" style="--delay:.08s">
-        Which of the six do you already have, and which talk to each other?
-        <span class="lets">Let's map it.</span>
-      </h2>
-      <div class="btn-row reveal" style="--delay:.14s">
-        <a class="btn btn--primary" href="contact.html">
-          Map your business
-          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
-        </a>
-        <a class="btn btn--ghost-dark" href="work.html#pss">See one we have built</a>
-      </div>
-      <p class="cta-note reveal">A conversation about your business — not a product demo.</p>
-    </div>
-  </section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">If this sounds like your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 </main>
 
 <footer class="footer">

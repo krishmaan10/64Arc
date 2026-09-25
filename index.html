@@ -30,16 +30,7 @@
 <script>/* Restore the reader's chosen register before first paint, so a returning
            visitor never sees the wrong one flash past. */
 try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3'){document.documentElement.setAttribute('data-level',_l);}}catch(e){}</script>
-<noscript><style>
-  /* Without JS the reveal system never runs — show everything immediately. */
-  .reveal, .reveal-l, .reveal-r, .frag, .mega .sub, .mega .mark { opacity: 1 !important; transform: none !important; }
-  .rise > span { transform: none !important; }
-  .rule-draw, .layer-stitch i, .core-drops i, .core-rail, .pmap-bar { transform: none !important; }
-  .draw { stroke-dashoffset: 0 !important; }
-  .flow { display: none; }
-  .hero-eyebrow, .hero-cols, .hero-figure { opacity: 1 !important; transform: none !important; }
-  [data-contact-form] button[type="submit"] { display: none; }
-</style></noscript>
+<noscript><style>[data-contact-form] button[type="submit"] { display: none; }</style></noscript>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -94,26 +85,25 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
        ================================================================== -->
   <section class="hero" data-hero>
     <div class="wrap">
-      <p class="hero-eyebrow">Connected business systems</p>
 
       <h1 class="t-hero">
         <span data-lvl="1">
-          <span class="rise" style="--delay:.05s"><span>We build the system</span></span>
-          <span class="rise" style="--delay:.13s"><span>your branches use.</span></span>
-          <span class="rise dim" style="--delay:.24s"><span>Your books stay</span></span>
-          <span class="rise dim" style="--delay:.32s"><span>where they are.</span></span>
+          <span class="line">We build the system</span>
+          <span class="line">your branches use.</span>
+          <span class="line">Your books stay</span>
+          <span class="line">where they are.</span>
         </span>
         <span data-lvl="2">
-          <span class="rise" style="--delay:.05s"><span>One set of numbers</span></span>
-          <span class="rise" style="--delay:.13s"><span>across your branches.</span></span>
-          <span class="rise dim" style="--delay:.24s"><span>Your ERP stays the</span></span>
-          <span class="rise dim" style="--delay:.32s"><span>system of record.</span></span>
+          <span class="line">One set of numbers</span>
+          <span class="line">across your branches.</span>
+          <span class="line">Your ERP stays the</span>
+          <span class="line">system of record.</span>
         </span>
         <span data-lvl="3">
-          <span class="rise" style="--delay:.05s"><span>We build the system</span></span>
-          <span class="rise" style="--delay:.13s"><span>your business runs on.</span></span>
-          <span class="rise dim" style="--delay:.24s"><span>The one everything</span></span>
-          <span class="rise dim" style="--delay:.32s"><span>else has to agree with.</span></span>
+          <span class="line">We build the system</span>
+          <span class="line">your business runs on.</span>
+          <span class="line">The one everything</span>
+          <span class="line">else has to agree with.</span>
         </span>
       </h1>
 
@@ -162,36 +152,32 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
         <p class="dial-hint">If you write software, start at Engineering detail.</p>
       </div>
 
-      <div class="hero-strip">
-        <span>Field app</span><span>Dealer portal</span><span>Head-office desk</span><span>Your ERP, connected</span>
-      </div>
     </div>
   </section>
 
   <!-- ==================================================================
        02 / WHAT WE DO  — the same four commitments, three registers
        ================================================================== -->
-  <section class="section section--lg s-ivory gridlines">
+  <section class="section section--lg s-ivory">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">What we do</p>
-        <h2 class="t-h2 reveal" data-lvl="1" style="--delay:.08s">
+        <h2 class="t-h2" data-lvl="1">
           One place owns each number.<br>
           <span class="muted">Every screen goes back to it.</span>
         </h2>
-        <h2 class="t-h2 reveal" data-lvl="2" style="--delay:.08s">
+        <h2 class="t-h2" data-lvl="2">
           One place owns each fact.<br>
           <span class="muted">Every screen, and your ERP, agree because of it.</span>
         </h2>
-        <h2 class="t-h2 reveal" data-lvl="3" style="--delay:.08s">
+        <h2 class="t-h2" data-lvl="3">
           One owner per fact.<br>
           <span class="muted">Everything else resolves against it at read time.</span>
         </h2>
       </div>
 
-      <div class="cards cards--wide" data-stagger=".08">
+      <div class="cards cards--wide">
 
-        <div class="card card--hover reveal">
+        <div class="card">
           <h3 class="t-h3" data-lvl="1">One place owns each number</h3>
           <h3 class="t-h3" data-lvl="2">One owner for each fact</h3>
           <h3 class="t-h3" data-lvl="3">One owner per fact, resolved at read time</h3>
@@ -207,7 +193,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
             it is as of, and keeps the dormant branches out of cross-branch availability.</p>
         </div>
 
-        <div class="card card--hover reveal">
+        <div class="card">
           <h3 class="t-h3" data-lvl="1">Your own system stays</h3>
           <h3 class="t-h3" data-lvl="2">Your ERP stays the system of record</h3>
           <h3 class="t-h3" data-lvl="3">The system of record stays</h3>
@@ -224,7 +210,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
             there; the priced sales order lives in the branch ERP, as it always has.</p>
         </div>
 
-        <div class="card card--hover reveal">
+        <div class="card">
           <h3 class="t-h3" data-lvl="1">A screen for each person</h3>
           <h3 class="t-h3" data-lvl="2">The interface each role needs</h3>
           <h3 class="t-h3" data-lvl="3">Different apps, one write path</h3>
@@ -243,7 +229,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
             keyed the same way, so it cannot be applied twice there either.</p>
         </div>
 
-        <div class="card card--hover reveal">
+        <div class="card">
           <h3 class="t-h3" data-lvl="1">What happens when you press save</h3>
           <h3 class="t-h3" data-lvl="2">The rules run on the server</h3>
           <h3 class="t-h3" data-lvl="3">The rules live on the server</h3>
@@ -267,13 +253,10 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
 
       </div>
 
-      <div class="principle reveal" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
-        <p class="label label--signal">The line we draw</p>
-        <p>Where the standard way of working fits you, keep it.<br>
+      <p class="was-principle">Where the standard way of working fits you, keep it.<br>
            What we build is the part that doesn&rsquo;t.</p>
-      </div>
 
-      <p style="margin-top:2.5rem" class="reveal">
+      <p style="margin-top:2.5rem">
         <a class="link" href="what-we-build.html">Everything we build
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
@@ -288,20 +271,19 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
   <!-- ==================================================================
        03 / BUILT AND RUNNING — three things, equal weight
        ================================================================== -->
-  <section class="section section--lg s-carbon-deep blueprint" id="built">
+  <section class="section section--lg s-carbon-deep" id="built">
     <div class="wrap">
       <div class="section-head">
-        <p class="label label--signal reveal">Built and running</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">Three things we have built.</h2>
-        <p class="lead reveal measure" style="--delay:.14s">
+        <h2 class="t-h2">Three things we have built.</h2>
+        <p class="lead measure">
           One is a business system in daily use. Two are early products of our own that you
           can open in a browser now. Each is described honestly on its own page, including
           where it stops.
         </p>
       </div>
 
-      <div class="cards cards--3" data-stagger=".08">
-        <article class="card card--dark card--hover reveal">
+      <div class="cards cards--3">
+        <article class="card card--dark">
           <div class="built-head">
             <span class="label label--bare">Business system</span>
             <span class="eco-tag">Live</span>
@@ -314,7 +296,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
           </a>
         </article>
 
-        <article class="card card--dark card--hover reveal">
+        <article class="card card--dark">
           <div class="built-head">
             <span class="label label--bare">Product</span>
             <span class="eco-tag eco-tag--pilot">Pilot</span>
@@ -327,7 +309,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
           </a>
         </article>
 
-        <article class="card card--dark card--hover reveal">
+        <article class="card card--dark">
           <div class="built-head">
             <span class="label label--bare">Product</span>
             <span class="eco-tag eco-tag--pilot">Pilot</span>
@@ -349,8 +331,7 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
   <section class="section section--lg s-ivory">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">Method</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">
+        <h2 class="t-h2">
           We don&rsquo;t start with software.<br>
           <span class="muted">We start with how your business actually works.</span>
         </h2>
@@ -358,23 +339,23 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
 
       <div data-lvl="1">
         <div class="steps">
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">01 — Understand</span></div>
             <div class="step-body"><p>We sit in your branches and watch how the work actually happens.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">02 — Decide</span></div>
             <div class="step-body"><p>We agree with you where each number lives and who is allowed to change it.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">03 — Build</span></div>
             <div class="step-body"><p>We write it in small pieces you can watch working, one at a time.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">04 — Join up</span></div>
             <div class="step-body"><p>Orders reach your system with no rates on them; it prices them, and nobody retypes anything.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">05 — Stay on</span></div>
             <div class="step-body"><p>We stay on afterwards. A piece is only replaced after you have watched the new one running.</p></div>
           </article>
@@ -383,23 +364,23 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
 
       <div data-lvl="2">
         <div class="steps">
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">01 — Understand</span></div>
             <div class="step-body"><p>We sit in your branches and map the exceptions and the workarounds, not the org chart.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">02 — Architect</span></div>
             <div class="step-body"><p>We agree what each system owns, what gets integrated, and what gets built.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">03 — Build</span></div>
             <div class="step-body"><p>In slices you can put in front of a branch &mdash; not a reveal at the end.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">04 — Connect</span></div>
             <div class="step-body"><p>Orders write back through your ERP and are priced there, without anyone retyping them.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">05 — Evolve</span></div>
             <div class="step-body"><p>We stay on. Any replacement happens a piece at a time, running beside the original.</p></div>
           </article>
@@ -408,30 +389,30 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
 
       <div data-lvl="3">
         <div class="steps">
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">01 — Understand</span></div>
             <div class="step-body"><p>Sit in the branches; trace every place a fact is contradicted and find out which copy people actually believe.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">02 — Architect</span></div>
             <div class="step-body"><p>Agree the owner of each fact, where rules are enforced, and what the write path is.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">03 — Build</span></div>
             <div class="step-body"><p>Server first &mdash; rules, transactions, migrations &mdash; then the apps, in shipping slices.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">04 — Connect</span></div>
             <div class="step-body"><p>Read the estate; write back through one path, idempotently, priced by the system of record.</p></div>
           </article>
-          <article class="step reveal">
+          <article class="step">
             <div><span class="step-n">05 — Evolve</span></div>
             <div class="step-body"><p>We stay on. Replace only what has earned the switch by running beside the original first.</p></div>
           </article>
         </div>
       </div>
 
-      <p style="margin-top:2.5rem" class="reveal">
+      <p style="margin-top:2.5rem">
         <a class="link" href="how-it-works.html">See the full method
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
@@ -445,37 +426,36 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
   <section class="section section--lg s-raised">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">What it asks of you</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">
+        <h2 class="t-h2">
           A family of technology, at home in the way you already work.<br>
           <span class="muted">You get the family. Not the wiring behind it.</span>
         </h2>
-        <p class="lead reveal measure" style="--delay:.14s">
+        <p class="lead measure">
           For established mid-sized businesses that have outgrown spreadsheets and isolated
           software &mdash; and do not want a five-year programme, or a technology department, to
           get there.
         </p>
       </div>
 
-      <div class="cards cards--3" data-stagger=".08">
-        <div class="card card--hover reveal">
+      <div class="cards cards--3">
+        <div class="card">
           <h3 class="t-h3">Words you already use</h3>
           <p>You should be able to repeat our explanation to your staff, word for word. The dial at
              the top of this page is that promise, made operational.</p>
         </div>
-        <div class="card card--hover reveal">
+        <div class="card">
           <h3 class="t-h3">Nothing stops</h3>
           <p>Your business keeps trading while we build. One room at a time &mdash; orders, then
              stock, then the rest &mdash; so no weekend has everything change at once.</p>
         </div>
-        <div class="card card--hover reveal">
+        <div class="card">
           <h3 class="t-h3">Sometimes you don&rsquo;t need us</h3>
           <p>Some problems are a process fix, not a platform. If a spreadsheet is already doing the
              job, it stays. You will hear that early, not late.</p>
         </div>
       </div>
 
-      <p class="reveal" style="margin-top:2.5rem">
+      <p  style="margin-top:2.5rem">
         <a class="link" href="what-we-build.html#india">64ARCS for India &mdash; GST, TDS, dealer schemes and WhatsApp
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
@@ -486,39 +466,11 @@ try{var _l=localStorage.getItem('64arcs:level');if(_l==='1'||_l==='2'||_l==='3')
   <!-- ==================================================================
        06 / STATEMENT
        ================================================================== -->
-  <section class="mega observe">
-    <div class="wrap">
-      <h2 class="reveal">Build beyond<br>software.</h2>
-      <p class="sub">Build the system your business can grow through.</p>
-      <div class="mark" style="display:flex;justify-content:center">
-        <svg width="44" height="44" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M4.6 30V16.4a11.4 11.4 0 0 1 22.8 0V30" stroke="#F4F1EA" stroke-width="2.2" stroke-linecap="square"/>
-          <circle cx="16" cy="5" r="3.4" fill="#5367FF"/>
-        </svg>
-      </div>
-    </div>
-  </section>
 
   <!-- ==================================================================
        07 / FINAL CTA
        ================================================================== -->
-  <section class="cta blueprint">
-    <div class="wrap">
-      <p class="label label--signal reveal">Begin</p>
-      <h2 class="reveal" style="--delay:.08s">
-        What would your business look like if every screen showed the same number?
-        <span class="lets">Let's map it.</span>
-      </h2>
-      <div class="btn-row reveal" style="--delay:.14s">
-        <a class="btn btn--primary" href="contact.html">
-          Start a conversation
-          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
-        </a>
-        <a class="btn btn--ghost-dark" href="work.html">See the systems we build</a>
-      </div>
-      <p class="cta-note reveal">A conversation about your business — not a product demo.</p>
-    </div>
-  </section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">If this sounds like your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Organization","name":"64ARCS","url":"https://64arcs.com/",

@@ -27,19 +27,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;450;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="assets/css/site.css">
-<noscript><style>
-  /* Without JS the reveal system never runs — show everything immediately. */
-  .reveal, .reveal-l, .reveal-r, .frag, .mega .sub, .mega .mark { opacity: 1 !important; transform: none !important; }
-  .rise > span { transform: none !important; }
-  .rule-draw, .layer-stitch i, .core-drops i, .core-rail, .pmap-bar { transform: none !important; }
-  .draw { stroke-dashoffset: 0 !important; }
-  .flow { display: none; }
-  .hero-eyebrow, .hero-cols, .hero-figure { opacity: 1 !important; transform: none !important; }
-  .ai-stop { color: var(--ivory); border-color: var(--signal); }
-  .ai-result { opacity: 1 !important; transform: none !important; }
-  .ai-replay { display: none; }
-  [data-contact-form] button[type="submit"] { display: none; }
-</style></noscript>
+<noscript><style>[data-contact-form] button[type="submit"] { display: none; }</style></noscript>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -89,9 +77,8 @@
 <main id="main">
 
   <!-- ================================ HERO ================================ -->
-  <section class="page-hero blueprint">
+  <section class="page-hero">
     <div class="wrap">
-      <span class="eyebrow">Work</span>
       <h1 class="t-h1 measure-l">What we have built, and where each piece stops.</h1>
       <p class="lead">
         One business system in daily use: orders, stock, dues and collections across 93 branches,
@@ -99,30 +86,27 @@
         our own. And four business shapes we would approach the same way &mdash; described as
         shapes, not as work we have done.
       </p>
-      <div class="page-meta">
-        <span>Before</span><span>Architecture</span><span>Platforms</span><span>Intelligence</span><span>Outcome</span>
-      </div>
     </div>
   </section>
 
   <!-- ============================== HOW TO READ =========================== -->
-  <section class="section s-ivory gridlines">
+  <section class="section s-ivory">
     <div class="wrap">
       <div class="split">
         <div>
-          <p class="label reveal">How to read these</p>
-          <h2 class="t-h2 reveal" style="--delay:.06s">
+          <p class="label">How to read these</p>
+          <h2 class="t-h2">
             Five questions,<br>
             <span class="muted">asked of every engagement.</span>
           </h2>
         </div>
-        <div class="stack" style="--stack:0" data-stagger=".07">
-          <div class="reveal"><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Before</b> — what the business was actually doing, including the manual parts.</p></div>
-          <div class="reveal"><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Architecture</b> — the structural decision that everything else follows from.</p></div>
-          <div class="reveal"><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Platforms</b> — the specific experiences built on that structure.</p></div>
-          <div class="reveal"><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Intelligence</b> — where context-aware AI changed a decision.</p></div>
-          <div class="reveal"><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Outcome</b> — what the business can now do that it could not before.</p></div>
-          <div class="reveal"><hr class="rule"></div>
+        <div class="stack" style="--stack:0">
+          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Before</b> — what the business was actually doing, including the manual parts.</p></div>
+          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Architecture</b> — the structural decision that everything else follows from.</p></div>
+          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Platforms</b> — the specific experiences built on that structure.</p></div>
+          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Intelligence</b> — where context-aware AI changed a decision.</p></div>
+          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Outcome</b> — what the business can now do that it could not before.</p></div>
+          <div><hr class="rule"></div>
         </div>
       </div>
     </div>
@@ -132,27 +116,21 @@
   <section class="section section--lg s-ivory anchor" id="pss">
     <div class="wrap">
       <div class="section-head">
-        <p class="label label--signal reveal">Built and running</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">
+        <h2 class="t-h2">
           The first system we built was our own.<br>
           <span class="muted">93 branches, on a twenty-year-old ERP nobody wanted to replace.</span>
         </h2>
-        <p class="lead reveal measure" style="--delay:.14s">
+        <p class="lead measure">
           Partap Singh &amp; Sons distributes commercial-vehicle parts across 93 branches in India.
           It is a family business, and it is ours — which is why we could try this on a real
           operation with real money before offering it to anyone else.
         </p>
       </div>
 
-      <article class="case reveal">
+      <article class="case">
         <div class="case-head">
           <span class="sector">PSS &middot; Commercial-vehicle parts distribution &middot; India</span>
           <h2>A salesman standing in a dealer's shop could not see what that dealer owed.</h2>
-          <ul class="chips">
-            <li class="chip chip--dark">Field app</li><li class="chip chip--dark">Dealer portal</li>
-            <li class="chip chip--dark">Supplier portal</li><li class="chip chip--dark">Head-office desk</li>
-            <li class="chip chip--dark">ERP</li>
-          </ul>
         </div>
         <div class="case-body">
           <div class="case-cell">
@@ -202,24 +180,24 @@
         </div>
       </article>
 
-      <figure class="note-figure note-figure--wide observe" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
+      <figure class="note-figure note-figure--wide" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
         <div class="frame only-wide">
           <svg viewBox="0 0 1000 470" role="img" aria-label="The PSS ecosystem. Three platforms — PSSAO for company profile and catalogue, PSS Go for branch reps, admin staff, dealers and suppliers, and PSS One for the ERP — all reading from one shared business core, which sits over the legacy ERP holding twenty years of books across 93 branches. PSSAO and PSS Go are live; PSS One is a pilot that reads these books read-only from one terminal and has never written to them.">
 
             <!-- ---------------------- who each one serves ---------------------- -->
-            <g class="d-label pop" style="--delay:.05s">
+            <g class="d-label">
               <text x="170" y="18" text-anchor="middle">Customers &middot; Dealers &middot; Public</text>
               <text x="500" y="18" text-anchor="middle">Reps &middot; Admin &middot; Customers &middot; Suppliers</text>
               <text x="830" y="18" text-anchor="middle">Head office &middot; Finance &middot; Management</text>
             </g>
             <g class="d-link">
-              <path class="draw" style="--delay:.2s" d="M170 28 V54"/>
-              <path class="draw" style="--delay:.26s" d="M500 28 V54"/>
-              <path class="draw" style="--delay:.32s" d="M830 28 V54"/>
+              <path  d="M170 28 V54"/>
+              <path  d="M500 28 V54"/>
+              <path  d="M830 28 V54"/>
             </g>
 
             <!-- --------------------------- PSSAO ------------------------------- -->
-            <g class="pop" style="--delay:.4s">
+            <g>
               <rect class="d-node" x="20" y="54" width="300" height="132" rx="10"/>
               <text class="d-title" x="44" y="88" style="font-size:17px;font-weight:700">PSSAO</text>
               <rect x="238" y="72" width="58" height="19" rx="3" fill="rgba(83,103,255,.14)" stroke="#5367FF"/>
@@ -231,7 +209,7 @@
             </g>
 
             <!-- --------------------------- PSS GO ------------------------------ -->
-            <g class="pop" style="--delay:.48s">
+            <g>
               <rect class="d-node" x="350" y="54" width="300" height="132" rx="10"/>
               <text class="d-title" x="374" y="88" style="font-size:17px;font-weight:700">PSS GO</text>
               <rect x="568" y="72" width="58" height="19" rx="3" fill="rgba(83,103,255,.14)" stroke="#5367FF"/>
@@ -243,7 +221,7 @@
             </g>
 
             <!-- --------------------------- PSS ONE ----------------------------- -->
-            <g class="pop" style="--delay:.56s">
+            <g>
               <rect class="d-node" x="680" y="54" width="300" height="132" rx="10"/>
               <text class="d-title" x="704" y="88" style="font-size:17px;font-weight:700">PSS ONE</text>
               <rect x="890" y="72" width="66" height="19" rx="3" fill="rgba(244,241,234,.06)" stroke="#4A5060"/>
@@ -256,23 +234,23 @@
 
             <!-- --------------- everything drops into one core ------------------- -->
             <g class="d-link">
-              <path class="draw" style="--delay:.72s" d="M170 186 V206 H500"/>
-              <path class="draw" style="--delay:.78s" d="M830 186 V206 H500"/>
-              <path class="draw" style="--delay:.84s" d="M500 186 V226"/>
+              <path  d="M170 186 V206 H500"/>
+              <path  d="M830 186 V206 H500"/>
+              <path  d="M500 186 V226"/>
             </g>
 
             <!-- ---------------------- shared business core ---------------------- -->
-            <g class="pop" style="--delay:.95s">
+            <g>
               <rect x="20" y="226" width="960" height="86" rx="10" fill="rgba(83,103,255,.08)" stroke="#5367FF"/>
               <text class="d-label" x="44" y="258" style="fill:#F4F1EA;letter-spacing:.18em">Shared business core</text>
               <text class="d-label" x="44" y="286">One customer &middot; one product &middot; one price &middot; one stock position &middot; one order &middot; one set of numbers</text>
             </g>
 
-            <path class="d-link draw" style="--delay:1.15s" d="M500 312 V352"/>
-            <path class="flow" style="--delay:1.6s;--flow-dur:3s" d="M500 352 V312"/>
+            <path class="d-link" d="M500 312 V352"/>
+            <path  style="--flow-dur:3s" d="M500 352 V312"/>
 
             <!-- ------------------------- the books ----------------------------- -->
-            <g class="pop" style="--delay:1.25s">
+            <g>
               <rect class="d-node" x="20" y="352" width="960" height="86" rx="10"/>
               <text class="d-label" x="44" y="384" style="fill:#F4F1EA;letter-spacing:.18em">The books &mdash; the ERP that stays</text>
               <text class="d-label" x="44" y="412">Built in VB.NET two decades ago &middot; 93 branches &middot; twenty years of records &middot; still the system of record</text>
@@ -314,13 +292,10 @@
         <figcaption>Three platforms, three audiences, one business underneath &mdash; and the twenty-year-old ERP still holding the books.</figcaption>
       </figure>
 
-      <div class="principle reveal" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
-        <p class="label label--signal">What it proves</p>
-        <p>We did not rip out the system the business depends on.<br>
+      <p class="was-principle">We did not rip out the system the business depends on.<br>
            We built around it, and left the books where they were.</p>
-      </div>
 
-      <p class="reveal" style="margin-top:2.5rem">
+      <p  style="margin-top:2.5rem">
         <a class="link" href="one-number-four-answers.html">A build note from this system &mdash; one number, four answers
           <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
         </a>
@@ -332,16 +307,15 @@
   <section class="section section--lg s-sunken">
     <div class="wrap">
       <div class="section-head">
-        <p class="label reveal">Shapes we would approach</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">Four business shapes, and how we would go about each.</h2>
-        <p class="lead reveal measure" style="--delay:.14s">
+        <h2 class="t-h2">Four business shapes, and how we would go about each.</h2>
+        <p class="lead measure">
           These four are not work we have done. They are common business shapes, written out end
           to end the way we would approach them, so you can see whether yours is one of them. The
           only built one on this page is the one above.
         </p>
       </div>
 
-      <div class="picker reveal" data-picker="model" data-picker-all="Showing all four">
+      <div class="picker" data-picker="model" data-picker-all="Showing all four">
         <p class="picker-q">Which looks most like your business?</p>
         <div class="picker-set" role="group" aria-label="Show business shapes">
           <button class="picker-btn" type="button" data-pick="all" aria-pressed="true">All four</button>
@@ -354,15 +328,10 @@
       </div>
 
       <!-- ------------------------------ 01 ------------------------------- -->
-      <article class="case reveal" data-model="distribution">
+      <article class="case" data-model="distribution">
         <div class="case-head">
           <span class="sector">If you are an industrial distributor</span>
           <h2>A dealer network running on phone calls, spreadsheets and an ERP nobody outside the office can reach.</h2>
-          <ul class="chips">
-            <li class="chip chip--dark">ERP</li><li class="chip chip--dark">Dealer app</li>
-            <li class="chip chip--dark">Warehouse</li><li class="chip chip--dark">Credit</li>
-            <li class="chip chip--dark">Forecasting</li>
-          </ul>
         </div>
         <div class="case-body">
           <div class="case-cell">
@@ -401,15 +370,10 @@
       </article>
 
       <!-- ------------------------------ 02 ------------------------------- -->
-      <article class="case reveal" data-model="manufacturing">
+      <article class="case" data-model="manufacturing">
         <div class="case-head">
           <span class="sector">If you are a manufacturer</span>
           <h2>Production planned from experience, because no system can see demand and capacity at the same time.</h2>
-          <ul class="chips">
-            <li class="chip chip--dark">Planning</li><li class="chip chip--dark">Shop floor</li>
-            <li class="chip chip--dark">Procurement</li><li class="chip chip--dark">Quality</li>
-            <li class="chip chip--dark">Demand forecasting</li>
-          </ul>
         </div>
         <div class="case-body">
           <div class="case-cell">
@@ -447,15 +411,10 @@
       </article>
 
       <!-- ------------------------------ 03 ------------------------------- -->
-      <article class="case reveal" data-model="retail">
+      <article class="case" data-model="retail">
         <div class="case-head">
           <span class="sector">If you sell through more than one channel</span>
           <h2>An online store that cannot be trusted to know whether an item is actually in stock.</h2>
-          <ul class="chips">
-            <li class="chip chip--dark">Ecommerce</li><li class="chip chip--dark">Stores</li>
-            <li class="chip chip--dark">Inventory</li><li class="chip chip--dark">Fulfilment</li>
-            <li class="chip chip--dark">Recommendations</li>
-          </ul>
         </div>
         <div class="case-body">
           <div class="case-cell">
@@ -492,15 +451,10 @@
       </article>
 
       <!-- ------------------------------ 04 ------------------------------- -->
-      <article class="case reveal" data-model="service">
+      <article class="case" data-model="service">
         <div class="case-head">
           <span class="sector">If you run a field service operation</span>
           <h2>Engineers dispatched by phone, with the customer's history sitting in a filing cabinet.</h2>
-          <ul class="chips">
-            <li class="chip chip--dark">Service</li><li class="chip chip--dark">Field app</li>
-            <li class="chip chip--dark">Spares</li><li class="chip chip--dark">Contracts</li>
-            <li class="chip chip--dark">Knowledge</li>
-          </ul>
         </div>
         <div class="case-body">
           <div class="case-cell">
@@ -540,19 +494,18 @@
   </section>
 
   <!-- ============================ OUR OWN PRODUCTS ========================= -->
-  <section class="section section--lg s-carbon-deep blueprint">
+  <section class="section section--lg s-carbon-deep">
     <div class="wrap">
       <div class="section-head">
-        <p class="label label--signal reveal">Our own products</p>
-        <h2 class="t-h2 reveal" style="--delay:.08s">The two things we built for ourselves.</h2>
-        <p class="lead reveal measure" style="--delay:.14s">
+        <h2 class="t-h2">The two things we built for ourselves.</h2>
+        <p class="lead measure">
           Both are early pilots you can open in a browser now. Each has its own page, including
           where it stops.
         </p>
       </div>
 
-      <div class="cards cards--2" data-stagger=".08">
-        <article class="card card--dark card--hover reveal">
+      <div class="cards cards--2">
+        <article class="card card--dark">
           <div class="built-head">
             <span class="label label--bare">Product</span>
             <span class="eco-tag eco-tag--pilot">Pilot</span>
@@ -565,7 +518,7 @@
           </a>
         </article>
 
-        <article class="card card--dark card--hover reveal">
+        <article class="card card--dark">
           <div class="built-head">
             <span class="label label--bare">Product</span>
             <span class="eco-tag eco-tag--pilot">Pilot</span>
@@ -582,23 +535,7 @@
   </section>
 
   <!-- =============================== CTA ================================= -->
-  <section class="cta blueprint">
-    <div class="wrap">
-      <p class="label label--signal reveal">Begin</p>
-      <h2 class="reveal" style="--delay:.08s">
-        Which of these looks most like your business?
-        <span class="lets">Let's map it.</span>
-      </h2>
-      <div class="btn-row reveal" style="--delay:.14s">
-        <a class="btn btn--primary" href="contact.html">
-          Start a conversation
-          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
-        </a>
-        <a class="btn btn--ghost-dark" href="how-it-works.html">See how 64ARCS works</a>
-      </div>
-      <p class="cta-note reveal">A conversation about your business — not a product demo.</p>
-    </div>
-  </section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">If this sounds like your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 </main>
 
 <footer class="footer">
