@@ -2107,14 +2107,7 @@ html.js .dial { display: block; }
   border-radius: var(--radius);
   padding: clamp(.75rem, .5rem + 1vw, 1.25rem);
 }
-.pilot-figure figcaption {
-  margin-top: .875rem;
-  font-family: var(--font-mono);
-  font-size: var(--t-label);
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
+.pilot-figure figcaption { margin-top: .75rem; font-size: .9375rem; line-height: 1.5; color: var(--ink-muted); }
 
 .pilot-bounds {
   background: var(--carbon);
@@ -2177,3 +2170,12 @@ h1 .muted, h2 .muted, .t-hero .muted, .t-h1 .muted, .t-h2 .muted { color: inheri
 .closer { max-width: 62ch; font-size: clamp(1.0625rem, 1rem + .3vw, 1.1875rem); line-height: 1.6; color: var(--ink); }
 .card { transition: none; }
 .chip { display: inline-block; font-family: var(--font-body); font-size: .8125rem; font-weight: 500; letter-spacing: 0; text-transform: none; padding: .15rem .55rem; border: 1px solid var(--soft-grey); border-radius: 3px; color: var(--ink-muted); }
+
+/* ---- real screenshots: a plain border, no chrome, no bezel ---- */
+.pilot-figure img { display: block; width: 100%; height: auto; border: 1px solid var(--soft-grey); border-radius: var(--radius); background: #fff; }
+.pilot-figure--phone { max-width: 340px; margin-top: clamp(1.5rem, 1rem + 1.4vw, 2.25rem); }
+
+/* ---- Notes: a dated list, nothing else ---- */
+.notes { max-width: 68ch; margin: 1.5rem 0 0; }
+.notes dt { font-weight: 600; margin-top: 1.5rem; }
+.notes dd { margin: .35rem 0 0; color: var(--ink-muted); line-height: 1.6; }
