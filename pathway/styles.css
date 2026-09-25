@@ -544,7 +544,7 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
    which is the one control they need most often and the one that was hardest to reach. */
 @media (max-width: 640px) {
   .session-nav { margin: 10px 0 0; padding: 0; }
-  .session-nav .space-label { display: block; margin: 0 0 6px; font-size: 9.5px; }
+  .session-nav .space-label { display: block; margin: 0 0 6px; font-size: 12px; }
   .session-nav > a { display: none; }
   .project-switcher {
     display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
@@ -556,7 +556,7 @@ legend { font-family: var(--font-display); font-size: 22px; font-weight: 700; ma
     padding: 7px 12px; border-radius: 999px; border-color: rgba(255, 255, 255, .14);
   }
   .project-entry .project-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; }
-  .project-subject { font-size: 9px; letter-spacing: 1px; }
+  .project-subject { font-size: 12px; letter-spacing: .5px; }
   .project-marks { display: none; }
 }
 /* Between phone and desktop the rail is only 190px wide, so the entries lose their padding, not their words. */
