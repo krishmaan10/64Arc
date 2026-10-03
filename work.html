@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Work — what 64ARCS has built, and where each piece stops</title>
-<meta name="description" content="One business system in daily use across a 93-branch distributor, two early products of our own, and four business shapes we would approach the same way — described honestly, including what is not built.">
+<meta name="description" content="Order entry, account summaries and follow-ups in customer software used since July 2026, alongside PathWay AI and 64Griddle pilots from September 2026.">
 <link rel="canonical" href="https://64arcs.com/work.html">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="64ARCS">
 <meta property="og:title" content="Work — what 64ARCS has built, and where each piece stops">
-<meta property="og:description" content="One business system in daily use across a 93-branch distributor, two early products of our own, and four business shapes we would approach the same way — described honestly, including what is not built.">
+<meta property="og:description" content="Order entry, account summaries and follow-ups in customer software used since July 2026, alongside PathWay AI and 64Griddle pilots from September 2026.">
 <meta property="og:url" content="https://64arcs.com/work.html">
 <meta property="og:image" content="https://64arcs.com/assets/img/og.png">
 <meta property="og:image:width" content="1200">
@@ -78,422 +78,62 @@
     <div class="wrap">
       <h1 class="t-h1 measure-l">What 64ARCS has built, and where each piece stops.</h1>
       <p class="lead">
-        One business system handles orders, dues, collections and attendance for a parts
-        distributor with 93 branches. Its field app, PSS GO, has been on the Play Store as a
-        production app since 14 July 2026. After it come four common kinds of business, described
-        the way we would approach them; none of those four has been built. The page ends with our
-        two products, both early browser pilots.
+        Customer software in daily use since July 2026 shows how AI and ordinary rules can
+        help with orders, account summaries and follow-ups alongside existing accounting software.
+        PathWay AI and 64Griddle are separate products, available as browser pilots since September 2026.
+        Each example below describes what it does and its limits.
       </p>
     </div>
   </section>
 
-  <!-- ============================== HOW TO READ =========================== -->
-  <section class="section s-ivory">
-    <div class="wrap">
-      <div class="split">
-        <div>
-          <h2 class="t-h2">The built system and the four shapes are written up under the same five headings.</h2>
-          <p style="margin-top:1.5rem">On the built system the last heading is Outcome. On the four shapes it is What we
-             would expect, because none of them exists yet.</p>
-        </div>
-        <div class="stack" style="--stack:0">
-          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Before</b> is how the business ran, including the parts done by hand.</p></div>
-          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Architecture</b> is the structural decision the rest of the build follows from.</p></div>
-          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Platforms</b> are the apps and screens built on that structure.</p></div>
-          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Intelligence</b> is where a rule or a model changes a decision.</p></div>
-          <div><hr class="rule"><p style="padding:1rem 0;margin:0"><b style="font-weight:500">Outcome</b> is what the business can do now that it could not do before.</p></div>
-          <div><hr class="rule"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================ PSS — LIVE ============================== -->
+  <!-- ========================== CUSTOMER WORK ============================ -->
   <section class="section section--lg s-ivory anchor" id="pss">
     <div class="wrap">
       <div class="section-head">
-        <h2 class="t-h2">PSSAO, PSS GO and PSS ONE, built for a parts distributor with 93 branches.</h2>
+        <h2 class="t-h2">Help with orders and follow-ups, inside the working day.</h2>
         <p class="lead measure">
-          The distributor is Partap Singh &amp; Sons, which sells commercial-vehicle parts across
-          India. It is the founder&rsquo;s family business, so the
-          system was tried on a real operation with real money before it was offered to anyone
-          else. PSSAO and PSS GO are live. PSS ONE, the ERP
-          rebuild, is a pilot on one terminal; since 28 August 2026 it has read one branch&rsquo;s
-          real books, read-only.
+          At a parts distributor, staff take orders from speech or paper, check account details
+          on a phone and work through overdue accounts. These features have been in daily use
+          since July 2026. The existing accounting software still prices and bills the orders.
         </p>
-      <figure class="pilot-figure pilot-figure--phone"><img src="assets/img/pssgo-order.png" width="720" height="573" loading="lazy" alt="PSS GO's new-order screen on a phone: a Speak button and a Photo button, a search box for part number, item code or name, and filters for all branches, all suppliers and in stock."><figcaption>PSS GO&rsquo;s order screen, from the public Play Store listing of the production app, which has been on the store since 14 July 2026. The screenshot is a demo shell with no dealer data. An order can be spoken or photographed, and stock is searched across every branch.</figcaption></figure>
-      <p class="was-principle">There is no screenshot of the PSS ONE terminal here; it reads one branch&rsquo;s real books, and we do not publish them.</p>
       </div>
 
-      <article class="case">
-        <div class="case-head">
-          <span class="sector">PSS &middot; Commercial-vehicle parts distribution &middot; India</span>
-          <h2>A salesman standing in a dealer&rsquo;s shop could not see what that dealer owed.</h2>
-        </div>
-        <div class="case-body">
-          <div class="case-cell">
-            <h3>Before</h3>
-            <p>The business ran, and still runs, on an ERP written in VB.NET twenty years ago and
-               installed on desktop PCs inside each of the 93 branches. A rep in a dealer&rsquo;s
-               shop carried the dues in his head, phoned the branch to ask about stock and wrote
-               orders on paper. Attendance was a paper register, and tour expense claims were on
-               paper too. He had no way to see whether head office had approved his branch&rsquo;s
-               credit request.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Architecture</h3>
-            <p>The ERP stays, and it still holds the invoices, receipts and ledgers. PSS GO reads
-               one copy of its data for all 93 branches, refreshed on a schedule, with dealer
-               figures every two hours. A separate store takes what the ERP has no place for:
-               field visits, orders, attendance and head-office decisions. The app does not post
-               to the books. A collection recorded in it is still entered as a receipt in the ERP
-               by a person.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Platforms</h3>
-            <ul>
-              <li>A field app for reps and branch staff, on Android and as an installable web app, in 13 languages</li>
-              <li>A dealer portal showing one balance across every branch the dealer buys from, with ordering at the catalogue price</li>
-              <li>A supplier portal where each of 13 brands sees its own stock by branch, valued at purchase cost, without per-dealer figures or the distributor&rsquo;s margin</li>
-              <li>A head-office desk that decides ten kinds of branch request, from credit limits and write-offs to tour claims and leave</li>
-              <li>PSS ONE, the ERP rebuilt, running beside the original on one terminal as a read-only pilot</li>
-            </ul>
-          </div>
-          <div class="case-cell">
-            <h3>Intelligence</h3>
-            <p>The collection list is ordered by a score built from the size of the dues and how late they are, raised when the dealer is over limit or has recently bounced a cheque. Before an order is written, the server
-               checks the dealer&rsquo;s credit. Over limit, ninety days overdue or a recent bounced
-               cheque puts the order on hold; the rep can confirm past the hold, and that is
-               recorded on the order. The same check shows a dealer who is overdue at another
-               branch, which a rep could not see before. A spoken order, including one in mixed
-               Hindi and English, or a photograph of a handwritten slip is turned into order lines
-               by a language model and matched against the stock catalogue.</p>
-          </div>
-          <div class="case-cell case-cell--outcome">
-            <h3>Outcome</h3>
-            <p><strong>A rep in a dealer&rsquo;s shop now sees what the dealer owes, which branches
-               hold the part, and where the branch&rsquo;s credit request stands with head office.</strong>
-               An order taken there reaches the dealer&rsquo;s branch as an email with a file
-               attached. The clerk double-clicks the file and it opens in the ERP as an ordinary
-               sales order, priced by the branch&rsquo;s own masters, and the ERP refuses the same
-               file a second time. A payment cannot be recorded without its proof photograph; the
-               two are saved in one commit. PSS ONE has not replaced the ERP anywhere. It signs in
-               to the branch database with a read-only login, so the database refuses any write
-               from it. It has never written a real branch&rsquo;s books.</p>
-          </div>
-        </div>
-      </article>
+      <div class="cards cards--3">
+        <article class="card">
+          <span class="label label--bare">Model</span>
+          <h3 class="t-h3">Turn an order into editable lines</h3>
+          <p>A model reads a photographed slip or a spoken order, including mixed Hindi and
+            English, and matches the items to the stock catalogue. Staff can check the proposed
+            lines against the attached photograph before sending the order.</p>
+          <p>The branch receives an import file that opens in its existing accounting software.
+            That software applies its own prices and refuses the same file a second time.</p>
+        </article>
+        <article class="card">
+          <span class="label label--bare">Model</span>
+          <h3 class="t-h3">Summarise an account on its screen</h3>
+          <p>A short brief puts the account position into English, Hindi or Marathi. If the
+            model cannot respond, a fixed template provides the summary in the same place.</p>
+          <p>The brief helps staff read the account; the underlying figures remain available
+            for checking.</p>
+        </article>
+        <article class="card">
+          <span class="label label--bare">Rule</span>
+          <h3 class="t-h3">Order the collection follow-ups</h3>
+          <p>A defined calculation sorts the collection list using amounts owed, days overdue,
+            credit limits and recent cheque returns. Accounts already touched that day leave
+            the list.</p>
+          <p>The ranking follows those agreed rules and needs no language model.</p>
+        </article>
+      </div>
 
-      <figure class="note-figure note-figure--wide" style="margin-top:clamp(2.5rem, 1.5rem + 3vw, 4rem)">
-        <div class="frame only-wide">
-          <svg viewBox="0 0 1000 470" role="img" aria-label="The three PSS platforms. PSSAO, the company profile and catalogue site, and PSS GO, for branch reps, admin staff, dealers and suppliers, read copies of the ERP&rsquo;s data refreshed on a schedule. PSS ONE, the ERP rebuild, reads one branch&rsquo;s database directly, read-only. The ERP underneath was written in VB.NET two decades ago and holds twenty years of records across 93 branches. PSSAO and PSS GO are live. PSS ONE is a pilot on one terminal that has read one branch&rsquo;s real books since 28 August 2026 and has never written to them.">
-
-            <!-- ---------------------- who each one serves ---------------------- -->
-            <g class="d-label">
-              <text x="170" y="18" text-anchor="middle">Customers &middot; Dealers &middot; Public</text>
-              <text x="500" y="18" text-anchor="middle">Reps &middot; Admin &middot; Customers &middot; Suppliers</text>
-              <text x="830" y="18" text-anchor="middle">Branch clerks &middot; Head office</text>
-            </g>
-            <g class="d-link">
-              <path  d="M170 28 V54"/>
-              <path  d="M500 28 V54"/>
-              <path  d="M830 28 V54"/>
-            </g>
-
-            <!-- --------------------------- PSSAO ------------------------------- -->
-            <g>
-              <rect class="d-node" x="20" y="54" width="300" height="132" rx="10"/>
-              <text class="d-title" x="44" y="88" style="font-size:17px;font-weight:700">PSSAO</text>
-              <rect x="238" y="72" width="58" height="19" rx="3" fill="rgba(83,103,255,.14)" stroke="#5367FF"/>
-              <text class="d-label" x="267" y="85" text-anchor="middle" style="fill:#7A89FF">Live</text>
-              <path d="M44 102 H296" stroke="#262A34" stroke-width="1"/>
-              <text class="d-label" x="44" y="126">Company profile</text>
-              <text class="d-label" x="44" y="146">Catalogue and pricelists by brand</text>
-              <text class="d-label" x="44" y="166">Branches &middot; brands &middot; how to buy</text>
-            </g>
-
-            <!-- --------------------------- PSS GO ------------------------------ -->
-            <g>
-              <rect class="d-node" x="350" y="54" width="300" height="132" rx="10"/>
-              <text class="d-title" x="374" y="88" style="font-size:17px;font-weight:700">PSS GO</text>
-              <rect x="568" y="72" width="58" height="19" rx="3" fill="rgba(83,103,255,.14)" stroke="#5367FF"/>
-              <text class="d-label" x="597" y="85" text-anchor="middle" style="fill:#7A89FF">Live</text>
-              <path d="M374 102 H626" stroke="#262A34" stroke-width="1"/>
-              <text class="d-label" x="374" y="126">Field app for reps and admin staff</text>
-              <text class="d-label" x="374" y="146">Customer &middot; dealer &middot; supplier portals</text>
-              <text class="d-label" x="374" y="166">Android &middot; installable web &middot; 13 languages</text>
-            </g>
-
-            <!-- --------------------------- PSS ONE ----------------------------- -->
-            <g>
-              <rect class="d-node" x="680" y="54" width="300" height="132" rx="10"/>
-              <text class="d-title" x="704" y="88" style="font-size:17px;font-weight:700">PSS ONE</text>
-              <rect x="890" y="72" width="66" height="19" rx="3" fill="rgba(244,241,234,.06)" stroke="#4A5060"/>
-              <text class="d-label" x="923" y="85" text-anchor="middle">Pilot</text>
-              <path d="M704 102 H956" stroke="#262A34" stroke-width="1"/>
-              <text class="d-label" x="704" y="126">The ERP, rebuilt</text>
-              <text class="d-label" x="704" y="146">Sales &middot; ledgers &middot; purchase bills</text>
-              <text class="d-label" x="704" y="166">Stock &middot; reports &middot; receivables</text>
-            </g>
-
-            <!-- --------------- all three read from the ERP ---------------------- -->
-            <g class="d-link">
-              <path  d="M170 186 V206 H500"/>
-              <path  d="M830 186 V206 H500"/>
-              <path  d="M500 186 V226"/>
-            </g>
-
-            <!-- ---------------------- how each one reads ----------------------- -->
-            <g>
-              <rect x="20" y="226" width="960" height="86" rx="10" fill="rgba(83,103,255,.08)" stroke="#5367FF"/>
-              <text class="d-label" x="44" y="258" style="fill:#F4F1EA;letter-spacing:.18em">How each one reads the books</text>
-              <text class="d-label" x="44" y="286">PSSAO and PSS GO read copies of the ERP&rsquo;s data, refreshed on a schedule &middot; PSS ONE reads one branch&rsquo;s database directly, read-only</text>
-            </g>
-
-            <path class="d-link" d="M500 312 V352"/>
-            <path  style="--flow-dur:3s" d="M500 352 V312"/>
-
-            <!-- ------------------------- the books ----------------------------- -->
-            <g>
-              <rect class="d-node" x="20" y="352" width="960" height="86" rx="10"/>
-              <text class="d-label" x="44" y="384" style="fill:#F4F1EA;letter-spacing:.18em">The ERP that stays</text>
-              <text class="d-label" x="44" y="412">Written in VB.NET two decades ago &middot; 93 branches &middot; twenty years of records &middot; still holds the invoices, receipts and ledgers</text>
-            </g>
-
-            <text class="d-label" x="980" y="460" text-anchor="end" style="fill:#808795">PSS ONE has read one branch&rsquo;s real books since 28 August 2026, read-only. It has never written to them.</text>
-          </svg>
-        </div>
-        <div class="only-narrow eco-stack">
-          <article class="eco-node">
-            <p class="who">Customers &middot; dealers &middot; public</p>
-            <div class="eco-head"><h3>PSSAO</h3><span class="eco-tag">Live</span></div>
-            <p class="what">Company profile and catalogue site, with brands, branches and pricelists by brand. It has no cart or checkout.</p>
-          </article>
-          <div class="eco-join" aria-hidden="true"></div>
-          <article class="eco-node">
-            <p class="who">Reps &middot; admin &middot; customers &middot; suppliers</p>
-            <div class="eco-head"><h3>PSS GO</h3><span class="eco-tag">Live</span></div>
-            <p class="what">Field app for reps and admin staff, with customer, dealer and supplier portals. It runs on Android and as an installable web app, in 13 languages.</p>
-          </article>
-          <div class="eco-join" aria-hidden="true"></div>
-          <article class="eco-node">
-            <p class="who">Branch clerks &middot; head office</p>
-            <div class="eco-head"><h3>PSS ONE</h3><span class="eco-tag eco-tag--pilot">Pilot</span></div>
-            <p class="what">The ERP rebuilt, with sales, ledgers, purchase bills, stock, reports and receivables.</p>
-          </article>
-          <div class="eco-join" aria-hidden="true"></div>
-          <div class="eco-core">
-            <span class="t">How each one reads the books</span>
-            <p>PSSAO and PSS GO read copies of the ERP&rsquo;s data, refreshed on a schedule. PSS ONE reads one branch&rsquo;s database directly, read-only.</p>
-          </div>
-          <div class="eco-join" aria-hidden="true"></div>
-          <div class="eco-books">
-            <span class="t">The ERP that stays</span>
-            <p>Written in VB.NET two decades ago. It holds twenty years of records for 93 branches, including the invoices, receipts and ledgers.</p>
-          </div>
-          <p class="eco-note">PSS ONE has read one branch&rsquo;s real books since 28 August 2026, read-only, and has never written to them.</p>
-        </div>
-        <figcaption>Three platforms for three audiences, all reading from the twenty-year-old ERP that still holds the books.</figcaption>
+      <figure class="pilot-figure pilot-figure--phone">
+        <img src="assets/img/pssgo-order.png" width="720" height="573" loading="lazy" alt="PSS GO order screen with Speak and Photo buttons and a parts search.">
+        <figcaption>PSS GO order screen from the public Play Store listing, July 2026.
+          The listing image is a demo shell with no dealer data.</figcaption>
       </figure>
-
-      <p  style="margin-top:2.5rem">
-        <a class="link" href="one-number-four-answers.html">A build note from this system, titled &ldquo;One number. Four answers.&rdquo;
-          <svg class="arw" width="14" height="10" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" stroke-width="1.5"/></svg>
-        </a>
-      </p>
-    </div>
-  </section>
-
-  <!-- ========================== BUSINESS SHAPES =========================== -->
-  <section class="section section--lg s-sunken">
-    <div class="wrap">
-      <div class="section-head">
-        <h2 class="t-h2">How we would approach four other kinds of business.</h2>
-        <p class="lead measure">
-          These four are not work we have done. Each is a common kind of business, written out
-          under the same five headings so you can check whether yours looks like one of them.
-          The system above is the only one on this page that exists.
-        </p>
-      </div>
-
-      <div class="picker" data-picker="model" data-picker-all="Showing all four">
-        <p class="picker-q">Choose the one that looks most like your business.</p>
-        <div class="picker-set" role="group" aria-label="Show business shapes">
-          <button class="picker-btn" type="button" data-pick="all" aria-pressed="true">All four</button>
-          <button class="picker-btn" type="button" data-pick="distribution" aria-pressed="false">Distribution</button>
-          <button class="picker-btn" type="button" data-pick="manufacturing" aria-pressed="false">Manufacturing</button>
-          <button class="picker-btn" type="button" data-pick="retail" aria-pressed="false">Retail</button>
-          <button class="picker-btn" type="button" data-pick="service" aria-pressed="false">Field service</button>
-        </div>
-        <p class="picker-status" role="status" aria-live="polite" data-picker-status></p>
-      </div>
-
-      <!-- ------------------------------ 01 ------------------------------- -->
-      <article class="case" data-model="distribution">
-        <div class="case-head">
-          <span class="sector">If you are an industrial distributor</span>
-          <h2>A dealer network running on phone calls, spreadsheets and an ERP nobody outside the office can reach.</h2>
-        </div>
-        <div class="case-body">
-          <div class="case-cell">
-            <h3>Before</h3>
-            <p>Dealers order by phone and message. The sales desk re-keys each order, calls the
-               warehouse about stock and asks accounts about credit. Stock lives in a spreadsheet
-               updated each evening, and it takes three calls to find out where an order is.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Architecture</h3>
-            <p>Product, price, stock and credit would each be defined once, at the centre. The ERP
-               would keep operations, and every other screen would read from one shared layer over
-               it and keep no copy of its own.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Platforms</h3>
-            <ul>
-              <li>Dealer ordering app with contract pricing and live credit position</li>
-              <li>Warehouse picking and dispatch interface</li>
-              <li>Sales desk console for exceptions and approvals</li>
-              <li>Management view of channel performance</li>
-            </ul>
-          </div>
-          <div class="case-cell">
-            <h3>Intelligence</h3>
-            <p>Replenishment suggestions for each dealer, drawn from its own buying rhythm.
-               Credit-risk flags raised while an order is still waiting to be accepted.</p>
-          </div>
-          <div class="case-cell case-cell--outcome">
-            <h3>What we would expect</h3>
-            <p><strong>The phone call asking where an order is would be the first thing to go.</strong>
-               Orders would arrive structured and priced. Stock would be one number everyone
-               shares. The sales desk would move from re-keying to the exceptions that need a
-               person&rsquo;s judgement.</p>
-          </div>
-        </div>
-      </article>
-
-      <!-- ------------------------------ 02 ------------------------------- -->
-      <article class="case" data-model="manufacturing">
-        <div class="case-head">
-          <span class="sector">If you are a manufacturer</span>
-          <h2>Production planned from experience, because no system can see demand and capacity at the same time.</h2>
-        </div>
-        <div class="case-body">
-          <div class="case-cell">
-            <h3>Before</h3>
-            <p>Orders sit in one system, production is tracked on paper and whiteboards, and
-               purchasing runs on memory. Shortages are discovered on the line. Planning depends on
-               the two people who have done it for years.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Architecture</h3>
-            <p>Demand, capacity, materials and stock would be modelled once, so a change in any of
-               them shows up in all of them. Purchasing would be triggered by the plan.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Platforms</h3>
-            <ul>
-              <li>Planning board showing demand against capacity</li>
-              <li>Shop-floor application for job status and consumption</li>
-              <li>Procurement workflow driven by material shortfall</li>
-              <li>Quality capture attached to batch and job</li>
-            </ul>
-          </div>
-          <div class="case-cell">
-            <h3>Intelligence</h3>
-            <p>Demand forecasts from real order history. Early warning on the items that will run
-               short, given with enough lead time to act on it.</p>
-          </div>
-          <div class="case-cell case-cell--outcome">
-            <h3>What we would expect</h3>
-            <p><strong>Planning would stop depending on two people&rsquo;s memories.</strong>
-               Shortages would surface weeks before they reach the machine, and what those two
-               people know would be written down where the whole team can use it.</p>
-          </div>
-        </div>
-      </article>
-
-      <!-- ------------------------------ 03 ------------------------------- -->
-      <article class="case" data-model="retail">
-        <div class="case-head">
-          <span class="sector">If you sell through more than one channel</span>
-          <h2>An online store that cannot say for certain whether an item is in stock.</h2>
-        </div>
-        <div class="case-body">
-          <div class="case-cell">
-            <h3>Before</h3>
-            <p>The website holds its own catalogue and its own stock figure, synced overnight.
-               The stores have a third view. Orders are cancelled after being accepted, and the
-               same product is described three different ways.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Architecture</h3>
-            <p>One product record and one live stock position would serve every channel. Rules set
-               in advance would decide where each order is fulfilled from.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Platforms</h3>
-            <ul>
-              <li>Storefront reading live availability</li>
-              <li>Store application for stock, transfers and click-and-collect</li>
-              <li>Fulfilment console with routing rules</li>
-              <li>Customer account with orders, returns and history</li>
-            </ul>
-          </div>
-          <div class="case-cell">
-            <h3>Intelligence</h3>
-            <p>Recommendations from purchase history across channels. Proposals to move stock
-               between locations before an item sells out in one of them.</p>
-          </div>
-          <div class="case-cell case-cell--outcome">
-            <h3>What we would expect</h3>
-            <p><strong>Every channel would tell the customer the same thing.</strong> Cancellations
-               caused by stock that was never there would stop, and one catalogue change would
-               update every channel.</p>
-          </div>
-        </div>
-      </article>
-
-      <!-- ------------------------------ 04 ------------------------------- -->
-      <article class="case" data-model="service">
-        <div class="case-head">
-          <span class="sector">If you run a field service operation</span>
-          <h2>Engineers dispatched by phone, with the customer&rsquo;s history sitting in a filing cabinet.</h2>
-        </div>
-        <div class="case-body">
-          <div class="case-cell">
-            <h3>Before</h3>
-            <p>Complaints arrive by phone and are written down. Engineers are assigned by whoever
-               is free. Nobody knows whether the spare is available until the engineer arrives,
-               and contract entitlements are checked by hand, sometimes after the work is done.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Architecture</h3>
-            <p>The installed base, contract terms, service history and spares stock would be
-               modelled as one record, so a ticket knows what the customer is entitled to before
-               anyone travels.</p>
-          </div>
-          <div class="case-cell">
-            <h3>Platforms</h3>
-            <ul>
-              <li>Customer service-request portal</li>
-              <li>Engineer field application, usable offline</li>
-              <li>Dispatch and scheduling console</li>
-              <li>Spares stock across vans and depots</li>
-            </ul>
-          </div>
-          <div class="case-cell">
-            <h3>Intelligence</h3>
-            <p>Tickets flagged before they breach a commitment. The likely part identified from
-               the symptom and the service history, so the van is loaded correctly the first time.</p>
-          </div>
-          <div class="case-cell case-cell--outcome">
-            <h3>What we would expect</h3>
-            <p><strong>There would be fewer second visits.</strong> Entitlement would be known
-               before dispatch, the history would travel with the engineer, and the customer could
-               see where the request stands.</p>
-          </div>
-        </div>
-      </article>
+      <p class="was-principle">PSS ONE remains a separate pilot: since 28 August 2026, one
+        terminal has read one branch&rsquo;s books with read-only access; it has never written
+        a real branch&rsquo;s books.</p>
     </div>
   </section>
 
@@ -542,7 +182,7 @@
   </section>
 
   <!-- =============================== CTA ================================= -->
-<section class="section closer-wrap"><div class="wrap"><p class="closer">If the PSS build looks like your problem, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
+<section class="section closer-wrap"><div class="wrap"><p class="closer">To talk through a similar task in your business, write to <a class="link" data-mail="text" href="mailto:hello@64arcs.com">hello@64arcs.com</a> or use <a class="link" href="contact.html">the form</a>. A person reads it and replies within two working days. The first call is sixty minutes on how your operation runs, no deck.</p></div></section>
 </main>
 
 <footer class="footer">
@@ -555,7 +195,7 @@
         <img class="brand-logo brand-logo--dark" src="assets/brand/logo.svg" width="405" height="112" alt="">
       </span>
         </a>
-        <p class="footer-tag">We build the system your business runs on.</p>
+        <p class="footer-tag">Practical software and AI for everyday business.</p>
       </div>
 
       <nav class="footer-nav" aria-label="Footer">
